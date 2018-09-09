@@ -1,0 +1,15 @@
+[submodule "lib/asio"]
+	path = lib/asio
+	url = https://github.com/chriskohlhoff/asio.git
+[submodule "lib/easyloggingpp"]
+	path = lib/easyloggingpp
+	url = https://github.com/muflihun/easyloggingpp.git
+[submodule "lib/gsl"]
+	path = lib/gsl
+	url = https://github.com/Microsoft/GSL.git
+[submodule "lib/json"]
+	path = lib/json
+	url = https://github.com/nlohmann/json.git
+[submodule "lib/type_safe"]
+	path = lib/type_safe
+	url = https://github.com/foonathan/type_safe
