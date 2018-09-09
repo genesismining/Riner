@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "Application.h"
+#include <src/common/OpenCL.h>
 
 #include <easylogging++.h>
 INITIALIZE_EASYLOGGINGPP
