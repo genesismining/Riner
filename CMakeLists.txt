@@ -13,9 +13,13 @@ link_directories(${OpenCL_LIBRARY})
 add_executable(Miner
         src/application/Main.cpp
         src/application/Application.cpp src/application/Application.h
+        src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
+        src/common/Pointers.h
+        src/common/StringSpan.h
+        src/util/Logging.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
-       )
+)
 
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

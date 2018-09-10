@@ -2,17 +2,33 @@
 #include <iostream>
 
 #include "Application.h"
-#include <src/common/OpenCL.h>
+#include <src/network/TcpLineSubscription.h>
 
-#include <easylogging++.h>
+#include <src/util/Logging.h>
 INITIALIZE_EASYLOGGINGPP
+
+#include <thread>
 
 namespace miner {
 
     Application::Application(int argc, char *argv[]) {
         START_EASYLOGGINGPP(argc, argv);
 
-        LOG(INFO) << "logging works";
+        auto user = "user123", password = "password123";
+
+        auto subscribe = [user, password] (std::ostream &stream) {
+            stream << R"({"jsonrpc": "2.0", "method" : "mining.subscribe", "params" : {"username": ")"
+                      << user << R"(", "password": ")" << password << R"("}, "id": 1})" << "\n";
+        };
+
+        TcpLineSubscription lines = {"eth-eu1.nanopool.org", "9999", subscribe, [] (auto line) {
+            LOG(INFO) << "received line: " << gsl::to_string(line);
+        }};
+
+        for (size_t i = 0; i < 10; ++i) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            LOG(INFO) << "...";
+        }
     }
 
 }
