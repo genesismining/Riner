@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "Application.h"
-#include <src/network/TcpLineSubscription.h>
+#include <src/network/TcpJsonSubscription.h>
 
 #include <src/util/Logging.h>
 INITIALIZE_EASYLOGGINGPP
@@ -21,11 +21,17 @@ namespace miner {
                       << user << R"(", "password": ")" << password << R"("}, "id": 1})" << "\n";
         };
 
-        TcpLineSubscription lines = {"eth-eu1.nanopool.org", "9999", subscribe, [] (auto line) {
-            LOG(INFO) << "received line: " << gsl::to_string(line);
+        TcpJsonSubscription tcpJson = {"eth-eu1.nanopool.org", "9999", subscribe, [] (auto &json) {
+
+            auto m = json.find("method");
+            if (m != json.end() && *m == "mining.notify") {
+
+                LOG(INFO) << "received json: " << json.dump(4);
+
+            }
         }};
 
-        for (size_t i = 0; i < 10; ++i) {
+        for (size_t i = 0; i < 20; ++i) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             LOG(INFO) << "...";
         }

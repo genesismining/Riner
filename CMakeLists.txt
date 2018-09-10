@@ -14,11 +14,13 @@ add_executable(Miner
         src/application/Main.cpp
         src/application/Application.cpp src/application/Application.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
+        src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
         src/common/Pointers.h
         src/common/StringSpan.h
         src/common/OpenCL.h
         src/common/Optional.h
         src/common/Span.h
+        src/common/Json.h
         src/util/Logging.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
