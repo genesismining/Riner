@@ -22,6 +22,7 @@ add_executable(Miner
         src/common/Span.h
         src/common/Json.h
         src/util/Logging.h
+        src/util/OptionalAccess.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         src/util/FileUtils.cpp src/util/FileUtils.h)
