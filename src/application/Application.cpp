@@ -3,18 +3,45 @@
 
 #include "Application.h"
 #include <src/network/TcpJsonSubscription.h>
-
+#include <src/util/FileUtils.h>
+#include <src/application/Config.h>
 #include <src/util/Logging.h>
-INITIALIZE_EASYLOGGINGPP
+#include <src/common/Optional.h>
 
 #include <thread>
 
 namespace miner {
 
-    Application::Application(int argc, char *argv[]) {
-        START_EASYLOGGINGPP(argc, argv);
+    Application::Application(optional<std::string> configPath) {
 
-        auto user = "user123", password = "password123";
+        if (!configPath) {
+            LOG(ERROR) << "no config path command line argument";
+            return;
+        }
+
+        auto configStr = file::readFileIntoString(configPath.value());
+        if (!configStr) {
+            LOG(ERROR) << "unable to read config file";
+            return;
+        }
+
+        LOG(INFO) << "parsing config string:\n" << configStr.value();
+        Config config(configStr.value());
+
+        optional_ref<const Config::Pool> configPool;
+        config.forEachPool([&] (const Config::Pool &pool) {
+            configPool = optional_ref<const Config::Pool>(pool);
+        });
+
+        if (!configPool) {
+            LOG(ERROR) << "no pool in config";
+            return;
+        }
+
+        auto &pool = configPool.value();
+
+        auto user = pool.username, password = pool.password;
+        LOG(INFO) << "user: " << user << ", password: " << password;
 
         auto subscribe = [user, password] (std::ostream &stream) {
             stream << R"({"jsonrpc": "2.0", "method" : "mining.subscribe", "params" : {"username": ")"
@@ -31,7 +58,7 @@ namespace miner {
             }
         }};
 
-        for (size_t i = 0; i < 20; ++i) {
+        for (size_t i = 0; i < 90; ++i) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             LOG(INFO) << "...";
         }

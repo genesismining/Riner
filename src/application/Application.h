@@ -1,12 +1,14 @@
 #pragma once
 
 #include <iostream>
+#include <src/common/Optional.h>
+#include <src/common/StringSpan.h>
 
 namespace miner {
 
     class Application {
     public:
-        Application(int argc, char* argv[]);
+        Application(optional<std::string> configPath);
     };
 
 }
