@@ -24,7 +24,7 @@ add_executable(Miner
         src/util/Logging.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
-)
+        src/util/FileUtils.cpp src/util/FileUtils.h)
 
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
