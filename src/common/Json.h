@@ -7,4 +7,9 @@ namespace miner {
 
     namespace nl = nlohmann;
 
+    //iterate through a json object's members as {key, value} pairs
+    inline nl::json::object_t asPairs(const nl::json::value_type &j) {
+        return j.get<nl::json::object_t>();
+    }
+
 }

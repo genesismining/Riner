@@ -13,6 +13,7 @@ link_directories(${OpenCL_LIBRARY})
 add_executable(Miner
         src/application/Main.cpp
         src/application/Application.cpp src/application/Application.h
+        src/application/Config.cpp src/application/Config.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
         src/common/Pointers.h
