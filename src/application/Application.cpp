@@ -7,6 +7,7 @@
 #include <src/application/Config.h>
 #include <src/util/Logging.h>
 #include <src/common/Optional.h>
+#include <src/compute/ComputeModule.h>
 
 #include <thread>
 
@@ -42,6 +43,11 @@ namespace miner {
 
         auto user = pool.username, password = pool.password;
         LOG(INFO) << "user: " << user << ", password: " << password;
+
+        ComputeModule compute;
+        for (auto &id : compute.getAllDeviceIds()) {
+            LOG(INFO) << "device id at: " << &id;
+        };
 
         auto subscribe = [user, password] (std::ostream &stream) {
             stream << R"({"jsonrpc": "2.0", "method" : "mining.subscribe", "params" : {"username": ")"

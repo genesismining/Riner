@@ -17,6 +17,7 @@ add_executable(Miner
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
+        src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/common/Pointers.h
         src/common/StringSpan.h
         src/common/OpenCL.h
