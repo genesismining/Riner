@@ -16,6 +16,7 @@ add_executable(Miner
         src/application/Config.cpp src/application/Config.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
+        src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/common/Pointers.h
         src/common/StringSpan.h
         src/common/OpenCL.h
@@ -24,9 +25,9 @@ add_executable(Miner
         src/common/Json.h
         src/util/Logging.h
         src/util/OptionalAccess.h
+        src/util/FileUtils.cpp src/util/FileUtils.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
-        src/util/FileUtils.cpp src/util/FileUtils.h)
 
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
