@@ -18,8 +18,13 @@ namespace miner {
         return &data[0];
     }
 
-    DeviceId::DeviceId(const PcieIndex &pcieId)
-    : pcieId(pcieId) {
+    DeviceId::DeviceId(const PcieIndex &pcieId, VendorEnum vendorEnum)
+    : pcieId(pcieId)
+    , vendorEnum(vendorEnum) {
+    }
+
+    VendorEnum DeviceId::vendor() const {
+        return vendorEnum;
     }
 
     bool DeviceId::operator==(const DeviceId &rhs) const {
@@ -36,6 +41,8 @@ namespace miner {
 
     optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &device) {
         PcieIndex pcieId{};
+        VendorEnum vendorEnum = VendorEnum::kUnknown;
+
         auto &log = *el::Loggers::getLogger("default");
 
         //function taken from sgminer-gm
@@ -44,6 +51,7 @@ namespace miner {
         cl_int status;
 
         if (deviceVendor == "Advanced Micro Devices") {
+            vendorEnum = kAMD;
 #ifndef CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD
 #define CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD        1
 #define CL_DEVICE_TOPOLOGY_AMD                  0x4037
@@ -69,6 +77,7 @@ namespace miner {
             }
         }
         else if (deviceVendor == "NVIDIA") {
+            vendorEnum = kNvidia;
 #ifndef CL_DEVICE_PCI_BUS_ID_NV
 #define CL_DEVICE_PCI_BUS_ID_NV                     0x4008
 #endif
@@ -97,7 +106,7 @@ namespace miner {
             return nullopt;
         }
 
-        return DeviceId(pcieId);
+        return DeviceId(pcieId, vendorEnum);
     };
 
     std::vector<DeviceId> gatherAllDeviceIds() {
