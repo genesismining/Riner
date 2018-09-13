@@ -16,7 +16,7 @@ namespace miner {
     Application::Application(optional<std::string> configPath) {
 
         if (!configPath) {
-            LOG(ERROR) << "no config path command line argument";
+            LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
             return;
         }
 
