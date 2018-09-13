@@ -3,7 +3,7 @@
 
 #include <src/common/Pointers.h>
 #include <src/common/StringSpan.h>
-#include <src/common/Json.h>
+#include <src/common/JsonForward.h>
 
 namespace miner {
     class TcpLineSubscription;

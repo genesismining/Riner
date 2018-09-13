@@ -25,6 +25,7 @@ add_executable(Miner
         src/common/Optional.h
         src/common/Span.h
         src/common/Json.h
+        src/common/JsonForward.h
         src/util/Logging.h
         src/util/OptionalAccess.h
         src/util/FileUtils.cpp src/util/FileUtils.h

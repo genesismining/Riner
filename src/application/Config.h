@@ -5,7 +5,7 @@
 #include <src/common/StringSpan.h>
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
-#include <src/common/Json.h>
+#include <src/common/JsonForward.h>
 
 namespace miner {
 
@@ -14,7 +14,7 @@ namespace miner {
         template<class T>
         using ref = std::reference_wrapper<T>;
 
-        Config(cstring_span configStr);
+        explicit Config(cstring_span configStr);
 
         struct GlobalSettings {
             uint32_t tempCutoff = 85;
@@ -26,7 +26,7 @@ namespace miner {
             uint32_t apiPort;
             std::string startProfile;
 
-            GlobalSettings(const nl::json &jsonObject);
+            explicit GlobalSettings(const nl::json &jsonObject);
         };
 
         struct Pool {

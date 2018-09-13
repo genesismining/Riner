@@ -1,6 +1,7 @@
 
 #include "TcpJsonSubscription.h"
 #include <src/network/TcpLineSubscription.h>
+#include <src/common/Json.h>
 #include <functional>
 
 namespace miner {

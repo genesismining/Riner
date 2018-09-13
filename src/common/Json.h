@@ -3,6 +3,8 @@
 
 #include <nlohmann/json.hpp>
 
+//for forward declarations include "JsonForward.h" instead
+
 namespace miner {
 
     namespace nl = nlohmann;
