@@ -14,6 +14,7 @@ namespace miner {
         kUnknown,
         kNvidia,
         kAMD,
+        kIntel,
 
         kVendorEnumCount
     };
