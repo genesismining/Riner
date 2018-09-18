@@ -54,3 +54,7 @@ include_directories(
 
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})
+
+#Threads
+find_package(Threads REQUIRED)
+target_link_libraries (Miner Threads::Threads)

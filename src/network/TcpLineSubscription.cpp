@@ -28,7 +28,7 @@ namespace miner {
         });
 
         //start io service thread which will handle the async calls
-        thread = std::make_unique<std::thread>([&] () {
+        thread = std::make_unique<std::thread>([this] () {
             try {
                 ioService.run();
             }

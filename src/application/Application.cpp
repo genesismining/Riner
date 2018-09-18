@@ -8,6 +8,7 @@
 #include <src/util/Logging.h>
 #include <src/common/Optional.h>
 #include <src/compute/ComputeModule.h>
+#include <src/common/Json.h>
 
 #include <thread>
 
