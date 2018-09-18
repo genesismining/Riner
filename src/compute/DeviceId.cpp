@@ -18,37 +18,54 @@ namespace miner {
         return &data[0];
     }
 
-    DeviceId::DeviceId(const PcieIndex &pcieId, VendorEnum vendorEnum)
-    : pcieId(pcieId)
-    , vendorEnum(vendorEnum) {
+    DeviceId::DeviceId(VendorEnum vendorEnum, const decltype(id) &idVariant, cstring_span name)
+    : vendorEnum(vendorEnum)
+    , id(idVariant)
+    , name(gsl::to_string(name))
+    {
     }
 
-    VendorEnum DeviceId::vendor() const {
+    VendorEnum DeviceId::getVendor() const {
         return vendorEnum;
     }
 
-    bool DeviceId::operator==(const DeviceId &rhs) const {
-        size_t size = sizeof(pcieId.data[0]) * pcieId.data.size();
-        int cmp = memcmp(pcieId.data.data(), rhs.pcieId.data.data(), size);
+    bool PcieIndex::operator==(const PcieIndex &rhs) const {
+        size_t size = sizeof(data[0]) * data.size();
+        int cmp = memcmp(data.data(), rhs.data.data(), size);
         return cmp == 0;
+    }
+
+    bool PcieIndex::operator<(const PcieIndex &rhs) const {
+        size_t size = sizeof(data[0]) * data.size();
+        int cmp = memcmp(data.data(), rhs.data.data(), size);
+        return cmp < 0;
+    }
+
+    bool DeviceId::operator==(const DeviceId &rhs) const {
+        //the name string is not included in this comparison
+        return std::tie(vendorEnum, id) == std::tie(rhs.vendorEnum, id);
     }
 
     bool DeviceId::operator<(const DeviceId &rhs) const {
-        size_t size = sizeof(pcieId.data[0]) * pcieId.data.size();
-        int cmp = memcmp(pcieId.data.data(), rhs.pcieId.data.data(), size);
-        return cmp == 0;
+        //the name string is not included in this comparison
+        return std::tie(vendorEnum, id) < std::tie(rhs.vendorEnum, id);
+    }
+
+    cstring_span DeviceId::getName() const {
+        return name;
     }
 
     optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &device) {
-        PcieIndex pcieId{};
+        variant<PcieIndex, DeviceVendorId> idVariant = PcieIndex{};
         VendorEnum vendorEnum = VendorEnum::kUnknown;
 
         auto &log = *el::Loggers::getLogger("default");
 
-        //function taken from sgminer-gm
-
+        auto deviceName = device.getInfo<CL_DEVICE_NAME>();
         auto deviceVendor = device.getInfo<CL_DEVICE_VENDOR>();
         cl_int status;
+
+        //function taken from sgminer-gm
 
         if (deviceVendor == "Advanced Micro Devices") {
             vendorEnum = kAMD;
@@ -63,11 +80,14 @@ namespace miner {
             cl_device_topology_amd topology{};
             status = device.getInfo(CL_DEVICE_TOPOLOGY_AMD, &topology);
 
-            memset(pcieId.begin(), 0xff, pcieId.byteSize());
             if (status == CL_SUCCESS && topology.raw.type == CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD) {
+
+                PcieIndex pcieId {};
+                memset(pcieId.begin(), 0xff, pcieId.byteSize());
                 pcieId.data[0] = static_cast<uint8_t>(topology.pcie.bus);
                 pcieId.data[0] = static_cast<uint8_t>(topology.pcie.device);
                 pcieId.data[0] = static_cast<uint8_t>(topology.pcie.function);
+                idVariant = pcieId;
 
                 log.debug("ComputeModule: detected PCIe topology 0000:%.2x:%.2x.%.1x",
                           pcieId.data[0], pcieId.data[1], pcieId.data[2]);
@@ -90,15 +110,22 @@ namespace miner {
             status =  device.getInfo(CL_DEVICE_PCI_BUS_ID_NV, &bus_id);
             status |= device.getInfo(CL_DEVICE_PCI_SLOT_ID_NV, &device_id);
 
-            memset(pcieId.begin(), 0xff, pcieId.byteSize());
             if (status == CL_SUCCESS) {
+                PcieIndex pcieId {};
+                memset(pcieId.begin(), 0xff, pcieId.byteSize());
                 pcieId.data[0] = static_cast<uint8_t>(bus_id);
                 pcieId.data[1] = static_cast<uint8_t>(device_id);
                 pcieId.data[2] = 0;
+                idVariant = pcieId;
             }
             else {
                 return nullopt;
             }
+        }
+        else if (deviceVendor == "Intel") {
+            vendorEnum = kIntel;
+            auto id = device.getInfo<CL_DEVICE_VENDOR_ID>();
+            idVariant = id;
         }
         else {
             auto name = device.getInfo<CL_DEVICE_NAME>();
@@ -106,7 +133,7 @@ namespace miner {
             return nullopt;
         }
 
-        return DeviceId(pcieId, vendorEnum);
+        return DeviceId(vendorEnum, idVariant, deviceName);
     };
 
     std::vector<DeviceId> gatherAllDeviceIds() {

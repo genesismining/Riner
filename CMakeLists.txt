@@ -23,6 +23,7 @@ add_executable(Miner
         src/common/StringSpan.h
         src/common/OpenCL.h
         src/common/Optional.h
+        src/common/Variant.h
         src/common/Span.h
         src/common/Json.h
         src/common/JsonForward.h
