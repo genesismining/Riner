@@ -3,6 +3,7 @@
 
 #include <src/common/Pointers.h>
 #include <src/compute/DeviceId.h>
+#include <src/common/Optional.h>
 #include <src/common/Span.h>
 #include <vector>
 
@@ -16,8 +17,9 @@ namespace miner {
         ComputeModule();
 
         span<DeviceId> getAllDeviceIds();
-        unique_ptr<OpenCLSession> makeOpenCLSession();
-        //unique_ptr<VulkanSession> makeVulkanSession();
+
+        optional<cl::Device> getDeviceOpenCL(const DeviceId &);
+        //optional_ref<vk::Device> getDeviceVulkan(const DeviceId &);
     };
 
 }

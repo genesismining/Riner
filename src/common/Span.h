@@ -4,7 +4,10 @@
 
 namespace miner {
     
-    template<class T>
-    using span = gsl::span<T>;
-    
+    template<class T, std::ptrdiff_t Extent = gsl::dynamic_extent>
+    using span = gsl::span<T, Extent>;
+
+    template<std::ptrdiff_t Extent = gsl::dynamic_extent>
+    using ByteSpan = span<uint8_t, Extent>;
+
 }

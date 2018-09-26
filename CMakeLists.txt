@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 project(Miner)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-unknown-attributes")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-unknown-attributes")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
 
 #OpenCL
 find_package(OpenCL REQUIRED)
@@ -14,11 +14,20 @@ add_executable(Miner
         src/application/Main.cpp
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
+        src/algorithm/Algorithm.h
+        src/algorithm/ethash/AlgoEthashCL.cpp
+        src/algorithm/ethash/AlgoEthashCL.h
+        src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
+        src/pool/Pool.cpp src/pool/Pool.h
+        src/pool/Work.cpp src/pool/Work.h
+        src/pool/WorkEthash.h
+        src/pool/PoolEthash.cpp src/pool/PoolEthash.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h
+        src/common/WorkCommon.h
         src/common/Pointers.h
         src/common/StringSpan.h
         src/common/OpenCL.h
@@ -27,11 +36,13 @@ add_executable(Miner
         src/common/Span.h
         src/common/Json.h
         src/common/JsonForward.h
+        src/common/Assert.h
         src/util/Logging.h
         src/util/OptionalAccess.h
         src/util/FileUtils.cpp src/util/FileUtils.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
+)
 
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
