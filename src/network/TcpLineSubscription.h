@@ -14,18 +14,20 @@ namespace miner {
         using tcp = asio::ip::tcp;
 
         using OnReceivedLineFunc = std::function<void(cstring_span line)>;
-        using GetSubscriptionMessageFunc = std::function<void (std::ostream &)>;
+        using OnSendMessageFunc = std::function<void (std::ostream &)>;
 
         TcpLineSubscription(cstring_span host, cstring_span port,
-                GetSubscriptionMessageFunc &&, OnReceivedLineFunc &&);
+                            OnSendMessageFunc &&, OnReceivedLineFunc &&);
 
         ~TcpLineSubscription();
+
+        void sendAsync(OnSendMessageFunc &&);
 
     private:
         std::string host;
         std::string port;
 
-        GetSubscriptionMessageFunc getSubscriptionMessage;
+        OnSendMessageFunc getSubscriptionMessage;
         OnReceivedLineFunc onReceivedLine;
 
         unique_ptr<std::thread> thread;

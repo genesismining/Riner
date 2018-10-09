@@ -20,6 +20,7 @@ add_executable(Miner
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
+        src/pool/WorkQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkEthash.h
@@ -27,6 +28,7 @@ add_executable(Miner
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h
+        src/common/Future.h
         src/common/WorkCommon.h
         src/common/Pointers.h
         src/common/StringSpan.h
@@ -39,6 +41,7 @@ add_executable(Miner
         src/common/Assert.h
         src/util/Logging.h
         src/util/OptionalAccess.h
+        src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory

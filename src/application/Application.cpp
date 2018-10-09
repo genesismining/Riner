@@ -9,8 +9,11 @@
 #include <src/common/Optional.h>
 #include <src/compute/ComputeModule.h>
 #include <src/common/Json.h>
+#include <src/pool/PoolEthash.h>
+#include <src/algorithm/ethash/AlgoEthashCL.h>
 
 #include <thread>
+#include <src/algorithm/Algorithm.h>
 
 namespace miner {
 
@@ -47,8 +50,26 @@ namespace miner {
 
         ComputeModule compute;
         for (auto &id : compute.getAllDeviceIds()) {
-            LOG(INFO) << "device id at: " << &id;
+            LOG(INFO) << "device id at: " << &id << " name: " << to_string(id.getName());
         };
+
+        PoolEthashStratum poolEthashStratum;
+
+        span<DeviceId> devSpan;
+
+        auto args = AlgoConstructionArgs {
+            compute, compute.getAllDeviceIds(), poolEthashStratum
+        };
+
+        AlgoEthashCL algo(args);
+
+        for (size_t i = 0; i < 40; ++i) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            //LOG(INFO) << "...";
+        }
+        LOG(INFO) << "test period over, closing application";
+
+        return;
 
         auto subscribe = [user, password] (std::ostream &stream) {
             stream << R"({"jsonrpc": "2.0", "method" : "mining.subscribe", "params" : {"username": ")"

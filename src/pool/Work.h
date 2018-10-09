@@ -30,6 +30,13 @@ namespace miner {
         virtual AlgoEnum getAlgoEnum() const = 0;
         virtual ~WorkBase() = default;
 
+        WorkBase(std::weak_ptr<WorkProtocolData>);
+
+        bool expired() const {
+            //checks whether associated shared_ptr is still alive
+            return protocolData.expired();
+        }
+
         template<AlgoEnum A>
         unique_ptr<WorkResult<A>> makeWorkResult() const {
             return std::make_unique<WorkResult<A>>(protocolData);

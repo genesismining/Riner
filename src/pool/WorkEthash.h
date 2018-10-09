@@ -10,13 +10,15 @@ namespace miner {
     template<>
     class Work<kEthash> : public WorkBase {
     public:
+        Work(std::weak_ptr<WorkProtocolData> data) : WorkBase(std::move(data)) {}
+
         uint32_t extraNonce;
         //uint32_t minerNonce; //gets chosen by
 
         Bytes<32> target; //previously difficulty
         Bytes<32> header;
 
-        uint32_t epoch;
+        uint32_t epoch = 0;
         Bytes<32> seedHash;
 
         AlgoEnum getAlgoEnum() const override {
@@ -27,7 +29,7 @@ namespace miner {
     template<>
     class WorkResult<kEthash> : public WorkResultBase {
     public:
-        WorkResult(std::weak_ptr<WorkProtocolData> data) : WorkResultBase(data) {}
+        WorkResult(std::weak_ptr<WorkProtocolData> data) : WorkResultBase(std::move(data)) {}
 
         uint64_t nonce;
 

@@ -2,6 +2,9 @@
 #include "AlgoEthashCL.h"
 #include <src/compute/ComputeModule.h>
 #include <src/pool/WorkEthash.h>
+#include <src/util/Logging.h>
+#include <src/common/Future.h>
+#include <random>
 
 namespace miner {
 
@@ -11,14 +14,14 @@ namespace miner {
         for (auto &id : args.assignedDevices) {
             if (auto clDevice = args.compute.getDeviceOpenCL(id)) {
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
-                                              clDevice.value()));
+                                              std::move(clDevice.value())));
             }
         }
     }
 
     AlgoEthashCL::~AlgoEthashCL() {
         shutdown = true; //set atomic shutdown flag
-        //implicitly waits for gpuTasks and submitTask to finish
+        //implicitly waits for gpuTasks and submitTasks to finish
     }
 
     void AlgoEthashCL::gpuTask(cl::Device clDevice) {
@@ -28,7 +31,11 @@ namespace miner {
         DagFile dag;
 
         while (!shutdown) {
-            auto work = pool.getWork<kEthash>(); //only for obtaining dag creation info
+            //get work only for obtaining dag creation info
+            auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
+            if (!work)
+                continue; //check shutdown and try again
+
             dag.generate(work->epoch, work->seedHash, clDevice); //~ every 5 days
 
             std::vector<std::future<void>> tasks(numGpuSubTasks);
@@ -36,7 +43,7 @@ namespace miner {
             for (auto &task : tasks) {
 
                 task = std::async(std::launch::async, &AlgoEthashCL::gpuSubTask, this,
-                        clDevice, std::ref(dag));
+                                  std::ref(clDevice), std::ref(dag));
             }
             //tasks destructor waits
             //tasks terminate if epoch has changed for every task's work
@@ -44,17 +51,21 @@ namespace miner {
 
     }
 
-    void AlgoEthashCL::gpuSubTask(cl::Device clDevice, DagFile &dag) {
-
-        const uint32_t intensity = 24;
+    void AlgoEthashCL::gpuSubTask(const cl::Device &clDevice, DagFile &dag) {
+        LOG(INFO) << "starting task " << std::this_thread::get_id();
+        const uint32_t intensity = 24 * 100;
 
         while (!shutdown) {
-            auto work = pool.getWork<kEthash>();
+            auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
+            if (!work)
+                continue; //check shutdown and try again
 
-            if (work->epoch != dag.getEpoch())
+            if (work->epoch != dag.getEpoch()) {
+                LOG(INFO) << "dag epoch outdated, stopping task";
                 break; //terminate task
+            }
 
-            for (uint64_t nonce = 0; nonce < UINT32_MAX; nonce += intensity) {
+            for (uint64_t nonce = 0; nonce < UINT32_MAX && !shutdown; nonce += intensity) {
 
                 uint64_t shiftedExtraNonce = uint64_t(work->extraNonce) << 32ULL;
 
@@ -63,28 +74,54 @@ namespace miner {
 
                 auto results = runKernel(clDevice, *work, nonceBegin, nonceEnd);
 
-                for (auto &result : results) {
-                    submitTask = std::async(std::launch::async, &AlgoEthashCL::submitShareTask, this,
-                            std::move(result), std::move(submitTask));
+                if (!results.empty()) {
+                    auto submitGuard = submitTasks.lock();
+                    for (auto &result : results)
+                        submitGuard->push_back(std::async(std::launch::async, &AlgoEthashCL::submitShareTask, this,
+                                                          std::move(result)));
+                    //submitGuard unlocks
+                }
+
+                if (work->expired()) {
+                    LOG(INFO) << "work expired, stop traversing " << std::this_thread::get_id();
+                    break; //get new work
                 }
             }
-        }
 
+            LOG(INFO) << (!shutdown ? "nonce range fully traversed. " : "stopped traversing nonce range due to shutdown. ") << std::this_thread::get_id();
+        }
+        LOG(INFO) << "terminating task " << std::this_thread::get_id();
     }
 
-    void AlgoEthashCL::submitShareTask(unique_ptr<WorkResult<kEthash>> result, std::future<void> &&previousTask) {
-        previousTask.wait(); //wait for the previous submit task to be finished
+    void AlgoEthashCL::submitShareTask(unique_ptr<WorkResult<kEthash>> result) {
+        //previousTask.wait();
 
-        if (true) { //result.verify(dagCaches)) {
+        if (true) {
             pool.submitWork(std::move(result));
+            //LOG(INFO) << "submitted work";
         }
     }
 
-    std::vector<unique_ptr<WorkResult<kEthash>>> AlgoEthashCL::runKernel(cl::Device device, const Work<kEthash> &work,
+    std::vector<unique_ptr<WorkResult<kEthash>>> AlgoEthashCL::runKernel(const cl::Device &device, const Work<kEthash> &work,
                                 uint64_t nonceBegin, uint64_t nonceEnd) {
 
         std::vector<unique_ptr<WorkResult<kEthash>>> results;
-        results.push_back(work.makeWorkResult<kEthash>());
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(1, UINT32_MAX);
+
+        auto num = dis(gen);
+
+        for (uint32_t div = 1000000; div < 10000000; div *= 10) {
+            if (num < UINT32_MAX / div) {
+                results.push_back(work.makeWorkResult<kEthash>());
+            }
+        }
+
+        if (!results.empty()) {
+            LOG(INFO) << "--------------> found " << results.size() << " results! " << std::this_thread::get_id() << " ("<< log10(nonceBegin) <<")";
+        }
         return results;
     }
 }

@@ -7,7 +7,7 @@
 namespace miner {
 
     TcpJsonSubscription::TcpJsonSubscription(cstring_span host, cstring_span port,
-                                             GetSubscriptionMessageFunc &&getSubscriptionMessageFunc,
+                                             OnSendMessageFunc &&getSubscriptionMessageFunc,
                                              OnReceivedJsonFunc &&onReceivedJsonFunc)
     : onReceivedJson(std::move(onReceivedJsonFunc)) {
 

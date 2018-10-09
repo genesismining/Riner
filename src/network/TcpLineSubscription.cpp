@@ -11,7 +11,7 @@ namespace miner {
 
     TcpLineSubscription::TcpLineSubscription(cstring_span hostSpan,
             cstring_span portSpan,
-            GetSubscriptionMessageFunc &&getSubscriptionMessageFunc,
+            OnSendMessageFunc &&getSubscriptionMessageFunc,
             OnReceivedLineFunc &&onReceivedLineFunc)
     : host(to_string(hostSpan))
     , port(to_string(portSpan))

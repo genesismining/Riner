@@ -19,7 +19,7 @@ namespace miner {
 
         bool valid = false;
     public:
-        void generate(uint32_t epoch, ByteSpan<32> seedHash, cl::Device &device);
+        void generate(uint32_t epoch, ByteSpan<32> seedHash, const cl::Device &device);
 
         uint32_t getEpoch() const;
 

@@ -12,11 +12,13 @@ namespace miner {
     class TcpJsonSubscription {
     public:
         using OnReceivedJsonFunc = std::function<void (const nl::json &json)>;
-        using GetSubscriptionMessageFunc = std::function<void (std::ostream &)>;
+        using OnSendMessageFunc  = std::function<void (std::ostream &)>;
 
         TcpJsonSubscription(cstring_span host, cstring_span port,
-                GetSubscriptionMessageFunc &&, OnReceivedJsonFunc &&);
+                            OnSendMessageFunc &&, OnReceivedJsonFunc &&);
         ~TcpJsonSubscription();
+
+        void sendAsync(OnSendMessageFunc &&);
 
     private:
         unique_ptr<TcpLineSubscription> tcpLines;

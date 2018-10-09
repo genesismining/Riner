@@ -12,7 +12,7 @@ namespace miner {
         return valid;
     }
 
-    void DagFile::generate(uint32_t epoch, ByteSpan<32> seedHash, cl::Device &device) {
+    void DagFile::generate(uint32_t epoch, ByteSpan<32> seedHash, const cl::Device &device) {
         valid = true;
     }
 
