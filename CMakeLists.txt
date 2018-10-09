@@ -54,6 +54,10 @@ add_subdirectory("lib/easyloggingpp")
 
 add_compile_definitions(ASIO_STANDALONE) #tell asio to not include boost headers
 
+add_compile_definitions(ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
+
+#add_compile_definitions(GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
+
 include_directories(
         lib/asio/asio/include
         lib/cl2hpp/include

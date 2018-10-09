@@ -15,5 +15,11 @@ namespace miner {
         return unique_ptr<T>(t); //make new owning unique_ptr for *t
     }
 
+    //convenience function for creating weak_ptr out of shared_ptr
+    template<class T>
+    std::weak_ptr<T> make_weak(std::shared_ptr<T> &sharedPtr) {
+        return sharedPtr;
+    }
+
 }
 
