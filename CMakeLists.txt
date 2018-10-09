@@ -43,6 +43,7 @@ add_executable(Miner
         src/util/OptionalAccess.h
         src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
+        src/util/HexString.cpp src/util/HexString.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
 )
