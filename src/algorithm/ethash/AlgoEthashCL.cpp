@@ -5,6 +5,7 @@
 #include <src/util/Logging.h>
 #include <src/common/Future.h>
 #include <random>
+#include <src/util/HexString.h> //for debug logging hex
 
 namespace miner {
 
@@ -26,7 +27,7 @@ namespace miner {
 
     void AlgoEthashCL::gpuTask(cl::Device clDevice) {
 
-        const unsigned numGpuSubTasks = 8;
+        const unsigned numGpuSubTasks = 4;
 
         DagFile dag;
 
@@ -35,6 +36,8 @@ namespace miner {
             auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
+
+            LOG(INFO) << "use work to generate dag...";
 
             dag.generate(work->epoch, work->seedHash, clDevice); //~ every 5 days
 
@@ -54,11 +57,18 @@ namespace miner {
     void AlgoEthashCL::gpuSubTask(const cl::Device &clDevice, DagFile &dag) {
         LOG(INFO) << "starting task " << std::this_thread::get_id();
         const uint32_t intensity = 24 * 100;
+        //intensity *= 200;
 
         while (!shutdown) {
             auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
+
+            LOG(INFO) << "gpu thread got ethash work: \n"
+                    << "    header: 0x" << HexString{work->header}.toString() << "\n"
+                    << "  seedHash: 0x" << HexString{work->seedHash}.toString() << "\n"
+                    << "    target: 0x" << HexString{work->target}.toString() << "\n"
+                    << "extranonce: " << work->extraNonce << "\n";
 
             if (work->epoch != dag.getEpoch()) {
                 LOG(INFO) << "dag epoch outdated, stopping task";

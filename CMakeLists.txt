@@ -21,6 +21,7 @@ add_executable(Miner
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
         src/pool/WorkQueue.h
+        src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkEthash.h
@@ -59,6 +60,7 @@ add_subdirectory("lib/easyloggingpp")
 add_compile_definitions(ASIO_STANDALONE) #tell asio to not include boost headers
 
 add_compile_definitions(ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
+#add_compile_definitions(ELPP_DISABLE_LOGS)
 
 #add_compile_definitions(GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
 

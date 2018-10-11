@@ -24,15 +24,12 @@ namespace miner {
         optional<std::unique_lock<std::mutex>> waitUntilNotEmptyAndLock(std::chrono::milliseconds timeout) {
             std::unique_lock<std::mutex> lock(mutex);
 
-            //only start waiting if the buffer is actually empty
-            if (buffer.empty()) {
-                bool success = conditionVariable.wait_for(lock, timeout, [this] {
-                    return !buffer.empty();
-                });
+            bool timedOut = !conditionVariable.wait_for(lock, timeout, [this] {
+                return !buffer.empty();
+            });
 
-                if (!success) //timeout
-                    return nullopt;
-            }
+            if (timedOut)
+                return nullopt;
             return lock;
         }
 
@@ -79,8 +76,6 @@ namespace miner {
             if (auto maybeLock = waitUntilNotEmptyAndLock(timeout)) {
                 auto t {std::move(buffer.back())};
                 buffer.pop_back();
-
-                LOG(INFO) << "<-- got work";
                 return t;
             }
             return nullopt; //timeout

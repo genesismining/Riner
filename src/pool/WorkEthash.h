@@ -12,8 +12,8 @@ namespace miner {
     public:
         Work(std::weak_ptr<WorkProtocolData> data) : WorkBase(std::move(data)) {}
 
-        uint32_t extraNonce;
-        //uint32_t minerNonce; //gets chosen by
+        uint32_t extraNonce = 0;
+        //uint32_t minerNonce;
 
         Bytes<32> target; //previously difficulty
         Bytes<32> header;

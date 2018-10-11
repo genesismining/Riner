@@ -53,7 +53,11 @@ namespace miner {
             LOG(INFO) << "device id at: " << &id << " name: " << to_string(id.getName());
         };
 
-        PoolEthashStratum poolEthashStratum;
+        auto poolArgs = PoolConstructionArgs {
+            "eth-eu1.nanopool.org", "9999", pool.username, pool.password
+        };
+
+        PoolEthashStratum poolEthashStratum(poolArgs);
 
         span<DeviceId> devSpan;
 
@@ -63,7 +67,7 @@ namespace miner {
 
         AlgoEthashCL algo(args);
 
-        for (size_t i = 0; i < 40; ++i) {
+        for (size_t i = 0; i < 60 * 4; ++i) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             //LOG(INFO) << "...";
         }
