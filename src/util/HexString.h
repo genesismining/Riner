@@ -5,6 +5,8 @@
 #include <src/common/StringSpan.h>
 #include <src/common/Optional.h>
 #include <src/common/Span.h>
+#include <src/common/JsonForward.h>
+#include <string>
 
 namespace miner {
 
@@ -24,10 +26,17 @@ namespace miner {
         bool parse(cstring_span inStr);
         bool parseSuccess = false;
     public:
+        explicit HexString(const nl::json &jsonInStr);
+        explicit HexString(const std::string &inStr);
         explicit HexString(cstring_span inStr);
         explicit HexString(cByteSpan<> src);
 
-        void reverseByteOrder(); //does not affect where leading zeroes are placed in getBytes
+        template <size_t N>
+        explicit HexString(const std::array<uint8_t, N> &arr)
+        : HexString(cByteSpan<>(arr)) {
+        }
+
+        HexString &flipByteOrder(); //does not affect where leading zeroes are placed in getBytes
 
         std::string toString() const; //returns lowercase hex without "0x"
 
@@ -47,6 +56,7 @@ namespace miner {
         }
 
         operator bool() const; //false if parse failed
+        operator std::string() const;
     };
 
 }

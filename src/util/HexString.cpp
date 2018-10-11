@@ -4,6 +4,7 @@
 #include <algorithm> //std::min
 #include <sstream>
 #include <iomanip>
+#include <src/common/Json.h>
 
 namespace miner {
 
@@ -14,6 +15,15 @@ namespace miner {
     HexString::HexString(cByteSpan<> src)
             : bytes(src.begin(), src.end())
             , parseSuccess(true) {
+    }
+
+    HexString::HexString(const nl::json &json) {
+        auto inStr = json.get<std::string>();
+        parseSuccess = parse(inStr);
+    }
+
+    HexString::HexString(const std::string &inStr) {
+        parseSuccess = parse(inStr);
     }
 
     bool HexString::parse(cstring_span in) {
@@ -56,12 +66,17 @@ namespace miner {
         return bytes.size();
     }
 
-    void HexString::reverseByteOrder() {
+    HexString &HexString::flipByteOrder() {
         std::reverse(begin(bytes), end(bytes));
+        return *this;
     }
 
     HexString::operator bool() const {
         return parseSuccess;
+    }
+
+    HexString::operator std::string() const {
+        return toString();
     }
 
     std::string HexString::toString() const {
@@ -92,44 +107,4 @@ namespace miner {
         return static_cast<size_t>(length);
     }
 
-    /*
-    // <delete this>
-    void foobartestHex(cstring_span str, bool flipEndian) {
-
-        if (HexString hex {str}) {
-
-            if (flipEndian) {
-                hex.reverseByteOrder();
-            }
-
-            auto bytes = hex.getBytes<8>();
-
-            printf("\n");
-            for (auto &byte : bytes) {
-                if (byte != 0)
-                    printf("%02X", byte);
-                else
-                    printf(". ");
-            }
-            printf("\n");
-
-            auto hstr = hex.toString();
-            printf("to string: %s\n", hstr.c_str());
-        }
-        else {
-            printf("parsing this hexstring failed\n");
-        }
-    }
-
-    int testfoobar() {
-
-        foobartestHex("0x00000C0FFEEBAADF00D", false);
-        foobartestHex("0x00000C0FFEEBAADF00D", true);
-        foobartestHex("0xBAADF00D", false);
-        foobartestHex("0xBAADF00D", true);
-        exit(1);
-    }
-    int testt = testfoobar();
-    // </delete this>
-    */
 }
