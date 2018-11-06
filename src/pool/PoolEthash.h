@@ -3,13 +3,16 @@
 
 #include <src/pool/Pool.h>
 #include <src/pool/WorkEthash.h>
+#include <src/network/TcpJsonProtocolUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/pool/WorkQueue.h>
 #include <src/common/Pointers.h>
 #include <queue>
 #include <future>
+#include <list>
 #include <atomic>
+#include <asio/yield.hpp>
 
 namespace miner {
     template<class T>
@@ -17,9 +20,7 @@ namespace miner {
     class TcpJsonSubscription;
 
     struct EthashStratumProtocolData : public WorkProtocolData {
-        Bytes<32> jobId {};
-        bool clean = false;
-        //nl::json jobId;
+        std::string jobId;
     };
 
     class PoolEthashStratum : public WorkProvider {
@@ -28,24 +29,42 @@ namespace miner {
         ~PoolEthashStratum() override;
 
     private:
+        PoolConstructionArgs args;
+
+        // WorkProvider interface
         optional<unique_ptr<WorkBase>> tryGetWork() override;
-
         void submitWork(unique_ptr<WorkResultBase> result) override;
-
-        uint64_t getPoolUid() const override;
-
-        std::atomic<bool> shutdown {false};
-
-        uint64_t uid = createNewPoolUid();
-
-        unique_ptr<TcpJsonSubscription> tcpJson;
-
-        std::vector<std::shared_ptr<EthashStratumProtocolData>> protocolDatas;
 
         using WorkQueueType = AutoRefillQueue<unique_ptr<Work<kEthash>>>;
         unique_ptr<WorkQueueType> workQueue;
 
-        WorkQueue<unique_ptr<WorkResultBase>> resultQueue;
+        // Pool Uid
+        uint64_t getPoolUid() const override;
+        uint64_t uid = createNewPoolUid();
+
+        std::atomic<bool> shutdown {false};
+
+        std::vector<std::shared_ptr<EthashStratumProtocolData>> protocolDatas;
+
+        std::list<int> pendingShareIds; //submitted shares that have not yet been accepted or rejected
+        bool isPendingShare(int id) const;
+        int highestJsonRpcId = 0;
+
+        void tcpCoroutine(nl::json response, asio::error_code, asio::coroutine &);
+        void resetCoroutine(asio::coroutine &coro);
+        unique_ptr<TcpJsonProtocolUtil> tcp;
+
+        bool acceptsMiningNotifyMessages = false;
+
+        std::string makeMiningSubscribeMsg();
+        std::string makeMiningAuthorizeMsg();
+        std::string makeSubmitMsg(const WorkResult<kEthash> &,
+                const EthashStratumProtocolData &, int shareid);
+
+        void onMiningNotify (nl::json &j);
+        void onSetExtraNonce(nl::json &j);
+        void onSetDifficulty(nl::json &j);
+        void onShareAcceptedOrDenied(nl::json &j);
     };
 
 }

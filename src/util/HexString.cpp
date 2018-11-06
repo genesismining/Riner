@@ -15,6 +15,13 @@ namespace miner {
     HexString::HexString(cByteSpan<> src)
             : bytes(src.begin(), src.end())
             , parseSuccess(true) {
+
+    }
+
+    HexString::HexString(uint64_t src)
+    : bytes(sizeof(src))
+    , parseSuccess(true) {
+        memcpy(bytes.data(), &src, sizeof(src));
     }
 
     HexString::HexString(const nl::json &json) {
@@ -75,11 +82,7 @@ namespace miner {
         return parseSuccess;
     }
 
-    HexString::operator std::string() const {
-        return toString();
-    }
-
-    std::string HexString::toString() const {
+    std::string HexString::str() const {
         std::stringstream stream;
         stream << std::hex << std::setfill('0');
 

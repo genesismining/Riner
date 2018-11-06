@@ -33,6 +33,8 @@ namespace miner {
         std::mutex mut;
 
     public:
+        using value_type = T;
+
         template<class ... Args>
         LockGuarded(Args &&...args)
                 : t(std::forward<Args>(args) ...) {

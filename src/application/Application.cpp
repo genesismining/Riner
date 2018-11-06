@@ -53,8 +53,11 @@ namespace miner {
             LOG(INFO) << "device id at: " << &id << " name: " << to_string(id.getName());
         };
 
+        std::string host = "eth-eu1.nanopool.org", port = "9999";
+        //std::string host = "localhost", port = "9998";
+
         auto poolArgs = PoolConstructionArgs {
-            "eth-eu1.nanopool.org", "9999", pool.username, pool.password
+            host, port, pool.username, pool.password
         };
 
         PoolEthashStratum poolEthashStratum(poolArgs);

@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.12)
 project(Miner)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
 
 #OpenCL
 find_package(OpenCL REQUIRED)
@@ -60,9 +60,10 @@ add_subdirectory("lib/type_safe")
 add_subdirectory("lib/easyloggingpp")
 
 add_compile_definitions(ASIO_STANDALONE) #tell asio to not include boost headers
+add_compile_definitions(BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
 
 add_compile_definitions(ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
-#add_compile_definitions(ELPP_DISABLE_LOGS)
+#add_compile_definitions(ELPP_DISABLE_LOGS) #disable all easylogging++ logging
 
 #add_compile_definitions(GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
 

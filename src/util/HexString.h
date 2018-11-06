@@ -30,6 +30,7 @@ namespace miner {
         explicit HexString(const std::string &inStr);
         explicit HexString(cstring_span inStr);
         explicit HexString(cByteSpan<> src);
+        explicit HexString(uint64_t src);
 
         template <size_t N>
         explicit HexString(const std::array<uint8_t, N> &arr)
@@ -38,14 +39,14 @@ namespace miner {
 
         HexString &flipByteOrder(); //does not affect where leading zeroes are placed in getBytes
 
-        std::string toString() const; //returns lowercase hex without "0x"
+        std::string str() const; //returns lowercase hex without "0x"
 
         //returns amount of bytes e.g. "0x001F" => 2
         size_t sizeBytes() const;
 
         //copies data into dst with leading zeroes
         //if dst is too small, leading bytes will be cut
-        size_t getBytes(ByteSpan<> dst) const;
+        size_t getBytes(ByteSpan<>) const;
 
         //convenience function that creates an array and calls getBytes
         template<size_t N>
@@ -56,7 +57,6 @@ namespace miner {
         }
 
         operator bool() const; //false if parse failed
-        operator std::string() const;
     };
 
 }

@@ -26,7 +26,7 @@ namespace miner {
         return map_at_if<MapT, KeyT, ReturnT>(map, key);
     }
 
-    //like std::span::at(index), but returns an optional depending on whether the key exists
+    //like gsl::span::at(index), but returns an optional depending on whether the key exists
     template<class T>
     optional_ref<T> at_if(span<T> span, size_t index) {
         if (index < span.size()) {

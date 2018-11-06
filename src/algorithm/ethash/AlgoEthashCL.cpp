@@ -55,23 +55,16 @@ namespace miner {
     }
 
     void AlgoEthashCL::gpuSubTask(const cl::Device &clDevice, DagFile &dag) {
-        LOG(INFO) << "starting task " << std::this_thread::get_id();
-        const uint32_t intensity = 24 * 100;
-        //intensity *= 200;
+        const uint32_t intensity = 24 * 1000;
 
         while (!shutdown) {
             auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
 
-            LOG(INFO) << "gpu thread got ethash work: \n"
-                    << "    header: 0x" << HexString{work->header}.toString() << "\n"
-                    << "  seedHash: 0x" << HexString{work->seedHash}.toString() << "\n"
-                    << "    target: 0x" << HexString{work->target}.toString() << "\n"
-                    << "extranonce: " << work->extraNonce << "\n";
+            //LOG(INFO) << "gpu thread got ethash work";
 
             if (work->epoch != dag.getEpoch()) {
-                LOG(INFO) << "dag epoch outdated, stopping task";
                 break; //terminate task
             }
 
@@ -93,22 +86,16 @@ namespace miner {
                 }
 
                 if (work->expired()) {
-                    LOG(INFO) << "work expired, stop traversing " << std::this_thread::get_id();
                     break; //get new work
                 }
             }
-
-            LOG(INFO) << (!shutdown ? "nonce range fully traversed. " : "stopped traversing nonce range due to shutdown. ") << std::this_thread::get_id();
         }
-        LOG(INFO) << "terminating task " << std::this_thread::get_id();
     }
 
     void AlgoEthashCL::submitShareTask(unique_ptr<WorkResult<kEthash>> result) {
-        //previousTask.wait();
-
-        if (true) {
+        bool workIsValid = true;
+        if (workIsValid) {
             pool.submitWork(std::move(result));
-            //LOG(INFO) << "submitted work";
         }
     }
 
@@ -123,15 +110,12 @@ namespace miner {
 
         auto num = dis(gen);
 
-        for (uint32_t div = 1000000; div < 10000000; div *= 10) {
+        for (uint32_t div = 4000000; div < 1000000000; div *= 10) {
             if (num < UINT32_MAX / div) {
                 results.push_back(work.makeWorkResult<kEthash>());
             }
         }
 
-        if (!results.empty()) {
-            LOG(INFO) << "--------------> found " << results.size() << " results! " << std::this_thread::get_id() << " ("<< log10(nonceBegin) <<")";
-        }
         return results;
     }
 }

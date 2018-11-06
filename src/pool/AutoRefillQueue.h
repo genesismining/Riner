@@ -84,8 +84,9 @@ namespace miner {
             notifyNeedsRefill.notify_one(); //wake up refillTask thread so it notices shutdown == true
         }
 
-        //set "gold master" value that is incremented and replicated by the refillFunc callback
-        //optional clearQueue parameter defines whether the refill queue should be cleared while holding the lock
+        //set "gold master" value that will be incremented and replicated by the refillFunc callback once the queue is
+        //too empty. optional clearQueue parameter defines whether all existing replica of the previous master should be cleared
+        //while holding the lock
         void setMaster(T &&newMaster, bool shouldClearQueue = false) {
             size_t currentSize = 0;
             {
@@ -126,8 +127,6 @@ namespace miner {
                 hasMaster = master != nullptr;
                 currentSize = buffer.size();
             }//unlock
-
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
             if (currentSize < refillThreshold && hasMaster) {
                 notifyNeedsRefill.notify_one();
