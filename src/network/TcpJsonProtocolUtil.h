@@ -27,7 +27,7 @@ namespace miner {
         void asyncWrite(std::string request, bool reenterCoroutine = false);
         void asyncWrite(nl::json request, bool reenterCoroutine = false);
 
-        void asyncRead(int debugInt);
+        void asyncRead();
 
         //retries calling the function after a time interval until it returns true for the first time
         void asyncRetryEvery(std::chrono::milliseconds interval, std::function<bool()> &&pred);

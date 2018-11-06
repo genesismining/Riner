@@ -30,7 +30,6 @@ namespace miner {
         thread = std::make_unique<std::thread>([this]() {
             try {
                 while(true) {
-                    LOG(WARNING) << "(re) starting ioService.run()";
                     ioService.run();
 
                     if (shutdown) {
@@ -46,13 +45,11 @@ namespace miner {
             catch (std::exception &e) {
                 LOG(ERROR) << "uncaught exception in TcpLineProtocolUtil thread: " << e.what();
             }
-            LOG(WARNING) << "ioService thread has finished";
         });
 
     }
 
     TcpLineProtocolUtil::~TcpLineProtocolUtil() {
-        LOG(WARNING) << "TcpLineProtocolUtil destructor called";
         shutdown = true;
         ioService.stop();
 
@@ -63,13 +60,11 @@ namespace miner {
         if (socket.is_open()) {
             socket.close();
         }
-        LOG(WARNING) << "TcpLineProtocolUtil destructor finished";
     }
 
     void TcpLineProtocolUtil::retry(const asio::error_code &reason) {
 
-        if (reason == asio::error::operation_aborted) {//todo: maybe handle this in the respective retry callers
-            LOG(WARNING) << "(maybe nested) retry aborted";
+        if (reason == asio::error::operation_aborted) {//consider handling this in the respective retry callers
             return; //do not retry if the reason is an abort (likely caused by another retry invocation)
         }
 
@@ -104,7 +99,6 @@ namespace miner {
 
             tcp::resolver::query query(host, port);
 
-            LOG(WARNING) << "async_resolve";
             resolver.async_resolve(query, [this](auto &error, auto it) {
                 handleResolve(error, it);
             });
@@ -119,7 +113,6 @@ namespace miner {
         if (!error) {
             //try connect to first endpoint, handleConnect tries the other endpoints if that fails
             tcp::endpoint endpoint = *it;
-            LOG(WARNING) << "async_connect";
             socket.async_connect(endpoint, [this, it](auto &error) {
                 handleConnect(error, it);
             });
@@ -152,11 +145,9 @@ namespace miner {
 
     void TcpLineProtocolUtil::handleEvent(const error_code &error, std::string line) {
         if (error == asio::error::operation_aborted) { //todo: maybe find a more elegant way than this at every handler
-            LOG(WARNING) << "handleEvent aborted";
             return; //this operation was likely aborted by socket.close(), do not proceed.
         }
 
-        LOG(WARNING) << "onEvent";
         onEvent(std::move(line), error, coroutine);
 
         if (error) {
@@ -170,7 +161,6 @@ namespace miner {
         std::ostream stream(&request);
         stream << requestLine;
 
-        LOG(WARNING) << "async_write";
         asio::async_write(socket, request, [this, reenterCoroutine] (auto &error, size_t numBytes) {
 
             if (reenterCoroutine || error) {
@@ -179,11 +169,9 @@ namespace miner {
         });
     }
 
-    /*
     void TcpLineProtocolUtil::asyncRead() {
         //read until '\n'
-        LOG(WARNING) << "async_read_until";
-        asio::async_read_until(socket, response, "\n", [this] (auto &error, size_t numBytes) {
+        asio::async_read_until(socket, response, '\n', [this](auto &error, size_t numBytes) {
 
             std::string line = "asio error occured"; //write something the api user will notice in case they forget to check the asio::error
 
@@ -196,42 +184,6 @@ namespace miner {
 
             handleEvent(error, line);
         });
-    }
-*/
-    void TcpLineProtocolUtil::asyncRead(int debugInt) {
-        //read until '\n'
-        auto currentNumAsyncReads = numAsyncReads += debugInt;
-        LOG(WARNING) << "async_read_until " << std::this_thread::get_id() << " val: " << currentNumAsyncReads;
-        MI_EXPECTS(currentNumAsyncReads <= 20000);
-        asio::async_read_until(socket, response, '\n', [this, debugInt] (auto &error, size_t numBytes) {
-            numAsyncReads -= debugInt;
-
-            std::string line = "asio line error occured"; //write something the api user will notice in case they forget to check the asio::error
-
-            if (!error) {
-                if (numBytes != 0) {
-
-                    std::istream stream(&response);
-
-                    std::vector<char> buf(numBytes);
-                    stream.read(buf.data(), buf.size());
-                    line = std::string(buf.data(), buf.size());
-
-                    if (line[line.size() - 1] != '\n') {
-                        LOG(INFO) << "async_read_until: line does not end with \\n, line: " << line;
-                    }
-                    //std::getline(stream, line);
-                }
-                else {
-                    LOG(INFO) << "NUMBYTES IS ZERO";
-                }
-            }
-
-            MI_EXPECTS(line.size() == strlen(line.c_str()));
-
-            handleEvent(error, line);
-        });
-
     }
 
     void TcpLineProtocolUtil::asyncRetryEvery(std::chrono::milliseconds interval, std::function<bool()> &&pred) {
@@ -270,7 +222,6 @@ namespace miner {
                 }
                 else {
                     shared->timer = asio::steady_timer{ioService, interval};
-                    LOG(WARNING) << "async_wait";
                     shared->timer.async_wait(shared->waitHandler);
                 }
 

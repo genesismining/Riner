@@ -11,26 +11,12 @@ namespace miner {
         auto onLineEvent = [this] (std::string line, auto &error, auto &coroutine) {
 
             bool onEventCalled = false;
-            while (!onEventCalled) {
+            while (!onEventCalled) {//repeat until onEvent is called, so that the ioService thread is not left without work
                 try {
                     if (line == "")
                         line = "{}"; //create valid json if empty string is passed
                     else {
-                        LOG(WARNING) << "                                " << "<== " << line.size() << ", "
-                                     << strlen(line.c_str());
                         LOG(INFO) << "                                   " << "<-- " << line;
-                    }
-
-
-                    if (false)
-                    if (line.find("mining.notify") != std::string::npos) {//TODO: remove, this is debug stuff
-                        static int i = 0;
-                        ++i;
-                        if (i > 2 && (i % 2 == 0)) {
-                            LOG(DEBUG) << "cutting the string";
-                            line = line.substr(line.size() / 2); //cut off half to see what happens
-                            LOG(INFO) << "                                   " << "<<< " << line;
-                        }
                     }
 
                     bool allowExceptions = false;
@@ -38,7 +24,6 @@ namespace miner {
                     if (jsonLine.is_discarded()) {
                         LOG(ERROR) << "json got discarded";
                     } else {
-                        LOG(WARNING) << "json onEvent";
                         onEventCalled = true;
                         onEvent(std::move(jsonLine), error, coroutine);
                     }
