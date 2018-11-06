@@ -33,7 +33,7 @@ namespace miner {
                 ioService.run();
             }
             catch(std::exception &e) {
-                LOG(ERROR) << e.what();
+                LOG(ERROR) << "uncaught exception in TcpLineSubscription thread: " << e.what();
             }
         });
     }

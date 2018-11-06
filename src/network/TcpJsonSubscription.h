@@ -5,6 +5,7 @@
 #include <src/common/StringSpan.h>
 #include <src/common/JsonForward.h>
 #include <functional>
+#include <chrono>
 
 namespace miner {
     class TcpLineSubscription;

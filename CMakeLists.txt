@@ -20,6 +20,8 @@ add_executable(Miner
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
+        src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
+        src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
