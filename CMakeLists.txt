@@ -22,6 +22,8 @@ add_executable(Miner
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
+        src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
+        src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
