@@ -4,6 +4,7 @@
 #include <src/pool/Pool.h>
 #include <src/pool/WorkEthash.h>
 #include <src/network/TcpJsonProtocolUtil.h>
+#include <src/network/TcpJsonRpcProtocolUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/pool/WorkQueue.h>
@@ -46,25 +47,14 @@ namespace miner {
 
         std::vector<std::shared_ptr<EthashStratumProtocolData>> protocolDatas;
 
-        std::list<int> pendingShareIds; //submitted shares that have not yet been accepted or rejected
-        bool isPendingShare(int id) const;
-        int highestJsonRpcId = 0;
+        void restart();
+        TcpJsonRpcProtocolUtil jrpc;
 
-        void tcpCoroutine(nl::json response, asio::error_code, asio::coroutine &);
-        void resetCoroutine(asio::coroutine &coro);
         unique_ptr<TcpJsonProtocolUtil> tcp;
 
-        bool acceptsMiningNotifyMessages = false;
+        bool acceptMiningNotify = false;
 
-        std::string makeMiningSubscribeMsg();
-        std::string makeMiningAuthorizeMsg();
-        std::string makeSubmitMsg(const WorkResult<kEthash> &,
-                const EthashStratumProtocolData &, int shareid);
-
-        void onMiningNotify (nl::json &j);
-        void onSetExtraNonce(nl::json &j);
-        void onSetDifficulty(nl::json &j);
-        void onShareAcceptedOrDenied(nl::json &j);
+        void onMiningNotify (const nl::json &j);
     };
 
 }

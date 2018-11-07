@@ -16,7 +16,7 @@ namespace miner {
     }
 
     JrpcBuilder::JrpcBuilder(cstring_span version) {
-        json["jsonrpc"] = nl::json(version);
+        json["jsonrpc"] = gsl::to_string(version);
     }
 
     JrpcBuilder &JrpcBuilder::method(cstring_span name) {
@@ -24,12 +24,8 @@ namespace miner {
         return *this;
     }
 
-    JrpcBuilder &JrpcBuilder::param(cstring_span val) {
-        return param(nl::json(val));
-    }
-
     JrpcBuilder &JrpcBuilder::param(const nl::json &val) {
-        MI_EXPECTS(!json.is_object()); //did you add a named param before and are now adding an unnamed one?
+        MI_EXPECTS(!json.count("params") || !json.at("params").is_object()); //did you add a named param before and are now adding an unnamed one?
 
         auto &jparams = json["params"];
         jparams.push_back(val);
@@ -37,11 +33,15 @@ namespace miner {
     }
 
     JrpcBuilder &JrpcBuilder::param(cstring_span name, const nl::json &val) {
-        MI_EXPECTS(!json.is_array()); //did you add an unnamed param before and are now adding a named one?
+        MI_EXPECTS(!json.count("params") || !json.at("params").is_array()); //did you add an unnamed param before and are now adding a named one?
 
         auto &jparams = json["params"];
         jparams[gsl::to_string(name)] = val;
         return *this;
+    }
+
+    JrpcBuilder &JrpcBuilder::param(const char *val) {
+        return param(static_cast<const nl::json &>(std::string(val)));
     }
 
     JrpcBuilder &JrpcBuilder::onResponse(ResponseFunc &&func) {
@@ -50,13 +50,17 @@ namespace miner {
     }
 
     optional<int> JrpcBuilder::getId() const {
-        if (json.count("id"))
-            return {json.at("id")};
+        //todo: decide whether to handle "null" id differently
+        if (json.count("id")) {
+            auto &jid = json.at("id");
+            if (jid.is_number())
+                return jid.get<int>();
+        }
         return nullopt;
     }
 
     JrpcBuilder &JrpcBuilder::id(int val) {
-        rpcId = val;
+        json["id"] = val;
         return *this;
     }
 
@@ -82,10 +86,10 @@ namespace miner {
         return nullopt;
     }
 
-    nl::json JrpcResponse::result() const {
+    optional<nl::json> JrpcResponse::result() const {
         if (json.count("result"))
-            return json.at("result");
-        return {};
+            return {json.at("result")};
+        return nullopt;
     }
 
     optional<JrpcError> JrpcResponse::error() const {
@@ -93,4 +97,5 @@ namespace miner {
             return {json.at("error")};
         return nullopt;
     }
+
 }

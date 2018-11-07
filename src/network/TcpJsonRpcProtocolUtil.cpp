@@ -3,8 +3,6 @@
 
 #include "TcpJsonRpcProtocolUtil.h"
 #include <utility>
-
-#include <src/network/TcpJsonProtocolUtil.h>
 #include <src/common/Assert.h>
 
 namespace miner {
@@ -16,6 +14,8 @@ namespace miner {
                 (auto responseJson, auto &error, auto &coro) {
             onJsonEvent(std::move(responseJson), error, coro);
         });
+
+        tcpJson->launch();
     }
 
     void TcpJsonRpcProtocolUtil::removeOutdatedPendingRpcs() {
@@ -33,22 +33,33 @@ namespace miner {
 
     void TcpJsonRpcProtocolUtil::onJsonEvent(nl::json json, const asio::error_code &, asio::coroutine &) {
 
-        if (!json.empty()) {
-
+        if (json.empty()) {
+            if (!isStarted) {
+                isStarted = true;
+                onRestartFunc();
+            }
+        }
+        else {
+            bool msgHandled = false;
             JrpcResponse res(json);
 
-            if (auto id = res.id()) {
+            bool isResponse = res.error() || res.result();
 
-                auto it = pendingRpcs.find(id.value());
+            if (res.id() && isResponse) {
+
+                auto it = pendingRpcs.find(res.id().value());
                 if (it != pendingRpcs.end()) {
                     JrpcBuilder &rpc = it->second.rpc;
 
                     rpc.callResponseFunc(res);
 
                     pendingRpcs.erase(it);
+                    msgHandled = true;
                 }
+
             }
-            else {
+
+            if (!msgHandled) {
                 onReceiveFunc(res);
             }
         }
@@ -58,58 +69,69 @@ namespace miner {
         tcpJson->asyncRead();
     }
 
-    void TcpJsonRpcProtocolUtil::setOnReceive(TcpJsonRpcProtocolUtil::OnReceiveFunc &&func) {
+    void TcpJsonRpcProtocolUtil::setOnReceive(OnReceiveFunc &&func) {
         onReceiveFunc = std::move(func);
     }
 
-    void TcpJsonRpcProtocolUtil::setOnRestart(OnRestartFunc &&func ) {
+    void TcpJsonRpcProtocolUtil::setOnRestart(std::function<void()> &&func ) {
         onRestartFunc = std::move(func);
     }
 
     void TcpJsonRpcProtocolUtil::call(JrpcBuilder rpc) {
-        if (!rpc.getId()) {
-            auto id = ++highestUsedIdYet;
-            rpc.id(id);
+        assignIdIfNecessary(rpc);
 
-            MI_EXPECTS(pendingRpcs.count(id) == 0); //id should not exist yet
+        tcpJson->asyncWrite(rpc.getJson());
 
-            tcpJson->asyncWrite(rpc.getJson());
+        auto id = rpc.getId().value();
+        MI_EXPECTS(pendingRpcs.count(id) == 0); //id should not exist yet
 
-            pendingRpcs.emplace(std::make_pair(id, PendingRpc{
+        pendingRpcs[id] = {
                 std::chrono::system_clock::now(),
                 std::move(rpc)
-            }));
-        }
-    }
-
-    void TcpJsonRpcProtocolUtil::postAsync(std::function<void()> &&func) {
-        tcpJson->postAsync(std::move(func));
+        };
     }
 
     void TcpJsonRpcProtocolUtil::callRetryNTimes(JrpcBuilder rpc, uint32_t triesLimit,
             std::chrono::milliseconds retryInterval,
             std::function<void()> neverRespondedHandler) {
 
-            call(rpc);
+            assignIdIfNecessary(rpc);
 
             int tries = 0;
             auto retryFunc = [this, rpc = std::move(rpc), tries] () mutable {
                 MI_EXPECTS(rpc.getId());
                 auto id = rpc.getId().value();
 
-                if (tries > 5 || !pendingRpcs.count(id)) {
+                if (tries == 0) {
+                    call(rpc); //starts id tracking
+                }
+
+                bool stillPending = pendingRpcs.count(id);
+
+                if (tries >= 5 || !stillPending) {
                     pendingRpcs.erase(id); //remove if it wasn't already removed
                     return true; //don't retry
                 }
 
-                if (tries != 0) {//0th try is done within 'call(rpc)' outside of this lambda
+                if (tries > 0) {//tracking already started, just resend the string
+                    LOG(INFO) << "retrying to send share with id " << id
+                    << " (try #" << (tries + 1) << ")";
+
                     tcpJson->asyncWrite(rpc.getJson().dump());
                 }
                 ++tries;
+
                 return false; //retry later
             };
 
             tcpJson->asyncRetryEvery(retryInterval, retryFunc);
+    }
+
+    void TcpJsonRpcProtocolUtil::assignIdIfNecessary(JrpcBuilder &rpc) {
+        if (!rpc.getId()) {
+            rpc.id(++highestUsedIdYet);
+        }
+        MI_ENSURES(rpc.getId());
     }
 
 

@@ -5,6 +5,7 @@
 #include <src/common/Json.h>
 #include <src/common/Optional.h>
 
+
 namespace miner {
 
     struct JrpcError {
@@ -35,12 +36,12 @@ namespace miner {
 
         optional<JrpcError> error() const;
 
-        nl::json result() const; //returns empty json if error
+        optional<nl::json> result() const; //returns empty json if error
 
         optional<int> id() const;
 
         template<class T>
-        bool safeAtEquals(const char *key, const T &t) const {
+        bool atEquals(const char *key, const T &t) const {
             return json.count(key) && json.at(key) == t;
         }
     };
@@ -53,8 +54,8 @@ namespace miner {
         //builder pattern methods
         JrpcBuilder &method(cstring_span name);
 
-        JrpcBuilder &param(cstring_span val);
         JrpcBuilder &param(const nl::json &val);
+        JrpcBuilder &param(const char *val);
         JrpcBuilder &param(cstring_span name, const nl::json &val);
 
         JrpcBuilder &onResponse(ResponseFunc &&func);
@@ -67,12 +68,11 @@ namespace miner {
 
         void callResponseFunc(const JrpcResponse &);
 
-    private:
-        JrpcBuilder(cstring_span version = "2.0");
+        explicit JrpcBuilder(cstring_span version = "2.0");
 
+    private:
         ResponseFunc responseFunc;
 
         nl::json json;
-        optional<int> rpcId;
     };
 }

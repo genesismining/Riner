@@ -4,6 +4,7 @@
 #include <functional>
 #include <src/network/JrpcBuilder.h>
 #include <src/common/Pointers.h>
+#include <src/network/TcpJsonProtocolUtil.h>
 #include <asio.hpp>
 #include <map>
 
@@ -12,13 +13,16 @@ namespace miner {
 
     class TcpJsonRpcProtocolUtil {
     public:
-        using OnRestartFunc = std::function<void()>; //called when reconnected
         using OnReceiveFunc = std::function<void(const JrpcResponse &j)>;
 
         explicit TcpJsonRpcProtocolUtil(cstring_span host, cstring_span port);
 
 
-        void setOnRestart(OnRestartFunc &&);
+        void setOnRestart(std::function<void()> &&);
+
+        void callRetryNTimes(JrpcBuilder rpc, uint32_t numTries,
+                             std::chrono::milliseconds retryInterval,
+                             std::function<void()> neverRespondedHandler);
 
         //set a callback that is called whenever a json rpc call/notification/response
         //is received that is not a response to a pending call
@@ -26,13 +30,18 @@ namespace miner {
 
         void call(JrpcBuilder);
 
+        template<class Fn>
+        void postAsync(Fn &&func) {
+            tcpJson->postAsync(std::forward<Fn>(func));
+        }
+
+        void assignIdIfNecessary(JrpcBuilder &);
+
     private:
-        OnRestartFunc onRestartFunc; //may not be initialized
+        std::function<void()> onRestartFunc; //may not be initialized
         OnReceiveFunc onReceiveFunc; //may not be initialized
 
         int highestUsedIdYet = 0;
-
-        void postAsync(std::function<void()> &&);
 
         void removeOutdatedPendingRpcs();
 
@@ -43,13 +52,11 @@ namespace miner {
             JrpcBuilder rpc;
         };
 
+        bool isStarted = false;
+
         std::map<int, PendingRpc> pendingRpcs;
 
         unique_ptr<TcpJsonProtocolUtil> tcpJson;
-
-        void callRetryNTimes(JrpcBuilder rpc, uint32_t numTries,
-                std::chrono::milliseconds retryInterval,
-                std::function<void()> neverRespondedHandler);
     };
 
 }
