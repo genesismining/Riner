@@ -237,10 +237,10 @@ namespace miner {
     }
 
     void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> result) {
+
         //build and send submitMessage on the tcp thread
-        LOG(WARNING) << "submit point 0";
         tcp->postAsync([this, result = static_unique_ptr_cast<WorkResult<kEthash>>(std::move(result))] {
-            LOG(WARNING) << "submit point 1";
+
             //obtain protoData shared_ptr (fails if associated work has expired)
             if (auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>()) {
 
@@ -249,8 +249,9 @@ namespace miner {
                 int tries = 0;
 
                 auto submitRetryFunc = [this, msg, id, tries] () mutable {
-                    LOG(WARNING) << "submit point 2: ok";
-                    LOG(INFO) << "submitRetryFunc called for id " << id << " try#" << tries;
+                    if (tries > 0)
+                        LOG(INFO) << "retrying to submit share with id " << id << "(try #" << tries+1 << ")";
+
                     if (tries > 5 || !isPendingShare(id)) {
                         pendingShareIds.remove(id); //remove if it wasn't already removed
                         return true; //don't retry
@@ -258,13 +259,12 @@ namespace miner {
 
                     tcp->asyncWrite(msg);
                     ++tries;
-                    return true; //retry later
+                    return false; //retry later
                 };
 
                 tcp->asyncRetryEvery(std::chrono::seconds(5), submitRetryFunc);
             }
         });
-        LOG(WARNING) << "submit point 0.5";
     }
 
     uint64_t PoolEthashStratum::getPoolUid() const {

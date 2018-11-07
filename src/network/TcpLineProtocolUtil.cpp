@@ -124,7 +124,7 @@ namespace miner {
 
     void TcpLineProtocolUtil::handleConnect(const error_code &error, tcp::resolver::iterator it) {
         if (!error) {
-            LOG(INFO) << "successfully connected.";
+            LOG(INFO) << "successfully connected to " << host << ':' << port;
             //successfully connected, enter onEvent coroutine for the first time
             handleEvent(error_code(), "");
         } else if (it != tcp::resolver::iterator()) {//default constructed iterator is "end"
@@ -202,19 +202,16 @@ namespace miner {
 
         shared->waitHandler = [this, weak, interval]
                 (const error_code &error) {
-            LOG(INFO) << "Wait handler start";
 
-            if (error) {
-                LOG(INFO) << "error " << error;
+            if (error && error != asio::error::operation_aborted) {
+                LOG(INFO) << "wait handler error " << error;
                 return;
             }
 
             if (auto shared = weak.lock()) {
 
                 if (shared->pred()) {
-                    LOG(INFO) << "erase ";
-
-                    activeRetries.lock()->erase(shared->it); //'shared' is now the last ref
+                    activeRetries.lock()->erase(shared->it); //'shared' now has the last ref
 
                     //'shared' is the last reference to this function, do not let this
                     //function continue in a destroyed state
