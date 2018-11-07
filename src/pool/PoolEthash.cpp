@@ -249,9 +249,6 @@ namespace miner {
                 int tries = 0;
 
                 auto submitRetryFunc = [this, msg, id, tries] () mutable {
-                    if (tries > 0)
-                        LOG(INFO) << "retrying to submit share with id " << id << "(try #" << tries+1 << ")";
-
                     if (tries > 5 || !isPendingShare(id)) {
                         pendingShareIds.remove(id); //remove if it wasn't already removed
                         return true; //don't retry
