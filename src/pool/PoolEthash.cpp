@@ -46,6 +46,10 @@ namespace miner {
                 ret.atEquals("method", "mining.notify")) {
                 onMiningNotify(ret.getJson());
             }
+            else if (ret.getJson().count("method")) {
+                //unsupported method
+                jrpc.respond({ret.id(), {JrpcError::method_not_found, "method not supported"}});
+            }
             else {
                 LOG(INFO) << "unhandled response: " << ret.getJson().dump();
             }
@@ -92,18 +96,14 @@ namespace miner {
 
             auto submit = std::make_shared<JrpcBuilder>();
 
-            auto hexNonce = "0x" + HexString(result->nonce).str();
-            auto hexPowHash = "0x" + HexString(result->proofOfWorkHash).str();
-            auto hexMixHash = "0x" + HexString(result->mixHash).str();
-
             submit->method("mining.submit")
                 .param(args.username)
                 .param(protoData.value()->jobId)
-                .param(hexNonce)
-                .param(hexPowHash)
-                .param(hexMixHash);
+                .param("0x" + HexString(result->nonce).str())
+                .param("0x" + HexString(result->proofOfWorkHash).str())
+                .param("0x" + HexString(result->mixHash).str());
 
-            submit->onResponse([] (const JrpcResponse &ret) {
+            submit->onResponse([] (auto &ret) {
                 auto idStr = ret.id() ? std::to_string(ret.id().value()) : "<no id>";
                 bool accepted = ret.atEquals("result", true);
 

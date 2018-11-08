@@ -20,10 +20,11 @@ namespace miner {
         };
         Code code = uninitialized;
         std::string message;
-        nl::json data;
-        nl::json errorJson;
+        optional<nl::json> data;
+        nl::json errorJson; //full json
 
-        JrpcError(const nl::json &);
+        JrpcError(Code code, cstring_span message, const optional<nl::json> &data = nullopt);;
+        explicit JrpcError(const nl::json &);
     };
 
     //utility class for reading/checking whether entries exist
@@ -31,6 +32,7 @@ namespace miner {
         nl::json json;
     public:
         explicit JrpcResponse(const nl::json &);
+        JrpcResponse(optional<int> id, const JrpcError &, cstring_span version = "2.0");
 
         const nl::json &getJson() const;
 
@@ -62,6 +64,7 @@ namespace miner {
 
         //set a custom id, if no id is set, the TcpJsonRpcProtocolUtil will choose an unused one automatically
         JrpcBuilder &id(int val);
+        JrpcBuilder &id(optional<int> val);
 
         optional<int> getId() const;
         const nl::json &getJson() const;

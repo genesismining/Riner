@@ -15,6 +15,12 @@ namespace miner {
         errorJson = j;
     }
 
+    JrpcError::JrpcError(JrpcError::Code code, cstring_span message, const optional<nl::json> &data)
+    : code(code)
+    , message(gsl::to_string(message))
+    , data(data) {
+    }
+
     JrpcBuilder::JrpcBuilder(cstring_span version) {
         json["jsonrpc"] = gsl::to_string(version);
     }
@@ -72,9 +78,30 @@ namespace miner {
         responseFunc(response);
     }
 
+    JrpcBuilder &JrpcBuilder::id(optional<int> val) {
+        if (val)
+            json["id"] = val.value();
+        return *this;
+    }
+
     JrpcResponse::JrpcResponse(const nl::json &j)
     : json(j) {
     }
+
+    JrpcResponse::JrpcResponse(optional<int> id, const JrpcError &inErr, cstring_span version) {
+        json["jsonrpc"] = gsl::to_string(version);
+
+        std::string idStr = id ? std::to_string(id.value()) : "null";
+        json["id"] = idStr;
+
+        auto &error = json["error"];
+        error["code"] = inErr.code;
+        error["message"] = inErr.message;
+
+        if (inErr.data)
+            error["data"] = inErr.data.value();
+    }
+
 
     const nl::json &JrpcResponse::getJson() const {
         return json;
@@ -97,5 +124,4 @@ namespace miner {
             return {json.at("error")};
         return nullopt;
     }
-
 }

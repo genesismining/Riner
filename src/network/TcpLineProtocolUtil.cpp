@@ -95,7 +95,7 @@ namespace miner {
             socket = tcp::socket(ioService);
             resolver = tcp::resolver(ioService);
 
-            std::this_thread::sleep_for(std::chrono::seconds(1)); //todo: remove this call, wait async
+            std::this_thread::sleep_for(std::chrono::seconds(10)); //todo: remove this call?, wait async
 
             tcp::resolver::query query(host, port);
 

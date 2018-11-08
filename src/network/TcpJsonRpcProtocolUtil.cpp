@@ -134,5 +134,9 @@ namespace miner {
         MI_ENSURES(rpc.getId());
     }
 
+    void TcpJsonRpcProtocolUtil::respond(const JrpcResponse &response) {
+        tcpJson->asyncWrite(response.getJson());
+    }
+
 
 }

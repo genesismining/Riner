@@ -29,6 +29,7 @@ namespace miner {
         void setOnReceive(OnReceiveFunc &&);
 
         void call(JrpcBuilder);
+        void respond(const JrpcResponse &);
 
         template<class Fn>
         void postAsync(Fn &&func) {
