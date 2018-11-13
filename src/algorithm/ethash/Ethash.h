@@ -2,10 +2,26 @@
 #pragma once
 
 #include <stdint.h>
+#include <src/pool/WorkEthash.h>
+#include <src/util/DynamicBuffer.h>
 
-namespace ethash {
+namespace miner {
 
-    static const uint64_t dag_sizes[2048] = {
+#define EthGetCacheSize(EpochNum)    cache_sizes[EpochNum]
+#define EthGetDAGSize(EpochNum)        dag_sizes[EpochNum]
+
+    DynamicBuffer eth_gen_cache(uint32_t epoch, const Bytes<32> &seedHash);
+
+    struct EthashRegenhashResult {
+        Bytes<32> proofOfWorkHash;
+        Bytes<32> mixHash;
+    };
+
+    EthashRegenhashResult ethash_regenhash(Work<kEthash> &work, ByteSpan<> dagCache, uint64_t nonce);
+
+    uint32_t EthCalcEpochNumber(Bytes<32> &SeedHash);
+
+    constexpr static const uint64_t dag_sizes[2048] = {
             1073739904U, 1082130304U, 1090514816U, 1098906752U, 1107293056U,
             1115684224U, 1124070016U, 1132461952U, 1140849536U, 1149232768U,
             1157627776U, 1166013824U, 1174404736U, 1182786944U, 1191180416U,
@@ -418,7 +434,7 @@ namespace ethash {
             18228444544U, 18236833408U, 18245220736U
     };
 
-    static const uint64_t cache_sizes[2048] = {
+    constexpr static const uint64_t cache_sizes[2048] = {
             16776896U, 16907456U, 17039296U, 17170112U, 17301056U, 17432512U, 17563072U,
             17693888U, 17824192U, 17955904U, 18087488U, 18218176U, 18349504U, 18481088U,
             18611392U, 18742336U, 18874304U, 19004224U, 19135936U, 19267264U, 19398208U,
@@ -747,14 +763,5 @@ namespace ethash {
             284163136U, 284294848U, 284426176U, 284556992U, 284687296U, 284819264U,
             284950208U, 285081536U
     };
-
-#define EthGetCacheSize(EpochNum)    cache_sizes[EpochNum]
-#define EthGetDAGSize(EpochNum)        dag_sizes[EpochNum]
-
-    void eth_gen_cache(struct pool *);
-
-    void ethash_regenhash(struct work *work);
-
-    uint32_t EthCalcEpochNumber(uint8_t *SeedHash);
 
 }
