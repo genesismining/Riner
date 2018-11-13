@@ -18,6 +18,8 @@ add_executable(Miner
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
+        src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
+        src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/network/TcpLineSubscription.cpp src/network/TcpLineSubscription.h
         src/network/TcpJsonSubscription.cpp src/network/TcpJsonSubscription.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
