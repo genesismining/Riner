@@ -24,11 +24,11 @@ namespace miner {
         uint64_t double_words[16 / 2];
     } Node;
 
-    uint32_t EthCalcEpochNumber(Bytes<32> &SeedHash) {
+    uint32_t EthCalcEpochNumber(cByteSpan<32> SeedHash) {
         uint8_t TestSeedHash[32] = {0};
 
         for (uint32_t Epoch = 0; Epoch < 2048; ++Epoch) {
-            if (!memcmp(TestSeedHash, SeedHash.begin(), 32))
+            if (!memcmp(TestSeedHash, SeedHash.data(), 32))
                 return Epoch;
             SHA3_256(TestSeedHash, TestSeedHash, 32);
         }
@@ -115,12 +115,10 @@ namespace miner {
     }
 
 
-    EthashRegenhashResult ethash_regenhash(Work<kEthash> &work, ByteSpan<> dagCache, uint64_t nonce) {
+    EthashRegenhashResult ethash_regenhash(const Work<kEthash> &work, cByteSpan<> dagCache, uint64_t nonce) {
         EthashRegenhashResult result {};
 
-        auto &log = *el::Loggers::getLogger("default");
-
-        log.debug("Regenhash: First qword of input: 0x%016llX.", nonce);
+        //LOG(DEBUG) << printfStr("Regenhash: First qword of input: 0x%016llX.", nonce);
 
         MI_EXPECTS(work.header.size() == 32); //assumed by LightEthash
         LightEthash(result.proofOfWorkHash.data(), result.mixHash.data(),
@@ -129,17 +127,17 @@ namespace miner {
 
         std::reverse(result.proofOfWorkHash.begin(), result.proofOfWorkHash.end());
 
-        log.debug("Last ulong: 0x%016llX.", *(uint64_t *)&result.proofOfWorkHash[24]);
+        //LOG(DEBUG) << printfStr("Last ulong: 0x%016llX.", *(uint64_t *)&result.proofOfWorkHash[24]);
         return result;
     }
 
     // Output (cache_nodes) MUST have at least cache_size bytes
-    static void EthGenerateCache(uint8_t *cache_nodes_inout, uint64_t cache_nodes_bytesize, const Bytes<32> &seedhash)
+    static void EthGenerateCache(uint8_t *cache_nodes_inout, uint64_t cache_nodes_bytesize, cByteSpan<32> &seedhash)
     {
         auto const num_nodes = (uint32_t)(cache_nodes_bytesize / sizeof(Node));
         Node *cache_nodes = (Node *)cache_nodes_inout;
 
-        sha3_512(cache_nodes[0].bytes, 64, seedhash.begin(), 32);
+        sha3_512(cache_nodes[0].bytes, 64, seedhash.data(), 32);
 
         for(uint32_t i = 1; i != num_nodes; ++i) {
             SHA3_512(cache_nodes[i].bytes, cache_nodes[i - 1].bytes, 64);
@@ -159,10 +157,9 @@ namespace miner {
         }
     }
 
-    DynamicBuffer eth_gen_cache(uint32_t epoch, const Bytes<32> &seedHash) {
+    DynamicBuffer eth_gen_cache(uint32_t epoch, cByteSpan<32> &seedHash) {
 
         DynamicBuffer dagCache(EthGetCacheSize(epoch));
-
         EthGenerateCache(dagCache.data(), (size_t)dagCache.size_bytes(), seedHash);
 
         return dagCache;

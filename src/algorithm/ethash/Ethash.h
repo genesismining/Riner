@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <src/pool/WorkEthash.h>
+#include <src/common/Span.h>
 #include <src/util/DynamicBuffer.h>
 
 namespace miner {
@@ -10,16 +11,16 @@ namespace miner {
 #define EthGetCacheSize(EpochNum)    cache_sizes[EpochNum]
 #define EthGetDAGSize(EpochNum)        dag_sizes[EpochNum]
 
-    DynamicBuffer eth_gen_cache(uint32_t epoch, const Bytes<32> &seedHash);
+    DynamicBuffer eth_gen_cache(uint32_t epoch, cByteSpan<32> &seedHash);
 
     struct EthashRegenhashResult {
         Bytes<32> proofOfWorkHash;
         Bytes<32> mixHash;
     };
 
-    EthashRegenhashResult ethash_regenhash(Work<kEthash> &work, ByteSpan<> dagCache, uint64_t nonce);
+    EthashRegenhashResult ethash_regenhash(const Work<kEthash> &work, cByteSpan<> dagCache, uint64_t nonce);
 
-    uint32_t EthCalcEpochNumber(Bytes<32> &SeedHash);
+    uint32_t EthCalcEpochNumber(cByteSpan<32> SeedHash);
 
     constexpr static const uint64_t dag_sizes[2048] = {
             1073739904U, 1082130304U, 1090514816U, 1098906752U, 1107293056U,

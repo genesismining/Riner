@@ -3,6 +3,8 @@
 
 #include <mutex>
 #include <src/common/OpenCL.h>
+#include <src/pool/Work.h>
+#include <src/common/Optional.h>
 #include <src/common/Span.h>
 
 namespace miner {
@@ -19,15 +21,11 @@ namespace miner {
 
         bool valid = false;
     public:
-        void generate(uint32_t epoch, ByteSpan<32> seedHash, const cl::Device &device);
+        void generate(uint32_t epoch, cByteSpan<32> seedHash, const cl::Device &device);
 
         uint32_t getEpoch() const;
 
         operator bool() const;
-    };
-
-    class DagCacheContainer {
-
     };
 
 }

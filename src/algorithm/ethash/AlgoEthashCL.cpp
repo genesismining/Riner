@@ -6,6 +6,7 @@
 #include <src/common/Future.h>
 #include <random>
 #include <src/util/HexString.h> //for debug logging hex
+#include "Ethash.h"
 
 namespace miner {
 
@@ -37,9 +38,13 @@ namespace miner {
             if (!work)
                 continue; //check shutdown and try again
 
-            LOG(INFO) << "use work to generate dag...";
+            LOG(INFO) << "using work to generate dag";
 
-            dag.generate(work->epoch, work->seedHash, clDevice); //~ every 5 days
+            //~ every 5 days
+            dagCaches.lock()->generateIfNeeded(work->epoch, work->seedHash);
+            dag.generate(work->epoch, work->seedHash, clDevice);
+
+            LOG(INFO) << "launching gpu subtasks";
 
             std::vector<std::future<void>> tasks(numGpuSubTasks);
 
@@ -48,6 +53,7 @@ namespace miner {
                 task = std::async(std::launch::async, &AlgoEthashCL::gpuSubTask, this,
                                   std::ref(clDevice), std::ref(dag));
             }
+
             //tasks destructor waits
             //tasks terminate if epoch has changed for every task's work
         }
@@ -55,14 +61,12 @@ namespace miner {
     }
 
     void AlgoEthashCL::gpuSubTask(const cl::Device &clDevice, DagFile &dag) {
-        const uint32_t intensity = 24 * 1000;
+        const uint32_t intensity = 1000;
 
         while (!shutdown) {
-            auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
+            std::shared_ptr<const Work<kEthash>> work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
-
-            //LOG(INFO) << "gpu thread got ethash work";
 
             if (work->epoch != dag.getEpoch()) {
                 break; //terminate task
@@ -75,14 +79,11 @@ namespace miner {
                 uint64_t nonceBegin = nonce | shiftedExtraNonce;
                 uint64_t nonceEnd = nonceBegin + intensity;
 
-                auto results = runKernel(clDevice, *work, nonceBegin, nonceEnd);
+                auto resultNonces = runKernel(clDevice, *work, nonceBegin, nonceEnd);
 
-                if (!results.empty()) {
-                    auto submitGuard = submitTasks.lock();
-                    for (auto &result : results)
-                        submitGuard->push_back(std::async(std::launch::async, &AlgoEthashCL::submitShareTask, this,
-                                                          std::move(result)));
-                    //submitGuard unlocks
+                if (!resultNonces.empty()) {
+                    submitTasks.lock()->push_back(std::async(std::launch::async,
+                            &AlgoEthashCL::submitShareTask, this, work, std::move(resultNonces)));
                 }
 
                 if (work->expired()) {
@@ -92,29 +93,49 @@ namespace miner {
         }
     }
 
-    void AlgoEthashCL::submitShareTask(unique_ptr<WorkResult<kEthash>> result) {
-        bool workIsValid = true;
-        if (workIsValid) {
-            pool.submitWork(std::move(result));
+    void AlgoEthashCL::submitShareTask(std::shared_ptr<const Work<kEthash>> work, std::vector<uint64_t> resultNonces) {
+
+        for (auto nonce : resultNonces) {//for each possible solution
+
+            auto result = work->makeWorkResult<kEthash>();
+
+            //calculate proof of work hash from nonce and dag-caches
+            {
+                auto caches = dagCaches.lock(); //todo: implement readlock
+                auto hashes = ethash_regenhash(*work, caches->getCache(), nonce);
+
+                result->nonce = nonce;
+                result->proofOfWorkHash = hashes.proofOfWorkHash;
+                result->mixHash = hashes.mixHash;
+            }
+
+            //TODO: verify that the byte order of these works with std::array operator<();
+            bool isValidSolution = result->proofOfWorkHash < work->target;
+
+            if (isValidSolution)
+                pool.submitWork(std::move(result));
+            else {
+                LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(nonce).str();
+                LOG(WARNING) << "notice: the byte order may be the wrong way for operator<() of std::array to be a correct test against target";
+            }
         }
     }
 
-    std::vector<unique_ptr<WorkResult<kEthash>>> AlgoEthashCL::runKernel(const cl::Device &device, const Work<kEthash> &work,
+    std::vector<uint64_t> AlgoEthashCL::runKernel(const cl::Device &device, const Work<kEthash> &work,
                                 uint64_t nonceBegin, uint64_t nonceEnd) {
 
-        std::vector<unique_ptr<WorkResult<kEthash>>> results;
+        std::vector<uint64_t> results;
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(1, UINT32_MAX);
+        auto &dagCache = *dagCaches.lock(); //(bad!) stealing the actual dagCache reference without holding the lock (TODO: remove)
 
-        auto num = dis(gen);
-
-        for (uint32_t div = 4000000; div < 1000000000; div *= 10) {
-            if (num < UINT32_MAX / div) {
-                results.push_back(work.makeWorkResult<kEthash>());
-            }
+        LOG(INFO) << "starting nonce range [" << nonceBegin << ", " << nonceEnd << ") on thread " << std::this_thread::get_id();
+        for (auto nonce = nonceBegin; nonce < nonceEnd; ++nonce) {
+            auto hashes = ethash_regenhash(work, dagCache.getCache(), nonce);
+            if (hashes.proofOfWorkHash < work.target)
+                results.push_back(nonce);
         }
+        LOG(INFO) << (nonceEnd - nonceBegin) << " nonces traversed on " << std::this_thread::get_id();
+
 
         return results;
     }

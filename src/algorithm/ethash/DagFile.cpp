@@ -1,6 +1,7 @@
 
 
 #include "DagFile.h"
+#include "Ethash.h"
 
 namespace miner {
 
@@ -12,8 +13,13 @@ namespace miner {
         return valid;
     }
 
-    void DagFile::generate(uint32_t epoch, ByteSpan<32> seedHash, const cl::Device &device) {
+    void DagFile::generate(uint32_t epoch, cByteSpan<32> seedHash, const cl::Device &device) {
         valid = true;
+
     }
+
+
+
+
 
 }

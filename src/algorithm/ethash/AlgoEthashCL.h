@@ -6,6 +6,7 @@
 #include <vector>
 #include <src/algorithm/Algorithm.h>
 #include <src/pool/Work.h>
+#include <src/algorithm/ethash/DagCache.h>
 #include <src/algorithm/ethash/DagFile.h>
 #include <src/util/LockUtils.h>
 
@@ -15,7 +16,7 @@ namespace miner {
 
     class AlgoEthashCL : AlgoBase {
 
-        DagCacheContainer dagCaches;
+        LockGuarded<DagCacheContainer> dagCaches;
         WorkProvider &pool;
 
         std::atomic<bool> shutdown {false};
@@ -32,9 +33,10 @@ namespace miner {
         void gpuSubTask(const cl::Device &clDevice, DagFile &dag);
 
         //gets called by gpuSubTask for each result nonce
-        void submitShareTask(unique_ptr<WorkResult<kEthash>> result);
+        void submitShareTask(std::shared_ptr<const Work<kEthash>> work, std::vector<uint64_t> resultNonces);
 
-        std::vector<unique_ptr<WorkResult<kEthash>>> runKernel(const cl::Device &, const Work<kEthash> &,
+        //returns possible solution nonces
+        std::vector<uint64_t> runKernel(const cl::Device &, const Work<kEthash> &,
                 uint64_t nonceBegin, uint64_t nonceEnd);
 
     public:

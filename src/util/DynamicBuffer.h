@@ -15,11 +15,12 @@ namespace miner {
         using value_type = ByteSpan<>::value_type;
         static_assert(sizeof(value_type) == 1, "value_type is expected to be 1 byte");
 
-        gsl::owner<value_type *> owner;
+        gsl::owner<value_type *> owner = nullptr;
         ByteSpan<> buffer;
 
     public:
 
+        DynamicBuffer() = default;
         explicit DynamicBuffer(size_t allocSize); //allocates allocSize bytes
         ~DynamicBuffer();
 
@@ -35,8 +36,20 @@ namespace miner {
             return buffer.data();
         }
 
-        size_t size_bytes() {
+        const uint8_t *data() const {
+            return buffer.data();
+        }
+
+        size_t size_bytes() const {
             return static_cast<size_t>(buffer.size_bytes());
+        }
+
+        cByteSpan<> getSpan() const {
+            return buffer;
+        }
+
+        operator bool() const {
+            return owner != nullptr;
         }
 
     };
