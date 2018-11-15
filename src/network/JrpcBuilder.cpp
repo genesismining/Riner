@@ -108,20 +108,28 @@ namespace miner {
     }
 
     optional<int> JrpcResponse::id() const {
-        if (json.count("id"))
-            return json.at("id").get<int>();
+        if (json.count("id")) {
+            auto & jid = json.at("id");
+            if (jid.is_number())
+                return jid.get<int>();
+        }
         return nullopt;
     }
 
     optional<nl::json> JrpcResponse::result() const {
-        if (json.count("result"))
+        if (!error() && json.count("result")) {
             return {json.at("result")};
+        }
         return nullopt;
     }
 
     optional<JrpcError> JrpcResponse::error() const {
-        if (json.count("error"))
-            return {json.at("error")};
+        if (json.count("error")) {
+            auto &jerr = json.at("error");
+            if (jerr.is_object()) {//check to tolerate invalid JsonRPC
+                return {jerr};
+            }
+        }
         return nullopt;
     }
 }
