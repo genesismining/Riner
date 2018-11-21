@@ -9,6 +9,8 @@
 #include <src/pool/AutoRefillQueue.h>
 #include <random>
 #include <functional>
+#include <src/common/Endian.h>
+#include <src/algorithm/ethash/Ethash.h>
 #include <algorithm> //max
 
 #include <asio.hpp>
@@ -41,7 +43,7 @@ namespace miner {
         });
 
         //set handler for receiving incoming messages that are not responses to sent rpcs
-        jrpc.setOnReceive([this] (const JrpcResponse &ret) {
+        jrpc.setOnReceive([this] (auto &ret) {
             if (acceptMiningNotify &&
                 ret.atEquals("method", "mining.notify")) {
                 onMiningNotify(ret.getJson());
@@ -77,8 +79,11 @@ namespace miner {
         sharedProtoData->jobId = jparams.at(0);
         HexString(jparams[1]).getBytes(work->header);
         HexString(jparams[2]).getBytes(work->seedHash);
-        HexString(jparams[3]).flipByteOrder().getBytes(work->target);
+        HexString(jparams[3]).swapByteOrder().getBytes(work->target);
 
+        //work->epoch is calculated in the refill thread
+
+        cleanFlag = true;
         workQueue->setMaster(std::move(work), cleanFlag);
     }
 
@@ -91,15 +96,17 @@ namespace miner {
         jrpc.postAsync([this, result = std::move(result)] {
 
             auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>();
-            if (!protoData)
+            if (!protoData) {
+                LOG(INFO) << "failed to submit expired work result";
                 return; //work has expired
+            }
 
             auto submit = std::make_shared<JrpcBuilder>();
 
             submit->method("mining.submit")
                 .param(args.username)
                 .param(protoData.value()->jobId)
-                .param("0x" + HexString(result->nonce).str())
+                .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
                 .param("0x" + HexString(result->proofOfWorkHash).str())
                 .param("0x" + HexString(result->mixHash).str());
 
@@ -127,6 +134,11 @@ namespace miner {
         auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
 
         auto refillFunc = [] (auto &out, auto &workMaster, size_t currentSize) {
+
+            if (workMaster->epoch == 0) {//calculate epoch for master if it didn't happen yet
+                workMaster->epoch = EthCalcEpochNumber(workMaster->seedHash);
+            }
+
             for (auto i = currentSize; i < 16; ++i) {
                 ++workMaster->extraNonce;
                 auto newWork = std::make_unique<Work<kEthash>>(*workMaster);

@@ -5,6 +5,7 @@
 #include "Ethash.h"
 #include "EthSha3.h"
 #include <src/util/sph/sph_keccak.h>
+#include <src/common/Endian.h>
 
 #define FNV_PRIME    0x01000193
 
@@ -75,6 +76,7 @@ namespace miner {
         // for the mixing state buffer. The init value is used
         // later for the final hash, and is therefore saved.
         memcpy(TmpBuf, HeaderPoWHash, 32UL);
+        MI_EXPECTS(endian::is_little);
         memcpy(TmpBuf + 8UL, &Nonce, 8UL);
         sha3_512((uint8_t *) TmpBuf, 64UL, (uint8_t *) TmpBuf, 40UL);
 

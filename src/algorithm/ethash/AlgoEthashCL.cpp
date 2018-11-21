@@ -6,6 +6,7 @@
 #include <src/common/Future.h>
 #include <random>
 #include <src/util/HexString.h> //for debug logging hex
+#include <src/common/Endian.h>
 #include "Ethash.h"
 
 namespace miner {
@@ -68,9 +69,14 @@ namespace miner {
             if (!work)
                 continue; //check shutdown and try again
 
-            if (work->epoch != dag.getEpoch()) {
-                break; //terminate task
+            if (work->epoch != dagCaches.lock()->getEpoch()) {//TODO: replace
+                LOG(INFO) << "dagcache epoch (" << dagCaches.lock()->getEpoch() << ") doesn't match work epoch " << work->epoch;
+                break;
             }
+
+            //if (work->epoch != dag.getEpoch()) { //TODO: debug reenable once dagfile exists
+            //    break; //terminate task
+            //}
 
             for (uint64_t nonce = 0; nonce < UINT32_MAX && !shutdown; nonce += intensity) {
 
@@ -100,23 +106,22 @@ namespace miner {
             auto result = work->makeWorkResult<kEthash>();
 
             //calculate proof of work hash from nonce and dag-caches
+            EthashRegenhashResult hashes {};
             {
                 auto caches = dagCaches.lock(); //todo: implement readlock
-                auto hashes = ethash_regenhash(*work, caches->getCache(), nonce);
-
-                result->nonce = nonce;
-                result->proofOfWorkHash = hashes.proofOfWorkHash;
-                result->mixHash = hashes.mixHash;
+                hashes = ethash_regenhash(*work, caches->getCache(), nonce);
             }
 
-            //TODO: verify that the byte order of these works with std::array operator<();
-            bool isValidSolution = result->proofOfWorkHash < work->target;
+            result->nonce = nonce;
+            result->proofOfWorkHash = hashes.proofOfWorkHash;
+            result->mixHash = hashes.mixHash;
+
+            bool isValidSolution = lessThanLittleEndian(result->proofOfWorkHash, work->target);
 
             if (isValidSolution)
                 pool.submitWork(std::move(result));
             else {
-                LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(nonce).str();
-                LOG(WARNING) << "notice: the byte order may be the wrong way for operator<() of std::array to be a correct test against target";
+                LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
             }
         }
     }
@@ -126,13 +131,16 @@ namespace miner {
 
         std::vector<uint64_t> results;
 
-        auto &dagCache = *dagCaches.lock(); //(bad!) stealing the actual dagCache reference without holding the lock (TODO: remove)
+        auto &dagCache = *dagCaches.lock(); //(bad!) stealing the actual dagCache reference without holding the lock (TODO: remove by implementing read lock)
 
         LOG(INFO) << "starting nonce range [" << nonceBegin << ", " << nonceEnd << ") on thread " << std::this_thread::get_id();
         for (auto nonce = nonceBegin; nonce < nonceEnd; ++nonce) {
             auto hashes = ethash_regenhash(work, dagCache.getCache(), nonce);
-            if (hashes.proofOfWorkHash < work.target)
+
+            if (lessThanLittleEndian(hashes.proofOfWorkHash, work.target)) {
+                LOG(INFO) << "result found: nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
                 results.push_back(nonce);
+            }
         }
         LOG(INFO) << (nonceEnd - nonceBegin) << " nonces traversed on " << std::this_thread::get_id();
 
