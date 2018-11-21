@@ -35,7 +35,6 @@ add_executable(Miner
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h
         src/common/Endian.h
-        src/common/Future.h
         src/common/WorkCommon.h
         src/common/Pointers.h
         src/common/StringSpan.h
