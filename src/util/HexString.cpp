@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <src/common/Json.h>
+#include <src/common/Endian.h>
 
 namespace miner {
 
@@ -15,13 +16,6 @@ namespace miner {
     HexString::HexString(cByteSpan<> src)
             : bytes(src.begin(), src.end())
             , parseSuccess(true) {
-
-    }
-
-    HexString::HexString(uint64_t src)
-    : bytes(sizeof(src))
-    , parseSuccess(true) {
-        memcpy(bytes.data(), &src, sizeof(src));
     }
 
     HexString::HexString(const nl::json &json) {
@@ -73,7 +67,7 @@ namespace miner {
         return bytes.size();
     }
 
-    HexString &HexString::flipByteOrder() {
+    HexString &HexString::swapByteOrder() {
         std::reverse(begin(bytes), end(bytes));
         return *this;
     }

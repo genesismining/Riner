@@ -36,6 +36,7 @@ add_executable(Miner
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h
+        src/common/Endian.h
         src/common/Future.h
         src/common/WorkCommon.h
         src/common/Pointers.h

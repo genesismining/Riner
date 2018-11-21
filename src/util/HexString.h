@@ -30,14 +30,18 @@ namespace miner {
         explicit HexString(const std::string &inStr);
         explicit HexString(cstring_span inStr);
         explicit HexString(cByteSpan<> src);
-        explicit HexString(uint64_t src);
+
+        //explicitly delete integral type to hexstring constructors, use utils in common/Endian.h to convert
+        //integral type to byte array first
+        template<class T>
+        HexString(T t, typename std::enable_if<std::is_integral<T>::value>::type* = 0) = delete;
 
         template <size_t N>
         explicit HexString(const std::array<uint8_t, N> &arr)
         : HexString(cByteSpan<>(arr)) {
         }
 
-        HexString &flipByteOrder(); //does not affect where leading zeroes are placed in getBytes
+        HexString &swapByteOrder(); //does not affect where leading zeroes are placed in getBytes
 
         std::string str() const; //returns lowercase hex without "0x"
 
