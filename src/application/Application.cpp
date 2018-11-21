@@ -16,14 +16,9 @@
 
 namespace miner {
 
-    Application::Application(optional<std::string> configPath) {
+    void Application::parseConfig(miner::cstring_span configPath) {
 
-        if (!configPath) {
-            LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
-            return;
-        }
-
-        auto configStr = file::readFileIntoString(configPath.value());
+        auto configStr = file::readFileIntoString(configPath);
         if (!configStr) {
             LOG(ERROR) << "unable to read config file";
             return;
@@ -46,27 +41,35 @@ namespace miner {
 
         auto user = pool.username, password = pool.password;
         LOG(INFO) << "user: " << user << ", password: " << password;
+    }
+
+    Application::Application(optional<std::string> configPath) {
+
+        if (configPath) {
+            parseConfig(configPath.value());
+        }
+        else {
+            LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
+        }
+
+#if 0
+        std::string host = "eth-eu1.nanopool.org", port = "9999";
+#else
+        //std::string host = "localhost", port = "9998";
+        std::string host = "192.168.30.39", port = "3001";
+#endif
 
         ComputeModule compute;
         for (auto &id : compute.getAllDeviceIds()) {
             LOG(INFO) << "device id at: " << &id << " name: " << to_string(id.getName());
         };
 
-        std::string host = "eth-eu1.nanopool.org", port = "9999";
+        auto username = "user";
+        auto password = "password";
 
-        auto poolArgs = PoolConstructionArgs {
-            host, port, pool.username, pool.password
-        };
+        PoolEthashStratum poolEthashStratum({host, port, username, password});
 
-        PoolEthashStratum poolEthashStratum(poolArgs);
-
-        span<DeviceId> devSpan;
-
-        auto args = AlgoConstructionArgs {
-            compute, compute.getAllDeviceIds(), poolEthashStratum
-        };
-
-        AlgoEthashCL algo(args);
+        AlgoEthashCL algo({compute, compute.getAllDeviceIds(), poolEthashStratum});
 
         for (size_t i = 0; i < 60 * 4; ++i) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
