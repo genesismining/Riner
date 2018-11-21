@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <src/common/Future.h>
 #include <src/common/Optional.h>
 #include <src/common/Pointers.h>
 #include <src/common/Assert.h>
@@ -9,6 +8,7 @@
 #include <queue>
 #include <functional>
 #include <chrono>
+#include <future>
 
 namespace miner {
 
