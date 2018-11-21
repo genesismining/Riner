@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "Application.h"
-#include <src/network/TcpJsonSubscription.h>
 #include <src/util/FileUtils.h>
 #include <src/application/Config.h>
 #include <src/util/Logging.h>
@@ -54,7 +53,6 @@ namespace miner {
         };
 
         std::string host = "eth-eu1.nanopool.org", port = "9999";
-        //std::string host = "localhost", port = "9998";
 
         auto poolArgs = PoolConstructionArgs {
             host, port, pool.username, pool.password
@@ -75,28 +73,6 @@ namespace miner {
             //LOG(INFO) << "...";
         }
         LOG(INFO) << "test period over, closing application";
-
-        return;
-
-        auto subscribe = [user, password] (std::ostream &stream) {
-            stream << R"({"jsonrpc": "2.0", "method" : "mining.subscribe", "params" : {"username": ")"
-                      << user << R"(", "password": ")" << password << R"("}, "id": 1})" << "\n";
-        };
-
-        TcpJsonSubscription tcpJson = {"eth-eu1.nanopool.org", "9999", subscribe, [] (auto &json) {
-
-            auto m = json.find("method");
-            if (m != json.end() && *m == "mining.notify") {
-
-                LOG(INFO) << "received json: " << json.dump(4);
-
-            }
-        }};
-
-        for (size_t i = 0; i < 90; ++i) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            LOG(INFO) << "...";
-        }
     }
 
 }

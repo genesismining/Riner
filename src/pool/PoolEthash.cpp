@@ -3,7 +3,6 @@
 #include <src/pool/WorkEthash.h>
 #include <src/util/Logging.h>
 #include <chrono>
-#include <src/network/TcpJsonSubscription.h>
 #include <src/common/Json.h>
 #include <src/util/HexString.h>
 #include <src/pool/AutoRefillQueue.h>
