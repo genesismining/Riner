@@ -3,9 +3,6 @@
 #pragma once
 
 #include <src/common/Span.h>
-#include <src/common/Pointers.h>
-#include <src/common/OpenCL.h>
-#include <atomic>
 
 namespace miner {
     class ComputeModule;

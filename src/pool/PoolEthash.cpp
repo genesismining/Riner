@@ -1,16 +1,15 @@
 
 #include "PoolEthash.h"
+#include <src/algorithm/ethash/Ethash.h>
 #include <src/pool/WorkEthash.h>
-#include <src/util/Logging.h>
-#include <chrono>
-#include <src/common/Json.h>
-#include <src/util/HexString.h>
 #include <src/pool/AutoRefillQueue.h>
+#include <src/util/Logging.h>
+#include <src/util/HexString.h>
+#include <src/common/Json.h>
+#include <src/common/Endian.h>
+#include <chrono>
 #include <random>
 #include <functional>
-#include <src/common/Endian.h>
-#include <src/algorithm/ethash/Ethash.h>
-#include <algorithm> //max
 
 #include <asio.hpp>
 

@@ -3,8 +3,6 @@
 #include <src/compute/ComputeModule.h>
 #include <src/pool/WorkEthash.h>
 #include <src/util/Logging.h>
-#include <src/common/Future.h>
-#include <random>
 #include <src/util/HexString.h> //for debug logging hex
 #include <src/common/Endian.h>
 #include "Ethash.h"

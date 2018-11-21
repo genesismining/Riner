@@ -52,7 +52,7 @@ namespace miner {
             LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
         }
 
-#if 0
+#if 1
         std::string host = "eth-eu1.nanopool.org", port = "9999";
 #else
         //std::string host = "localhost", port = "9998";
