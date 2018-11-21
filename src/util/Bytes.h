@@ -20,21 +20,21 @@ namespace miner {
     }
 
     template<class T>
-    typename std::enable_if<std::is_integral<T>::value, std::array<uint8_t, sizeof(T)>>::type
+    typename std::enable_if<std::is_integral<T>::value, Bytes<sizeof(T)>>::type
     toBytesWithEndian(T src, endian::endian_t endian) {
         return conditionalSwapBytesArray(src, endian != endian::host);
     }
 
     //htobe for arrays
     template<class T>
-    typename std::enable_if<std::is_integral<T>::value, std::array<uint8_t, sizeof(T)>>::type
+    typename std::enable_if<std::is_integral<T>::value, Bytes<sizeof(T)>>::type
     toBytesWithBigEndian(T src) {
         return toBytesWithEndian(src, endian::big);
     }
 
     //htole for arrays
     template<class T>
-    typename std::enable_if<std::is_integral<T>::value, std::array<uint8_t, sizeof(T)>>::type
+    typename std::enable_if<std::is_integral<T>::value, Bytes<sizeof(T)>>::type
     toBytesWithLittleEndian(T src) {
         return toBytesWithEndian(src, endian::little);
     }
