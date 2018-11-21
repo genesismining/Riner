@@ -46,6 +46,7 @@ add_executable(Miner
         src/common/JsonForward.h
         src/common/Assert.h
         src/common/PlatformDefines.h
+        src/util/Bytes.h
         src/util/Logging.h
         src/util/OptionalAccess.h
         src/util/LockUtils.cpp src/util/LockUtils.h

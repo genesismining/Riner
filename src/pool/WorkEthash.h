@@ -4,6 +4,7 @@
 #include <src/pool/Pool.h>
 #include <src/pool/Work.h>
 #include <src/common/Pointers.h>
+#include <src/util/Bytes.h>
 
 namespace miner {
 
