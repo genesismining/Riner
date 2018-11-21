@@ -97,7 +97,7 @@ namespace miner {
 
             auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>();
             if (!protoData) {
-                LOG(INFO) << "failed to submit expired work result";
+                LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
             }
 
