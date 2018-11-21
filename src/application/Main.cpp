@@ -9,7 +9,7 @@ INITIALIZE_EASYLOGGINGPP
 namespace miner {
 
     //this function is used to get a config path until we have a proper argc argv parser
-    optional<std::string> getPathAfterArg(cstring_span minusminusArg, int argc, char *argv[]) {
+    optional<std::string> getPathAfterArg(cstring_span minusminusArg, int argc, const char *argv[]) {
         //minusminusArg is something like "--config"
         size_t pathI = 0;
         for (size_t i = 1; i < argc; ++i) {
@@ -36,7 +36,7 @@ namespace miner {
 
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char *argv[]) {
     using namespace miner;
     START_EASYLOGGINGPP(argc, argv);
 
