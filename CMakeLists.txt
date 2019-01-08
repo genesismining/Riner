@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 project(Miner)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
 
 #OpenCL
 find_package(OpenCL REQUIRED)
@@ -33,6 +33,7 @@ add_executable(Miner
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
+        src/compute/opencl/CLProgramLoader.cpp src/compute/opencl/CLProgramLoader.h
         src/compute/ComputeApiEnums.h
         src/common/Endian.h
         src/common/WorkCommon.h
@@ -67,13 +68,15 @@ add_subdirectory("lib/json")
 add_subdirectory("lib/type_safe")
 add_subdirectory("lib/easyloggingpp")
 
-add_compile_definitions(ASIO_STANDALONE) #tell asio to not include boost headers
-add_compile_definitions(BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
+target_compile_definitions(Miner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
+target_compile_definitions(Miner PUBLIC CL_HPP_TARGET_OPENCL_VERSION=120)
+target_compile_definitions(Miner PUBLIC ASIO_STANDALONE) #tell asio to not include boost headers
+target_compile_definitions(Miner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
 
-add_compile_definitions(ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
-#add_compile_definitions(ELPP_DISABLE_LOGS) #disable all easylogging++ logging
+target_compile_definitions(Miner PUBLIC ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
+#target_compile_definitions(Miner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
 
-#add_compile_definitions(GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
+#target_compile_definitions(Miner PUBLIC GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
 
 include_directories(
         lib/asio/asio/include
@@ -84,6 +87,9 @@ include_directories(
         lib/type_safe/external/debug_assert
         lib/easyloggingpp/src
 )
+
+#std
+#target_link_libraries (Miner -static-libgcc -static-libstdc++)
 
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})

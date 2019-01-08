@@ -5,9 +5,11 @@
 
 namespace miner {
 
-
     void DagCacheContainer::generate(uint32_t epoch, cByteSpan<32> seedHash) {
         valid = false;
+        if (epoch == 0)
+            return;
+
         try {
             LOG(INFO) << "calculating dag cache for epoch = " << epoch;
             MI_EXPECTS(epoch == EthCalcEpochNumber(seedHash));

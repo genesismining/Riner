@@ -8,18 +8,23 @@
 #include <vector>
 
 namespace miner {
-    class OpenCLSession;
+    class CLProgramLoader;
 
     class ComputeModule {
         std::vector<DeviceId> allDevices;
 
+        unique_ptr<CLProgramLoader> clProgramLoader; //lazy initialization
+
     public:
         ComputeModule();
+        ~ComputeModule();
 
         span<DeviceId> getAllDeviceIds();
 
         optional<cl::Device> getDeviceOpenCL(const DeviceId &);
-        //optional_ref<vk::Device> getDeviceVulkan(const DeviceId &);
+        //optional_ref<vk::Device> getDeviceVulkan(const DeviceId &)
+
+        CLProgramLoader &getProgramLoaderOpenCL();
     };
 
 }

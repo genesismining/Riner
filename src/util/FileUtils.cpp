@@ -8,12 +8,13 @@
 
 namespace miner {namespace file {
 
-        optional<std::string> readFileIntoString(cstring_span filePath) {
+        template<class T>
+        inline static optional<T> readFileInto(cstring_span filePath) {
             using namespace std;
             ifstream stream(filePath.data());
 
             if (stream) {
-                string result;
+                T result;
 
                 stream.seekg(0, ios::end);
                 auto size = stream.tellg();
@@ -27,14 +28,22 @@ namespace miner {namespace file {
                 }
                 else {
                     LOG(WARNING) << "Failed to obtain size of file at '"
-                               << to_string(filePath) << "'";
+                                 << to_string(filePath) << "'";
                 }
             }
             else {
                 LOG(WARNING) << "Failed when trying to load a file at '"
-                << to_string(filePath) << "'";
+                             << to_string(filePath) << "'";
             }
             return nullopt;
         }
 
-    }}
+        optional<std::string> readFileIntoString(cstring_span filePath) {
+            return readFileInto<std::string>(filePath);
+        }
+
+        optional<std::vector<uint8_t>> readFileIntoByteVector(cstring_span filePath) {
+            return readFileInto<std::vector<uint8_t>>(filePath);
+        }
+
+}}

@@ -67,7 +67,7 @@ namespace miner {
 
         //function taken from sgminer-gm
 
-        if (deviceVendor == "Advanced Micro Devices") {
+        if (deviceVendor == "Advanced Micro Devices, Inc.") {
             vendorEnum = kAMD;
 #ifndef CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD
 #define CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD        1
@@ -129,7 +129,7 @@ namespace miner {
         }
         else {
             auto name = device.getInfo<CL_DEVICE_NAME>();
-            LOG(INFO) << "could not find PCIe ID for OpenCL device '" << name << "'";
+            LOG(INFO) << "could not find PCIe ID for OpenCL device '" << name << "' with vendor '" << deviceVendor << "'";
             return nullopt;
         }
 

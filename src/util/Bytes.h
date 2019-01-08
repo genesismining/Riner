@@ -3,6 +3,7 @@
 
 #include <array>
 #include <src/common/Endian.h>
+#include <cstring>
 
 namespace miner {
 

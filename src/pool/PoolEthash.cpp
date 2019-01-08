@@ -64,6 +64,7 @@ namespace miner {
         auto jparams = j.at("params");
 
         bool cleanFlag = jparams.at(4);
+        cleanFlag = true;
         if (cleanFlag)
             protocolDatas.clear(); //invalidates all gpu work that links to them
 
@@ -81,7 +82,6 @@ namespace miner {
 
         //work->epoch is calculated in the refill thread
 
-        cleanFlag = true;
         workQueue->setMaster(std::move(work), cleanFlag);
     }
 
