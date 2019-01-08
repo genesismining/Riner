@@ -44,7 +44,7 @@ namespace miner {
 
     CLProgramLoader &ComputeModule::getProgramLoaderOpenCL() {
         if (!clProgramLoader) {
-            clProgramLoader = std::make_unique<CLProgramLoader>("/Miner/", "/tmp/kernels/precompiled/");
+            clProgramLoader = std::make_unique<CLProgramLoader>("/cppminer_bin/", "/tmp/kernels/precompiled/"); //TODO: make this path configurable
         }
         MI_ENSURES(clProgramLoader);
         return *clProgramLoader;

@@ -3,6 +3,7 @@
 #include "DagFile.h"
 #include "Ethash.h"
 #include <src/util/Logging.h>
+#include <thread>
 
 namespace miner {
 
@@ -20,7 +21,6 @@ namespace miner {
 
     bool DagFile::generate(const DagCacheContainer &cache, cByteSpan<32> seedHash,
                   const cl::Context &context, const cl::Device &device, cl::Program &generateDagProgram) {
-
         cl_int err;
         auto epoch = cache.getEpoch();
 
@@ -29,15 +29,22 @@ namespace miner {
 
         if (allocationMaxEpoch < epoch) {
             allocationMaxEpoch = epoch + futureEpochs;
+	
+	    auto allocSize = EthGetDAGSize(allocationMaxEpoch);
+	    auto clDeviceMaxMemAllocSize = device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
+	    if (allocSize > clDeviceMaxMemAllocSize) {
+		    LOG(WARNING) << "trying to allocate clDagBuffer of size " << allocSize << " which exceeds " << clDeviceMaxMemAllocSize << " = CL_DEVICE_MAX_MEM_ALLOC_SIZE";
+	    }
 
+	    LOG(INFO) << "allocating clDagBuffer size = " << allocSize;
             clDagBuffer = cl::Buffer{context,
                 CL_MEM_READ_WRITE |
                 CL_MEM_HOST_NO_ACCESS,
-                EthGetDAGSize(allocationMaxEpoch), nullptr, &err
+                allocSize, nullptr, &err
             };
 
             if (err) {
-                LOG(ERROR) << "allocation of clDagBuffer failed";
+                LOG(ERROR) << "#" << err << " allocation of clDagBuffer failed (size = " << allocSize << " on device " << device() << ")";
                 return false;
             }
 
@@ -56,7 +63,7 @@ namespace miner {
         };
 
         if (err) {
-            LOG(ERROR) << "#" << err << " creation of clDagCache failed";
+            LOG(ERROR) << "#" << err << " creation of clDagCache failed (size = " << cacheSpan.size() << " on device " << device() << ")";
             return false;
         }
 
@@ -74,16 +81,23 @@ namespace miner {
 
         //run the kernel
         cl_uint arg = 0;
-        genDagKernel.setArg(arg++, 0);
+
+	    cl_uint zero = 0;
+	    cl_uint cacheSize64 = static_cast<cl_uint>(cacheSpan.size() / 64);
+
+        genDagKernel.setArg(arg++, zero);
         genDagKernel.setArg(arg++, clDagCache);
         genDagKernel.setArg(arg++, clDagBuffer);
-        genDagKernel.setArg(arg++, cacheSpan.size() / 64);
+        genDagKernel.setArg(arg++, cacheSize64);
 
         auto dagSize = EthGetDAGSize(epoch);
         cl::NDRange offset{0};
         cl::NDRange dagItems{dagSize / 64};
 
-        cmdQueue.enqueueNDRangeKernel(genDagKernel, offset, dagItems);
+        err = cmdQueue.enqueueNDRangeKernel(genDagKernel, offset, dagItems);
+	    if (err) {
+            LOG(ERROR) << "#" << err << " error when enqueueing GenerateDAG kernel on " << std::this_thread::get_id();
+        }
         cmdQueue.finish(); //clFinish();
 
         clDagCache = {}; //clReleaseMemObject

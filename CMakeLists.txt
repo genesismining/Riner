@@ -88,11 +88,9 @@ include_directories(
         lib/easyloggingpp/src
 )
 
-#std
-#target_link_libraries (Miner -static-libgcc -static-libstdc++)
-
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})
+target_link_libraries (Miner -static-libgcc -static-libstdc++)
 
 #Threads
 find_package(Threads REQUIRED)

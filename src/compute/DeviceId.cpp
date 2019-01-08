@@ -3,6 +3,8 @@
 
 #include "DeviceId.h"
 #include <src/common/OpenCL.h>
+#include <string>
+#include <cstdio>
 
 namespace miner {
 
@@ -89,8 +91,8 @@ namespace miner {
                 pcieId.data[0] = static_cast<uint8_t>(topology.pcie.function);
                 idVariant = pcieId;
 
-                log.debug("ComputeModule: detected PCIe topology 0000:%.2x:%.2x.%.1x",
-                          pcieId.data[0], pcieId.data[1], pcieId.data[2]);
+                //printf("ComputeModule: detected PCIe topology 0000:%.2x:%.2x.%.1x\n",
+                //          pcieId.data[0], pcieId.data[1], pcieId.data[2]);
             }
             else {
                 return nullopt;
@@ -129,7 +131,7 @@ namespace miner {
         }
         else {
             auto name = device.getInfo<CL_DEVICE_NAME>();
-            LOG(INFO) << "could not find PCIe ID for OpenCL device '" << name << "' with vendor '" << deviceVendor << "'";
+            LOG(INFO) << "could not find PCIe ID for OpenCL device '" << name << "' with vendor name '" << deviceVendor << "'";
             return nullopt;
         }
 

@@ -18,9 +18,12 @@ namespace miner {
 
         for (auto &id : args.assignedDevices) {
             if (auto clDevice = args.compute.getDeviceOpenCL(id)) {
+		
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
                                               std::move(clDevice.value())));
             }
+		LOG(ERROR) << "currently only one GPU is being used. remove line below this log to enable multiple GPUs again";
+		break; //todo: remove, this is only for debug limiting to 1 gpu
         }
     }
 
@@ -30,8 +33,9 @@ namespace miner {
     }
 
     void AlgoEthashCL::gpuTask(cl::Device clDevice) {
+	LOG(INFO) << "AlgoEthashCL::gpuTask for clDevice = " << clDevice();
 
-        const unsigned numGpuSubTasks = 4;
+        const unsigned numGpuSubTasks = 1;
 
         auto notifyFunc = [] (const char *errinfo, const void *private_info, size_t cb, void *user_data) {
             LOG(ERROR) << errinfo;
@@ -40,7 +44,7 @@ namespace miner {
         PerPlatform plat;
         plat.clContext = cl::Context(clDevice, nullptr, notifyFunc); //TODO: opencl context should be per-platform
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", "-D WORKSIZE=4"); //TODO: build worksize into this string programmatically
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", "-D WORKSIZE=128"); //TODO: build worksize into this string programmatically
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
@@ -51,6 +55,7 @@ namespace miner {
 
         while (!shutdown) {
             //get work only for obtaining dag creation info
+		    LOG(INFO) << "trying to get work for dag creation";
             auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
@@ -60,8 +65,10 @@ namespace miner {
             //~ every 5 days
             DagCacheContainer *dagCachePtr = nullptr; //TODO: implement read locks and replace this ptr with a read-locked dagCache
             {
+		        LOG(INFO) << "generating dag cache";
                 auto cache = dagCache.lock(); //TODO: obtain write-lock here once read/write locks are implemented
                 cache->generateIfNeeded(work->epoch, work->seedHash);
+		        LOG(INFO) << "dag cache generated for epoch " << cache->getEpoch();
                 dagCachePtr = &*cache;
             }
 
@@ -86,12 +93,9 @@ namespace miner {
     }
 
     void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag) {
-        const uint32_t intensity = 1024 * 1024;
+        const uint32_t intensity = 1024;
 
         cl_int err = 0;
-
-        cl::Device device;
-        auto i = device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
 
         PerGpuSubTask state;
         state.cmdQueue = cl::CommandQueue(plat.clContext, clDevice, 0, &err);
@@ -117,6 +121,11 @@ namespace miner {
             LOG(ERROR) << "unable to allocate opencl output buffer";
             return;
         }
+
+	err = state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, 		state.blankOutputBuffer.size() * sizeof(state.blankOutputBuffer[0]), state.blankOutputBuffer.data());
+	if (err) {
+	    LOG(ERROR) << "unable to enqueue initial blank write into output buffer";
+	}
 
         while (!shutdown) {
             std::shared_ptr<const Work<kEthash>> work = pool.tryGetWork<kEthash>().value_or(nullptr);
@@ -220,7 +229,10 @@ namespace miner {
         cl_uint max = static_cast<cl_uint>((cl_ulong) UINT32_MAX * ItemsArg >> 32);
         cl_uint red_shift = UINT32_MAX;
         for (; max != 0; max >>= 1, red_shift++);
-        cl_uint red_mult = static_cast<cl_uint>(((cl_ulong) 1 << (32 + red_shift)) / ItemsArg);
+        cl_uint red_mult = ((cl_ulong) 1 << (32 + red_shift)) / ItemsArg;
+	    uint64_t target64 = 0;
+	    MI_EXPECTS(work.target.size() - 24 == sizeof(target64));
+	    memcpy(&target64, work.target.data() + 24, work.target.size() - 24);
 
         err = state.cmdQueue.enqueueWriteBuffer(state.CLbuffer0, CL_FALSE, 0, work.header.size(), work.header.data());
         if (err) {
@@ -228,28 +240,26 @@ namespace miner {
             return results;
         }
 
-        cl_uint i = 0;
+        cl_uint argI = 0;
         auto &k = state.clSearchKernel;
 
-        LOG(INFO) << "clOutputBuffer " << state.clOutputBuffer.getInfo<CL_MEM_SIZE>();
-
-        k.setArg(i++, state.clOutputBuffer);
-        k.setArg(i++, state.CLbuffer0);
-        k.setArg(i++, dag.getCLBuffer());
-        k.setArg(i++, nonceBegin);
-        k.setArg(i++, work.target.size() - 24, work.target.data() + 24);
-        k.setArg(i++, ItemsArg);
-        k.setArg(i++, red_mult);
-        k.setArg(i++, red_shift);
+        k.setArg(argI++, state.clOutputBuffer);
+        k.setArg(argI++, state.CLbuffer0);
+        k.setArg(argI++, dag.getCLBuffer());
+        k.setArg(argI++, nonceBegin);
+	    k.setArg(argI++, target64);
+        k.setArg(argI++, ItemsArg);
+        k.setArg(argI++, red_mult);
+        k.setArg(argI++, red_shift);
 
         cl::NDRange offset{0};
         //TODO: intensity must influence the following work sizes
-        cl::NDRange localWorkSize{4}; //worksize from sgminer
-        cl::NDRange globalWorkSize{1024}; //rawIntensity (= 2^intensity)
+        cl::NDRange localWorkSize{128};
+        cl::NDRange globalWorkSize{1024};
 
         err = state.cmdQueue.enqueueNDRangeKernel(state.clSearchKernel, offset, globalWorkSize, localWorkSize);
         if (err) {
-            LOG(ERROR) << "#" << err << " error (A) when enqueueing search kernel";
+            LOG(ERROR) << "#" << err << " error when enqueueing search kernel on " << std::this_thread::get_id();
         }
 
         err = state.cmdQueue.finish(); //clFinish();
@@ -259,31 +269,31 @@ namespace miner {
         }
 
         cl_bool blocking = CL_TRUE;
-        err = state.cmdQueue.enqueueReadBuffer(state.clOutputBuffer, blocking, 0, state.outputBuffer.size(), state.outputBuffer.data());
+        err = state.cmdQueue.enqueueReadBuffer(state.clOutputBuffer, blocking, 0, state.outputBuffer.size() * sizeof(state.outputBuffer[0]), state.outputBuffer.data());
         if (err) {
             LOG(ERROR) << "#" << err << " error when trying to read back clOutputBuffer after search kernel";
             return results;
         }
-
+	    state.cmdQueue.finish();
         //TODO: test whether blocking = CL_TRUE works as intended here
         //TODO: alternatively for nvidia, use glFlush instead of finish and wait for the cl event of readBuffer command to finish
 
-        auto numFoundNonces = state.outputBuffer.back(); //last entry is amount of found nonces
-
+        auto numFoundNonces = state.outputBuffer[0xFF];
         if (numFoundNonces >= state.outputBuffer.size()) {
-            LOG(ERROR) << "amount of nonces in outputBuffer exceeds outputBuffer's size";
+            LOG(ERROR) << "amount of nonces (" << numFoundNonces << ") in outputBuffer exceeds outputBuffer's size";
         }
         else if (numFoundNonces > 0) {
             //clear the clOutputBuffer by overwriting it with blank
-            state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, state.blankOutputBuffer.size(), state.blankOutputBuffer.data());
+            state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, state.blankOutputBuffer.size() * sizeof(state.blankOutputBuffer[0]), state.blankOutputBuffer.data());
 
-            //put the nonces into the results vector so they can be moved to a submit task
-            auto begin = state.outputBuffer.begin();
-            auto end = begin + numFoundNonces;
-            results.insert(results.begin(), begin, end);
+            //populate the result vector and compute the actual 32 bit nonces by adding the outputBuffer contents
+            results.resize(numFoundNonces);
+            for (size_t i = 0; i < numFoundNonces; ++i) {
+                results.push_back(state.outputBuffer[i] + gsl::narrow_cast<uint32_t>(nonceBegin));
+            }
         }
-
-        LOG(INFO) << "kernel finished, " << results.size() << " results on " << std::this_thread::get_id();
+	
+	    MI_EXPECTS(results.size() == numFoundNonces);
         return results;
     }
 

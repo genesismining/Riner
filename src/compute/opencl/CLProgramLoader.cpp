@@ -5,6 +5,7 @@
 #include "CLProgramLoader.h"
 #include <src/util/FileUtils.h>
 #include <src/util/Logging.h>
+#include <condition_variable>
 
 namespace miner {
 
@@ -34,15 +35,24 @@ namespace miner {
 
         { //compilation
             std::mutex mut;
-            mut.lock();
+            std::condition_variable cv;
+            std::unique_lock<std::mutex> lock(mut);
 
-            auto onDidCompile = [] (cl_program, void *mut) {
-                ((std::mutex *) mut)->unlock();
+            auto onDidCompile = [] (cl_program, void *cv) {
+                ((std::condition_variable *) cv)->notify_one();
             };
 
-            program.build(fullOptions.c_str(), onDidCompile, &mut); //does not block until compilation is finished
-            mut.lock(); //waits until onDidCompile was called
-            mut.unlock();
+            program.build(fullOptions.c_str(), onDidCompile, &cv); //does not block until compilation is finished
+            cv.wait(lock, [&] {//wait until no device is building anymore
+                auto devicesStatus = program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>();
+                for (auto &pair : devicesStatus) {
+                    auto status = pair.second;
+                    if (status == CL_BUILD_IN_PROGRESS) {
+                        return false;
+                    }
+                }
+                return true;
+            });
         }
 
         bool atLeastOneFailed = false;
@@ -61,7 +71,7 @@ namespace miner {
                 LOG(ERROR) << "#" << status << " failed building cl program " << gsl::to_string(clFile) <<
                 "\non device '" << name <<
                 "\nwith options '" << fullOptions << "'" <<
-                "\nBuild Log: \n" << log;
+                "\nbuild log: \n" << log;
             }
         }
 
