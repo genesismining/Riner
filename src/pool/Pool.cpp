@@ -9,4 +9,17 @@ namespace miner {
         return uid;
     }
 
+    void StillAliveTrackable::onStillAlive() {
+        lastKnownAliveTime = clock::now();
+    };
+
+    StillAliveTrackable::clock::time_point
+    StillAliveTrackable::getLastKnownAliveTime() {
+        return lastKnownAliveTime;
+    }
+
+    void StillAliveTrackable::setLastKnownAliveTime(clock::time_point time) {
+        lastKnownAliveTime = time;
+    }
+
 }

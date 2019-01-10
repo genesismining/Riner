@@ -30,11 +30,12 @@ add_executable(Miner
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkEthash.h
+        src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
-        src/compute/opencl/CLProgramLoader.cpp src/compute/opencl/CLProgramLoader.h
         src/compute/ComputeApiEnums.h
+        src/compute/opencl/CLProgramLoader.cpp src/compute/opencl/CLProgramLoader.h
         src/common/Endian.h
         src/common/WorkCommon.h
         src/common/Pointers.h

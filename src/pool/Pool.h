@@ -22,16 +22,29 @@ namespace miner {
         std::string password;
     };
 
-    class WorkProvider {
+    class StillAliveTrackable {//WorkProviders extend this class to offer timestamp information of last incoming message to a poolswitcher
+    public:
+        using clock = std::chrono::system_clock;
+        virtual ~StillAliveTrackable() = default;
+
+        clock::time_point getLastKnownAliveTime();
+        void setLastKnownAliveTime(clock::time_point time);
+
     protected:
-        virtual optional<unique_ptr<WorkBase>> tryGetWork() = 0;
-        virtual void submitWork(unique_ptr<WorkResultBase> result) = 0;
+        void onStillAlive(); //call this if you just received an incoming message from the network, it will update the timestamp
 
-        virtual uint64_t getPoolUid() const = 0; //call may be redirected to individual pools of a pool switcher
+    private:
+        std::atomic<clock::time_point> lastKnownAliveTime;
+    };
 
+    class WorkProvider : public StillAliveTrackable {
+    protected:
         static uint64_t createNewPoolUid();
 
     public:
+        virtual uint64_t getPoolUid() const = 0; //call may be redirected to individual pools of a pool switcher
+        virtual optional<unique_ptr<WorkBase>> tryGetWork() = 0;
+        virtual void submitWork(unique_ptr<WorkResultBase> result) = 0;
 
         //returns either nullopt or a valid unique_ptr (!= nullptr)
         template<AlgoEnum A>

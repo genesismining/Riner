@@ -59,14 +59,20 @@ namespace miner {
 
             }
 
+            onReceiveFunc(res);
+
             if (!msgHandled) {
-                onReceiveFunc(res);
+                onReceiveUnhandledFunc(res);
             }
         }
 
         removeOutdatedPendingRpcs();
 
         tcpJson->asyncRead();
+    }
+
+    void TcpJsonRpcProtocolUtil::setOnReceiveUnhandled(OnReceiveFunc &&func) {
+        onReceiveUnhandledFunc = std::move(func);
     }
 
     void TcpJsonRpcProtocolUtil::setOnReceive(OnReceiveFunc &&func) {
@@ -92,39 +98,38 @@ namespace miner {
     }
 
     void TcpJsonRpcProtocolUtil::callRetryNTimes(JrpcBuilder rpc, uint32_t triesLimit,
-            std::chrono::milliseconds retryInterval,
-            std::function<void()> neverRespondedHandler) {
+                                                 std::chrono::milliseconds retryInterval,
+                                                 std::function<void()> neverRespondedHandler) {
+        assignIdIfNecessary(rpc);
 
-            assignIdIfNecessary(rpc);
+        int tries = 0;
+        auto retryFunc = [this, rpc = std::move(rpc), tries] () mutable {
+            MI_EXPECTS(rpc.getId());
+            auto id = rpc.getId().value();
 
-            int tries = 0;
-            auto retryFunc = [this, rpc = std::move(rpc), tries] () mutable {
-                MI_EXPECTS(rpc.getId());
-                auto id = rpc.getId().value();
+            if (tries == 0) {
+                call(rpc); //starts id tracking
+            }
 
-                if (tries == 0) {
-                    call(rpc); //starts id tracking
-                }
+            bool stillPending = pendingRpcs.count(id);
 
-                bool stillPending = pendingRpcs.count(id);
+            if (tries >= 5 || !stillPending) {
+                pendingRpcs.erase(id); //remove if it wasn't already removed
+                return true; //don't retry
+            }
 
-                if (tries >= 5 || !stillPending) {
-                    pendingRpcs.erase(id); //remove if it wasn't already removed
-                    return true; //don't retry
-                }
+            if (tries > 0) {//tracking already started, just resend the string
+                LOG(INFO) << "retrying to send share with id " << id
+                          << " (try #" << (tries + 1) << ")";
 
-                if (tries > 0) {//tracking already started, just resend the string
-                    LOG(INFO) << "retrying to send share with id " << id
-                    << " (try #" << (tries + 1) << ")";
+                tcpJson->asyncWrite(rpc.getJson().dump());
+            }
+            ++tries;
 
-                    tcpJson->asyncWrite(rpc.getJson().dump());
-                }
-                ++tries;
+            return false; //retry later
+        };
 
-                return false; //retry later
-            };
-
-            tcpJson->asyncRetryEvery(retryInterval, retryFunc);
+        tcpJson->asyncRetryEvery(retryInterval, retryFunc);
     }
 
     void TcpJsonRpcProtocolUtil::assignIdIfNecessary(JrpcBuilder &rpc) {

@@ -41,7 +41,7 @@ namespace miner {
         });
 
         //set handler for receiving incoming messages that are not responses to sent rpcs
-        jrpc.setOnReceive([this] (auto &ret) {
+        jrpc.setOnReceiveUnhandled([this] (auto &ret) {
             if (acceptMiningNotify &&
                 ret.atEquals("method", "mining.notify")) {
                 onMiningNotify(ret.getJson());
@@ -53,6 +53,11 @@ namespace miner {
             else {
                 LOG(INFO) << "unhandled response: " << ret.getJson().dump();
             }
+        });
+
+        //set handler that gets called on any received response, before the other handlers are called
+        jrpc.setOnReceive([this] (auto &ret) {
+            onStillAlive(); //set latest still-alive timestamp to now
         });
 
         jrpc.call(*subscribe);

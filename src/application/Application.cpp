@@ -10,9 +10,9 @@
 #include <src/common/Json.h>
 #include <src/pool/PoolEthash.h>
 #include <src/algorithm/ethash/AlgoEthashCL.h>
-
 #include <thread>
 #include <src/algorithm/Algorithm.h>
+#include <src/pool/PoolSwitcher.h>
 
 namespace miner {
 
@@ -67,9 +67,19 @@ namespace miner {
         auto username = "user";
         auto password = "password";
 
-        PoolEthashStratum poolEthashStratum({host, port, username, password});
+        PoolSwitcher poolSwitcher;
 
-        AlgoEthashCL algo({compute, compute.getAllDeviceIds(), poolEthashStratum});
+        poolSwitcher.emplace<PoolEthashStratum>({
+            "eth-eu1.nanopool.org", "9999", username, password
+        });
+
+        poolSwitcher.emplace<PoolEthashStratum>({
+            host, port, username, password
+        });
+
+        //PoolEthashStratum poolEthashStratum({host, port, username, password});
+
+        AlgoEthashCL algo({compute, compute.getAllDeviceIds(), poolSwitcher});
 
         for (size_t i = 0; i < 60 * 4; ++i) {
             std::this_thread::sleep_for(std::chrono::seconds(1));

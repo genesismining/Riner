@@ -11,6 +11,10 @@ namespace miner {
     class WorkProtocolData {
         uint64_t poolUid = 0; //used to determine whether a WorkResult is
         // returned to the same pool that created the work to begin with.
+    public:
+        uint64_t getPoolUid() {
+            return poolUid;
+        }
     };
 
     class WorkResultBase {

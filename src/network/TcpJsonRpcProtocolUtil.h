@@ -26,6 +26,8 @@ namespace miner {
 
         //set a callback that is called whenever a json rpc call/notification/response
         //is received that is not a response to a pending call
+        void setOnReceiveUnhandled(OnReceiveFunc &&);
+
         void setOnReceive(OnReceiveFunc &&);
 
         void call(JrpcBuilder);
@@ -40,6 +42,7 @@ namespace miner {
 
     private:
         std::function<void()> onRestartFunc; //may not be initialized
+        OnReceiveFunc onReceiveUnhandledFunc; //may not be initialized
         OnReceiveFunc onReceiveFunc; //may not be initialized
 
         int highestUsedIdYet = 0;
