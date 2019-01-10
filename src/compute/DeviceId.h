@@ -37,6 +37,7 @@ namespace miner {
 
         VendorEnum getVendor() const;
         cstring_span getName() const;
+        optional_ref<const PcieIndex> getIfPcieIndex() const;
 
         bool operator==(const DeviceId &rhs) const;
         bool operator<(const DeviceId &rhs) const;

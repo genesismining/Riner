@@ -20,6 +20,7 @@ namespace miner {
         LockGuarded<DagCacheContainer> dagCache;
         WorkProvider &pool;
         CLProgramLoader &clProgramLoader;
+        const uint32_t rawIntensity;
 
         std::atomic<bool> shutdown {false};
 

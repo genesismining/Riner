@@ -12,18 +12,17 @@ namespace miner {
 
     AlgoEthashCL::AlgoEthashCL(AlgoConstructionArgs args)
             : pool(args.workProvider)
-            , clProgramLoader(args.compute.getProgramLoaderOpenCL()) {
+            , clProgramLoader(args.compute.getProgramLoaderOpenCL())
+            , rawIntensity(1024 * 1024) {
 
         LOG(INFO) << "launching " << args.assignedDevices.size() << " gpu-tasks";
 
         for (auto &id : args.assignedDevices) {
             if (auto clDevice = args.compute.getDeviceOpenCL(id)) {
-		
+
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
                                               std::move(clDevice.value())));
             }
-		LOG(ERROR) << "currently only one GPU is being used. remove line below this log to enable multiple GPUs again";
-		break; //todo: remove, this is only for debug limiting to 1 gpu
         }
     }
 
@@ -33,8 +32,6 @@ namespace miner {
     }
 
     void AlgoEthashCL::gpuTask(cl::Device clDevice) {
-	LOG(INFO) << "AlgoEthashCL::gpuTask for clDevice = " << clDevice();
-
         const unsigned numGpuSubTasks = 1;
 
         auto notifyFunc = [] (const char *errinfo, const void *private_info, size_t cb, void *user_data) {
@@ -65,10 +62,10 @@ namespace miner {
             //~ every 5 days
             DagCacheContainer *dagCachePtr = nullptr; //TODO: implement read locks and replace this ptr with a read-locked dagCache
             {
-		        LOG(INFO) << "generating dag cache";
+		        LOG(INFO) << "waiting for dag cache to be generated";
                 auto cache = dagCache.lock(); //TODO: obtain write-lock here once read/write locks are implemented
                 cache->generateIfNeeded(work->epoch, work->seedHash);
-		        LOG(INFO) << "dag cache generated for epoch " << cache->getEpoch();
+		        LOG(INFO) << "dag cache was generated for epoch " << cache->getEpoch();
                 dagCachePtr = &*cache;
             }
 
@@ -93,8 +90,6 @@ namespace miner {
     }
 
     void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag) {
-        const uint32_t intensity = 1024;
-
         cl_int err = 0;
 
         PerGpuSubTask state;
@@ -122,31 +117,31 @@ namespace miner {
             return;
         }
 
-	err = state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, 		state.blankOutputBuffer.size() * sizeof(state.blankOutputBuffer[0]), state.blankOutputBuffer.data());
-	if (err) {
-	    LOG(ERROR) << "unable to enqueue initial blank write into output buffer";
-	}
+        err = state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, state.blankOutputBuffer.size() * sizeof(state.blankOutputBuffer[0]), state.blankOutputBuffer.data());
+        if (err) {
+            LOG(ERROR) << "unable to enqueue initial blank write into output buffer";
+        }
 
         while (!shutdown) {
             std::shared_ptr<const Work<kEthash>> work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
 
-            if (work->epoch != dagCache.lock()->getEpoch()) {//TODO: replace
-                LOG(INFO) << "dagcache epoch (" << dagCache.lock()->getEpoch() << ") doesn't match work epoch " << work->epoch;
-                break;
-            }
-
-            //if (work->epoch != dag.getEpoch()) { //TODO: debug reenable once dagfile exists
-            //    break; //terminate task
+            //if (work->epoch != dagCache.lock()->getEpoch()) {//TODO: replace
+            //    LOG(INFO) << "dagcache epoch (" << dagCache.lock()->getEpoch() << ") doesn't match work epoch " << work->epoch;
+            //    break;
             //}
 
-            for (uint64_t nonce = 0; nonce < UINT32_MAX && !shutdown; nonce += intensity) {
+            if (work->epoch != dag.getEpoch()) {
+                break; //terminate task
+            }
+
+            for (uint64_t nonce = 0; nonce < UINT32_MAX && !shutdown; nonce += rawIntensity) {
 
                 uint64_t shiftedExtraNonce = uint64_t(work->extraNonce) << 32ULL;
 
                 uint64_t nonceBegin = nonce | shiftedExtraNonce;
-                uint64_t nonceEnd = nonceBegin + intensity;
+                uint64_t nonceEnd = nonceBegin + rawIntensity;
 
                 auto resultNonces = runKernel(state, dag, *work, nonceBegin, nonceEnd);
 
@@ -254,8 +249,9 @@ namespace miner {
 
         cl::NDRange offset{0};
         //TODO: intensity must influence the following work sizes
-        cl::NDRange localWorkSize{128};
-        cl::NDRange globalWorkSize{1024};
+        size_t workSize = 128;
+        cl::NDRange localWorkSize{workSize};
+        cl::NDRange globalWorkSize{rawIntensity};
 
         err = state.cmdQueue.enqueueNDRangeKernel(state.clSearchKernel, offset, globalWorkSize, localWorkSize);
         if (err) {
@@ -289,7 +285,7 @@ namespace miner {
             //populate the result vector and compute the actual 32 bit nonces by adding the outputBuffer contents
             results.resize(numFoundNonces);
             for (size_t i = 0; i < numFoundNonces; ++i) {
-                results.push_back(state.outputBuffer[i] + gsl::narrow_cast<uint32_t>(nonceBegin));
+                results[i] = state.outputBuffer[i] + gsl::narrow_cast<uint32_t>(nonceBegin);
             }
         }
 	
