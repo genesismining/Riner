@@ -12,6 +12,9 @@ namespace miner {
         uint64_t poolUid = 0; //used to determine whether a WorkResult is
         // returned to the same pool that created the work to begin with.
     public:
+        WorkProtocolData(uint64_t poolUid) : poolUid(poolUid) {
+        };
+
         uint64_t getPoolUid() {
             return poolUid;
         }

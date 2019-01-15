@@ -22,7 +22,7 @@ namespace miner {
                     bool allowExceptions = false;
                     auto jsonLine = nl::json::parse(line, nullptr, allowExceptions);
                     if (jsonLine.is_discarded()) {
-                        LOG(ERROR) << "json got discarded";
+                        LOG(ERROR) << "json got discarded: '" << line << "'";
                     } else {
                         onEventCalled = true;
                         onEvent(std::move(jsonLine), error, coroutine);

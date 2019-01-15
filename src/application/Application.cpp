@@ -44,6 +44,7 @@ namespace miner {
     }
 
     Application::Application(optional<std::string> configPath) {
+        using namespace std::chrono;
 
         if (configPath) {
             parseConfig(configPath.value());
@@ -52,7 +53,7 @@ namespace miner {
             LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
         }
 
-#if 1
+#if 0
         std::string host = "eth-eu1.nanopool.org", port = "9999";
 #else
         //std::string host = "localhost", port = "9998";
@@ -67,14 +68,16 @@ namespace miner {
         auto username = "user";
         auto password = "password";
 
-        PoolSwitcher poolSwitcher;
-
-        poolSwitcher.emplace<PoolEthashStratum>({
-            "eth-eu1.nanopool.org", "9999", username, password
-        });
+        auto interval = seconds(1);
+        auto timeUntilDead = seconds(5);
+        PoolSwitcher poolSwitcher{interval, timeUntilDead};
 
         poolSwitcher.emplace<PoolEthashStratum>({
             host, port, username, password
+        });
+
+        poolSwitcher.emplace<PoolEthashStratum>({
+            "eth-eu1.nanopool.org", "9999", username, password
         });
 
         //PoolEthashStratum poolEthashStratum({host, port, username, password});

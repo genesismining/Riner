@@ -21,6 +21,9 @@ namespace miner {
     class TcpJsonSubscription;
 
     struct EthashStratumProtocolData : public WorkProtocolData {
+        EthashStratumProtocolData(uint64_t poolUid) : WorkProtocolData(poolUid) {
+        }
+
         std::string jobId;
     };
 
@@ -28,6 +31,8 @@ namespace miner {
     public:
         explicit PoolEthashStratum(PoolConstructionArgs);
         ~PoolEthashStratum() override;
+
+        cstring_span getName() const override;
 
     private:
         PoolConstructionArgs args;

@@ -74,7 +74,7 @@ namespace miner {
             protocolDatas.clear(); //invalidates all gpu work that links to them
 
         //create work package
-        protocolDatas.emplace_back(std::make_shared<EthashStratumProtocolData>());
+        protocolDatas.emplace_back(std::make_shared<EthashStratumProtocolData>(getPoolUid()));
         auto &sharedProtoData = protocolDatas.back();
         auto weakProtoData = make_weak(sharedProtoData);
 
@@ -170,6 +170,10 @@ namespace miner {
 
     uint64_t PoolEthashStratum::getPoolUid() const {
         return uid;
+    }
+
+    cstring_span PoolEthashStratum::getName() const {
+        return args.host;
     }
 
 }

@@ -5,7 +5,9 @@
 #include <src/common/Optional.h>
 #include <src/common/Assert.h>
 #include <src/pool/Work.h>
+#include <src/common/StringSpan.h>
 #include <string>
+#include <atomic>
 
 namespace miner {
     class WorkResultBase;
@@ -22,19 +24,19 @@ namespace miner {
         std::string password;
     };
 
-    class StillAliveTrackable {//WorkProviders extend this class to offer timestamp information of last incoming message to a poolswitcher
+    class StillAliveTrackable {//WorkProviders extend this class to offer timestamp information of last incoming message to a PoolSwitcher
     public:
         using clock = std::chrono::system_clock;
+
+        StillAliveTrackable() = default;
         virtual ~StillAliveTrackable() = default;
 
         clock::time_point getLastKnownAliveTime();
         void setLastKnownAliveTime(clock::time_point time);
-
-    protected:
         void onStillAlive(); //call this if you just received an incoming message from the network, it will update the timestamp
 
     private:
-        std::atomic<clock::time_point> lastKnownAliveTime;
+        std::atomic<clock::time_point> lastKnownAliveTime = {clock::time_point::min()};
     };
 
     class WorkProvider : public StillAliveTrackable {
@@ -42,6 +44,7 @@ namespace miner {
         static uint64_t createNewPoolUid();
 
     public:
+        virtual cstring_span getName() const = 0;
         virtual uint64_t getPoolUid() const = 0; //call may be redirected to individual pools of a pool switcher
         virtual optional<unique_ptr<WorkBase>> tryGetWork() = 0;
         virtual void submitWork(unique_ptr<WorkResultBase> result) = 0;
