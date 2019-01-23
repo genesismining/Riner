@@ -14,6 +14,7 @@ add_executable(Miner
         src/application/Main.cpp
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
+        src/application/Types.cpp src/application/Types.h
         src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
@@ -21,10 +22,12 @@ add_executable(Miner
         src/algorithm/ethash/DagCache.cpp src/algorithm/ethash/DagCache.h
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
+        src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
         src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
+        src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
@@ -50,6 +53,8 @@ add_executable(Miner
         src/common/PlatformDefines.h
         src/util/Bytes.h
         src/util/Logging.h
+        src/util/ConfigUtils.cpp src/util/ConfigUtils.h
+        src/util/StringUtils.cpp src/util/StringUtils.h
         src/util/OptionalAccess.h
         src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h

@@ -24,8 +24,12 @@ namespace miner {
 
         template<class T>
         WorkProvider &emplace(PoolConstructionArgs args) {
+            return push(std::make_unique<T>(std::move(args)));
+        }
+
+        WorkProvider &push(unique_ptr<WorkProvider> pool) {
             std::lock_guard<std::mutex> lock(mut);
-            pools.emplace_back(std::make_unique<T>(std::move(args)));
+            pools.emplace_back(std::move(pool));
 
             if (pools.size() == 1) //if first pool was added, treat it as if it was alive (TODO: is this really desired behavior?)
                 pools.back()->onStillAlive();
@@ -37,6 +41,8 @@ namespace miner {
 
         void submitWork(unique_ptr<WorkResultBase>) override;
 
+        size_t poolCount() const;
+
         uint64_t getPoolUid() const override;
 
         cstring_span getName() const override;
@@ -44,7 +50,8 @@ namespace miner {
     private:
         //shutdown related variables
         bool shutdown = false;
-        std::mutex mut;
+
+        mutable std::mutex mut;
         std::condition_variable notifyOnShutdown;
 
         //periodic checking
@@ -54,6 +61,7 @@ namespace miner {
         clock::duration checkInterval;
         clock::duration durUntilDeclaredDead;
 
+        //TODO: replace unique_ptr with shared_ptr so that lock doesn't need to be held the entire time in tryGetWork();
         std::vector<unique_ptr<WorkProvider>> pools;
         size_t activePoolIndex = 0; //if > pools.size(), no pool is active
 

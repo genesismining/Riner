@@ -15,7 +15,7 @@
 
 namespace miner {
 
-    class AlgoEthashCL : AlgoBase {
+    class AlgoEthashCL : public AlgoBase {
 
         LockGuarded<DagCacheContainer> dagCache;
         WorkProvider &pool;

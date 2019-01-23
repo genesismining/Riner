@@ -4,32 +4,164 @@
 #include <src/common/Json.h>
 #include <src/util/Logging.h>
 #include <src/util/OptionalAccess.h>
+#include <src/util/StringUtils.h>
 
 namespace miner {
 
-    Config::Config(cstring_span configStr) {
+    //returns json.at(key) or defaultVal
+    template<class T>
+    static T valueOr(const nl::json &j, const char *key, const T &defaultVal) {
+        if (!j.count(key))
+            return defaultVal;
+        return j.at(key);
+    }
+
+    Config::Profile::Mapping parseProfileMapping(const nl::json &j) {
+        return {j.at(0), j.at(1)};
+    }
+
+    void Config::parse(const nl::json &j) {
+        using namespace std::string_literals;
+
+        bool sanity = true;
+
+        std::string version = j.at("config_version");
+        const auto supported = "1.0"s;
+        if (version != supported) {
+            LOG(ERROR) << "config has unsupported version (" << version
+                       << "). only " << supported << " is supported";
+            return;
+        }
+
+        //parse pools
+        for (auto &jo : j.at("pools")) {
+            pools.emplace_back();
+            auto &pool = pools.back();
+
+            std::string url = jo.at("url");
+            auto hostPort = parsePoolAddress(url.c_str());
+
+            pool.host = hostPort.host;
+            pool.port = hostPort.port;
+            pool.username = jo.at("username");
+            pool.password = jo.at("password");
+        }
+
+        //parse device profile
+        for (auto &pair : asPairs(j.at("device_profiles"))) {
+            DeviceProfile devp;
+
+            auto &jo = pair.second;
+
+            devp.name = pair.first;
+            devp.core_clock_mhz_min = jo.at("core_clock_mhz_min");
+            devp.core_clock_mhz_max = jo.at("core_clock_mhz_max");
+
+            if (devp.core_clock_mhz_min > devp.core_clock_mhz_max) {
+                LOG(WARNING) << "core_clock_mhz_min is supposed to be smaller than core_clock_mhz_max";
+                devp.core_clock_mhz_max = devp.core_clock_mhz_min;
+            }
+
+            devp.memclock = jo.at("memclock");
+            devp.powertune = jo.at("powertune");
+
+            //parse algorithm settings for this device profile
+            for (auto &pair : asPairs(jo.at("algorithms"))) {
+                DeviceProfile::AlgoSettings algs;
+
+                auto &jo = pair.second;
+
+                algs.algoImplName = pair.first;
+                algs.num_threads = jo.at("num_threads");
+                algs.work_size = jo.at("work_size");
+                algs.raw_intensity = jo.at("raw_intensity");
+
+                if (algs.raw_intensity == 0) {
+                    LOG(WARNING) << "raw_intensity must not be 0";
+                    LOG(WARNING) << "cannot add algo settings for '" << algs.algoImplName << "' to device profile '" << devp.name << "'";
+                    continue;
+                }
+
+                devp.algoSettings.push_back(algs);
+            }
+
+            deviceProfiles.push_back(devp);
+        }
+
+        //parse profiles
+        for (auto &pair : asPairs(j.at("profiles"))) {
+            Profile prof;
+
+            auto &jo = pair.second;
+
+            prof.name = pair.first;
+            prof.device_default = parseProfileMapping(jo.at("device_default"));
+
+            if (j.count("devices_by_index")) {
+                for (auto &pair : asPairs(j.at("devices_by_index"))) {
+                    auto index = static_cast<size_t>(std::stoll(pair.first));
+                    auto mapping = parseProfileMapping(pair.second);
+
+                    if (!getDeviceProfile(mapping.deviceProfileName)) {
+                        LOG(WARNING) << "device profile '" << mapping.deviceProfileName << "' requested for device with index " << index << " does not exist";
+                        continue;
+                    }
+
+                    prof.devices_by_index[index] = mapping;
+                }
+            }
+
+        }
+
+        //parse global settings
+        {
+            auto &jo = j.at("global_settings");
+            auto &gs = globalSettings;
+
+            gs.temp_cutoff = jo.at("temp_cutoff");
+            gs.temp_overheat = jo.at("temp_overheat");
+            gs.temp_target = jo.at("temp_target");
+            gs.temp_hysteresis = valueOr<uint32_t>(jo, "temp_hysteresis", 2);
+
+            sanity &= gs.temp_target   <= gs.temp_overheat;
+            sanity &= gs.temp_overheat <= gs.temp_cutoff;
+            if (!sanity) {
+                LOG(WARNING) << "temperature parameters don't satisfy 'temp_target <= temp_overheat <= temp_cutoff'";
+                gs.temp_cutoff = gs.temp_overheat = gs.temp_target; //TODO: come up with something better here
+                sanity = true;
+            }
+
+            gs.api_port = std::to_string(valueOr<uint32_t>(jo, "api_port", 4028));
+            gs.opencl_kernel_path = jo.at("opencl_kernel_path");
+            gs.start_profile = jo.at("start_profile");
+
+            if (!getProfile(gs.start_profile)) {
+                LOG(WARNING) << "specified start_profile '" << gs.start_profile << "' does not exist";
+                gs.start_profile = "";
+                return;
+            }
+        }
+    }
+
+    Config::Config(const std::string &configStr) {
+        const auto j = nl::json::parse(configStr);
+        if (!j.is_discarded()) {
+            tryParse(j);
+        } else {
+            LOG(ERROR) << "unable to parse config text as json";
+        }
+    }
+
+    Config::Config(const nl::json &configJson) {
+        tryParse(configJson);
+    }
+
+    void Config::tryParse(const nl::json &configJson) {
         try {
-            const auto j = nl::json::parse(configStr);
-
-            version = j.at("config_version");
-
-            //parse pools
-            for (auto &pair : asPairs(j.at("pools"))) {
-                pools.insert({pair.first, Pool(pair.second)});
-            }
-
-            //parse deviceProfiles
-            for (auto &pair : asPairs(j.at("device_profiles"))) {
-                deviceProfiles.insert({pair.first, DeviceProfile(pair.second)});
-            }
-
-            //parse profiles
-            for (auto &pair : asPairs(j.at("profiles"))) {
-                profiles.insert({pair.first, Profile(pair.second, deviceProfiles)});
-            }
-
-            //parse global settings
-            globalSettings = std::make_unique<GlobalSettings>(j.at("global_settings"));
+            valid = false;
+            parse(configJson);
+            valid = true;
+            LOG(INFO) << "parsing config string - done";
         }
         catch (nl::json::exception &e) {
             LOG(ERROR) << "error while parsing json config: " << e.what();
@@ -38,79 +170,37 @@ namespace miner {
             LOG(ERROR) << "invalid argument while parsing json config: " << e.what();
         }
         catch (std::exception &e) {
-            LOG(ERROR) << "unknown exception: " << e.what();
-        }
-
-        LOG(INFO) << "parsing config string - done";
-    }
-
-    Config::GlobalSettings::GlobalSettings(const nl::json &j) {
-        tempCutoff = j.at("temp_cutoff");
-        tempOverheat = j.at("temp_overheat");
-        tempTarget = j.at("temp_target");
-
-        apiAllow = j.at("api_allow");
-        apiEnable = j.at("api_enable");
-        apiPort = j.at("api_port");;
-        startProfile = j.at("start_profile");
-    }
-
-    Config::Pool::Pool(const nl::json &j) {
-        type = j.at("type");
-        url = j.at("url");
-        username = j.at("username");
-        password = j.at("password");
-    }
-
-    Config::DeviceProfile::DeviceProfile(const nl::json &j) {
-        engineMin = j.at("engine_min");
-        engineMax = j.at("engine_max");
-        memClock = j.at("memclock");
-        powertune = j.at("powertune");
-
-        for (auto &pair : asPairs(j.at("algorithms"))) {
-            algorithms.insert({pair.first, Algorithm(pair.second)});
+            LOG(ERROR) << "unknown exception while parsing json config: " << e.what();
         }
     }
 
-    Config::DeviceProfile::Algorithm::Algorithm(const nl::json &j) {
-        numThreads = j.at("num_threads");
-        workSize = j.at("worksize");
-        intensity = j.at("intensity");
+    optional_ref<const Config::DeviceProfile::AlgoSettings> Config::DeviceProfile::getAlgoSettings(const std::string &algoImplName) const {
+        for (auto &algs : algoSettings)
+            if (algs.algoImplName == algoImplName)
+                return type_safe::opt_ref(algs);
+        return nullopt;
     }
 
-    Config::Profile::Profile(const nl::json &j,
-                             std::map<std::string, Config::DeviceProfile> &deviceProfiles) {
-        defaultDeviceProfile = map_at_if(deviceProfiles, j.at("default").get<std::string>());
-
-        for (auto &pair : asPairs(j.at("gpus"))) {
-
-            if (auto deviceProfile = map_at_if(deviceProfiles, pair.second)) {
-
-                auto gpuIndex = std::stoul(pair.first); //may throw std::invalid_argument
-                gpus.insert({gpuIndex, deviceProfile.value()});
-            }
-            else {
-                LOG(ERROR) << "While parsing a config profile, a device_profile '" << pair.second
-                           << "' was referenced that was not previously defined in 'device_profiles'";
-            }
-        }
+    optional_ref<const Config::DeviceProfile> Config::getDeviceProfile(const std::string &name) const {
+        for (auto &devp : deviceProfiles)
+            if (devp.name == name)
+                return type_safe::opt_ref(devp);
+        return nullopt;
     }
 
-    optional_ref<const Config::Pool> Config::getPool(cstring_span name) const {
-        return map_at_if(pools, name);
+    optional_ref<Config::Profile> Config::getProfile(const std::string &name) {
+        for (auto &prof : profiles)
+            if (prof.name == name)
+                return type_safe::opt_ref(prof);
+        return nullopt;
     }
 
-    optional_ref<const Config::DeviceProfile> Config::getDeviceProfile(cstring_span name) const {
-        return map_at_if(deviceProfiles, name);
+    const std::list<Config::Pool> &Config::getPools() const {
+        return pools;
     }
 
-    optional_ref<const Config::Profile> Config::getProfile(cstring_span name) const {
-        return map_at_if(profiles, name);
+    optional_ref<miner::Config::Profile> Config::getStartProfile() {
+        return getProfile(globalSettings.start_profile);
     }
 
-    const Config::GlobalSettings &Config::getGlobalSettings() {
-        assert(globalSettings);
-        return *globalSettings;
-    }
 }

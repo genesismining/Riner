@@ -1,92 +1,95 @@
 #pragma once
 
-#include <map>
+#include <list>
 #include <string>
 #include <src/common/StringSpan.h>
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 #include <src/common/JsonForward.h>
+#include <src/common/WorkCommon.h>
 
 namespace miner {
 
-    class Config { //TODO: sanitize values before usage
+    class Config {
     public:
-        template<class T>
-        using ref = std::reference_wrapper<T>;
 
-        explicit Config(cstring_span configStr);
+        Config() {}; //invalid config
+        explicit Config(const std::string &configStr);
+        explicit Config(const nl::json &configJson);
 
         struct GlobalSettings {
-            uint32_t tempCutoff = 85;
-            uint32_t tempOverheat = 80;
-            uint32_t tempTarget = 76;
+            uint32_t
+            temp_cutoff,
+            temp_overheat,
+            temp_target,
+            temp_hysteresis;
 
-            std::string apiAllow;
-            bool apiEnable;
-            uint32_t apiPort;
-            std::string startProfile;
+            std::string api_port;
 
-            explicit GlobalSettings(const nl::json &jsonObject);
+            std::string opencl_kernel_path;
+            std::string start_profile;
         };
 
         struct Pool {
-            std::string type;
-            std::string url;
-            std::string username;
-            std::string password;
+            AlgoEnum type; //e.g. ethash
+            ProtoEnum protocol; //e.g. stratum
 
-            explicit Pool(const nl::json &jsonObject);
+            std::string host, port, username, password;
         };
 
         struct DeviceProfile {
-            uint32_t engineMin = 0;
-            uint32_t engineMax = 0;
-            uint32_t memClock = 0;
-            uint32_t powertune = 0;
+            std::string name;
+            uint32_t
+            core_clock_mhz_min, //engine_min
+            core_clock_mhz_max, //engine_max
+            memclock,
+            powertune;
 
-            struct Algorithm {
-                std::string name;
+            struct AlgoSettings {
+                std::string algoImplName; //e.g. "AlgoEthashCL"
 
-                uint32_t numThreads = 0;
-                uint32_t workSize = 0;
-                uint32_t intensity = 0;
-
-                explicit Algorithm(const nl::json &jsonObject);
+                uint32_t
+                num_threads,
+                work_size,
+                raw_intensity;
             };
 
-            std::map<std::string, Algorithm> algorithms;
+            std::vector<AlgoSettings> algoSettings;
 
-            explicit DeviceProfile(const nl::json &jsonObject);
+            optional_ref<const AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
         };
 
         struct Profile {
-            optional_ref<DeviceProfile> defaultDeviceProfile;
-            std::map<size_t, ref<DeviceProfile>> gpus;
 
-            Profile(const nl::json &jsonObject,
-                    std::map<std::string, DeviceProfile> &deviceProfiles);
+            struct Mapping {
+                std::string deviceProfileName;
+                std::string algoImplName;
+            };
+
+            std::string name;
+            std::map<size_t, Mapping> devices_by_index;
+            Mapping device_default;
         };
 
-        optional_ref<const Pool> getPool(cstring_span name) const;
-        optional_ref<const DeviceProfile> getDeviceProfile(cstring_span name) const;
-        optional_ref<const Profile> getProfile(cstring_span name) const;
-        const GlobalSettings &getGlobalSettings();
+        optional_ref<const DeviceProfile> getDeviceProfile(const std::string &name) const;
+        optional_ref<Profile> getProfile(const std::string &name);
+        optional_ref<Profile> getStartProfile();
 
-        template<class Func>
-        void forEachPool(const Func &func) {
-            for (auto &pool : pools) {
-                func(pool.second);
-            }
-        }
+        operator bool() {return valid;}
+
+        const std::list<Pool> &getPools() const;
 
     private:
+        void tryParse(const nl::json &j); //calls parse(j) within a try block
+        void parse(const nl::json &j);
 
-        std::string version;
-        unique_ptr<GlobalSettings> globalSettings;
+        GlobalSettings globalSettings;
 
-        std::map<std::string, Pool> pools;
-        std::map<std::string, DeviceProfile> deviceProfiles;
-        std::map<std::string, Profile> profiles;
+        bool valid = false;
+
+        std::list<DeviceProfile> deviceProfiles;
+        std::list<Profile> profiles;
+        std::list<Pool> pools;
     };
 
 }

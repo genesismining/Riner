@@ -45,7 +45,7 @@ namespace miner {
 
     public:
         virtual cstring_span getName() const = 0;
-        virtual uint64_t getPoolUid() const = 0; //call may be redirected to individual pools of a pool switcher
+        virtual uint64_t getPoolUid() const = 0;
         virtual optional<unique_ptr<WorkBase>> tryGetWork() = 0;
         virtual void submitWork(unique_ptr<WorkResultBase> result) = 0;
 

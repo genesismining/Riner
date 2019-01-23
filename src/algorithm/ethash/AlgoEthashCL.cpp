@@ -17,8 +17,8 @@ namespace miner {
 
         LOG(INFO) << "launching " << args.assignedDevices.size() << " gpu-tasks";
 
-        for (auto &id : args.assignedDevices) {
-            if (auto clDevice = args.compute.getDeviceOpenCL(id)) {
+        for (auto &device : args.assignedDevices) {
+            if (auto clDevice = args.compute.getDeviceOpenCL(device.id)) {
 
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
                                               std::move(clDevice.value())));
@@ -248,7 +248,7 @@ namespace miner {
         k.setArg(argI++, red_shift);
 
         cl::NDRange offset{0};
-        //TODO: intensity must influence the following work sizes
+
         size_t workSize = 128;
         cl::NDRange localWorkSize{workSize};
         cl::NDRange globalWorkSize{rawIntensity};

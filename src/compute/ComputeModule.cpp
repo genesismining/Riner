@@ -16,7 +16,7 @@ namespace miner {
         //this empty destructor enables forward declaration of types contained in member unique_ptrs
     }
 
-    span<DeviceId> ComputeModule::getAllDeviceIds() {
+    const std::vector<DeviceId> &ComputeModule::getAllDeviceIds() {
         return allDevices;
     }
 

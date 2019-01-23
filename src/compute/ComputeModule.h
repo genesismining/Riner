@@ -19,7 +19,7 @@ namespace miner {
         ComputeModule();
         ~ComputeModule();
 
-        span<DeviceId> getAllDeviceIds();
+        const std::vector<DeviceId> &getAllDeviceIds();
 
         optional<cl::Device> getDeviceOpenCL(const DeviceId &);
         //optional_ref<vk::Device> getDeviceVulkan(const DeviceId &)

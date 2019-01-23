@@ -128,4 +128,9 @@ namespace miner {
         return "PoolSwitcher at " + std::to_string(uintptr_t(this));
     }
 
+    size_t PoolSwitcher::poolCount() const {
+        std::lock_guard<std::mutex> lock(mut);
+        return pools.size();
+    }
+
 }

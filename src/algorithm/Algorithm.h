@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <src/common/Span.h>
+#include <vector>
+#include <src/util/ConfigUtils.h>
 
 namespace miner {
     class ComputeModule;
@@ -11,7 +12,7 @@ namespace miner {
 
     struct AlgoConstructionArgs {
         ComputeModule &compute;
-        span<DeviceId> assignedDevices;
+        std::vector<DeviceAlgoInfo> assignedDevices;
         WorkProvider &workProvider;
     };
 
