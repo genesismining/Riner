@@ -67,7 +67,7 @@ namespace miner {
         explicit AlgoEthashCL(AlgoConstructionArgs);
 
         //destructor shuts down all working threads and joins them
-        ~AlgoEthashCL();
+        ~AlgoEthashCL() override;
 
     };
 

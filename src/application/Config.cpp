@@ -39,11 +39,11 @@ namespace miner {
             pool.protocol = protoEnumFromString(jo.at("protocol"));
 
             if (pool.type == kAlgoTypeCount) {
-                LOG(WARNING) << "'" << jo.at("type") << "' is not a valid algorithm type, cannot add pool";
+                LOG(WARNING) << jo.at("type") << " is not a valid algorithm type, cannot add pool";
                 continue;
             }
             if (pool.protocol == kProtoCount) {
-                LOG(WARNING) << "'" << jo.at("protocol") << "' is not a valid protocol type, cannot add pool";
+                LOG(WARNING) << jo.at("protocol") << " is not a valid protocol type, cannot add pool";
                 continue;
             }
 

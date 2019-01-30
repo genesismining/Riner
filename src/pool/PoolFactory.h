@@ -31,6 +31,9 @@ namespace miner {
         unique_ptr<WorkProvider> makePool(PoolConstructionArgs args, const std::string &poolImplName);
         unique_ptr<WorkProvider> makePool(PoolConstructionArgs args, AlgoEnum, ProtoEnum);
 
+        //returns implName
+        std::string getImplNameForAlgoTypeAndProtocol(AlgoEnum, ProtoEnum) const;
+
         //returns kAlgoTypeCount if implName doesn't match any pool impl
         AlgoEnum getAlgoTypeForImplName(const std::string &implName);
 

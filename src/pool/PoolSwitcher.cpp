@@ -27,8 +27,10 @@ namespace miner {
 
         while(!shutdown) {
 
-            LOG(INFO) << "check for dead pools";
-            aliveCheckAndMaybeSwitch();
+            if (!pools.empty()) {
+                LOG(INFO) << "checking pool connection status";
+                aliveCheckAndMaybeSwitch();
+            }
 
             //use condition vairable to wait, so the wait can be interrupted on shutdown
             notifyOnShutdown.wait_for(lock, checkInterval, [this] {
@@ -87,10 +89,8 @@ namespace miner {
             return pool.value().tryGetWork();
         }
 
-        //TODO: make this call wait for some time before it returns nullopt
-        // like the other tryGetWork implementations, so that there's no
-        // busy waiting happening on the algorithm side
         LOG(INFO) << "PoolSwitcher cannot provide work since there is no active pool";
+        //wait for a short period of time to prevent busy waiting in the algorithms' loops
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return nullopt;
     }

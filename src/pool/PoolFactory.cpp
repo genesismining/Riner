@@ -23,6 +23,13 @@ namespace miner {
         return nullptr;
     }
 
+    std::string PoolFactory::getImplNameForAlgoTypeAndProtocol(AlgoEnum algoEnum, ProtoEnum protoEnum) const {
+        for (auto &entry : entries)
+            if (entry.algoEnum == algoEnum && entry.protoEnum == protoEnum)
+                return entry.implName;
+        return "";
+    }
+
     AlgoEnum PoolFactory::getAlgoTypeForImplName(const std::string &implName) {
         if (auto entry = entryWithName(implName))
             return entry.value().algoEnum;

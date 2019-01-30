@@ -133,11 +133,6 @@ namespace miner {
             if (!work)
                 continue; //check shutdown and try again
 
-            //if (work->epoch != dagCache.lock()->getEpoch()) {//TODO: replace
-            //    LOG(INFO) << "dagcache epoch (" << dagCache.lock()->getEpoch() << ") doesn't match work epoch " << work->epoch;
-            //    break;
-            //}
-
             if (work->epoch != dag.getEpoch()) {
                 break; //terminate task
             }

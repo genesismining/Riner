@@ -69,7 +69,6 @@ namespace miner {
 
             auto poolSwitcher = std::make_unique<PoolSwitcher>();
 
-
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
 
@@ -77,7 +76,17 @@ namespace miner {
                     p.host, p.port, p.username, p.password
                 };
 
+                auto poolImplName = poolFactory.getImplNameForAlgoTypeAndProtocol(algoType, p.protocol);
                 auto pool = poolFactory.makePool(args, algoType, p.protocol);
+
+                if (!pool) {
+                    LOG(ERROR) << "no pool implementation available for algo type "
+                    << stringFromAlgoEnum(algoType) << " in combination with protocol type "
+                    << stringFromProtoEnum(p.protocol);
+                    continue;
+                }
+
+                LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host << " on port " << p.port;
 
                 poolSwitcher->push(std::move(pool));
             }
