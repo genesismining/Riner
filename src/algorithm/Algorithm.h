@@ -17,7 +17,8 @@ namespace miner {
     };
 
     class AlgoBase {
-
+    public:
+        virtual ~AlgoBase() = default;
     };
 
 }

@@ -21,7 +21,7 @@ namespace miner {
             if (auto clDevice = args.compute.getDeviceOpenCL(device.id)) {
 
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
-                                              std::move(clDevice.value())));
+                                              std::move(clDevice.value()), device.settings));
             }
         }
     }
@@ -31,8 +31,10 @@ namespace miner {
         //implicitly waits for gpuTasks and submitTasks to finish
     }
 
-    void AlgoEthashCL::gpuTask(cl::Device clDevice) {
-        const unsigned numGpuSubTasks = 1;
+    void AlgoEthashCL::gpuTask(cl::Device clDevice, DeviceAlgoSettings settings) {
+        const unsigned numGpuSubTasks = settings.num_threads;
+
+        //Statistics statistics;
 
         auto notifyFunc = [] (const char *errinfo, const void *private_info, size_t cb, void *user_data) {
             LOG(ERROR) << errinfo;
@@ -41,7 +43,9 @@ namespace miner {
         PerPlatform plat;
         plat.clContext = cl::Context(clDevice, nullptr, notifyFunc); //TODO: opencl context should be per-platform
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", "-D WORKSIZE=128"); //TODO: build worksize into this string programmatically
+        std::string compilerOptions = "-D WORKSIZE=" + std::to_string(settings.work_size);
+
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", compilerOptions);
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
@@ -80,7 +84,7 @@ namespace miner {
 
             for (auto &task : tasks) {
                 task = std::async(std::launch::async, &AlgoEthashCL::gpuSubTask, this,
-                                  std::ref(plat), std::ref(clDevice), std::ref(dag));
+                                  std::ref(plat), std::ref(clDevice), std::ref(dag), settings);
             }
 
             //tasks destructor waits
@@ -89,10 +93,12 @@ namespace miner {
 
     }
 
-    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag) {
+    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag, DeviceAlgoSettings settings) {
         cl_int err = 0;
 
         PerGpuSubTask state;
+        state.settings = settings;
+
         state.cmdQueue = cl::CommandQueue(plat.clContext, clDevice, 0, &err);
         if (err || !state.cmdQueue()) {
             LOG(ERROR) << "unable to create command queue in gpuSubTask";
@@ -249,9 +255,8 @@ namespace miner {
 
         cl::NDRange offset{0};
 
-        size_t workSize = 128;
-        cl::NDRange localWorkSize{workSize};
-        cl::NDRange globalWorkSize{rawIntensity};
+        cl::NDRange localWorkSize{state.settings.work_size};
+        cl::NDRange globalWorkSize{state.settings.raw_intensity};
 
         err = state.cmdQueue.enqueueNDRangeKernel(state.clSearchKernel, offset, globalWorkSize, localWorkSize);
         if (err) {

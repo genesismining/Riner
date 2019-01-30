@@ -28,13 +28,13 @@ namespace miner {
         PoolFactory();
 
         //returns nullptr if no matching pool was found
-        unique_ptr<WorkProvider> makePool(PoolConstructionArgs args, const std::string &algoImplName);
+        unique_ptr<WorkProvider> makePool(PoolConstructionArgs args, const std::string &poolImplName);
         unique_ptr<WorkProvider> makePool(PoolConstructionArgs args, AlgoEnum, ProtoEnum);
 
-        //returns kAlgoTypeCount if implName doesn't match any algo
+        //returns kAlgoTypeCount if implName doesn't match any pool impl
         AlgoEnum getAlgoTypeForImplName(const std::string &implName);
 
-        //returns kProtoCount if implName doesn't match any algo
+        //returns kProtoCount if implName doesn't match any pool impl
         ProtoEnum getProtocolForImplName(const std::string &implName);
 
         template<class T>

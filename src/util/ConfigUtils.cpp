@@ -55,7 +55,7 @@ namespace miner {namespace configUtils {
                 auto &devProf = config.getDeviceProfile(mapping.deviceProfileName).value();
 
                 if (auto algoSettings = devProf.getAlgoSettings(implName)) {
-                    result.emplace_back(DeviceAlgoInfo{algoSettings.value(), deviceId});
+                    result.emplace_back(DeviceAlgoInfo{algoSettings.value(), deviceId, i});
                 }
                 else {
                     LOG(WARNING) << "no algorithm settings for '" << implName << "' in deviceProfile '" << devProf.name << "'";

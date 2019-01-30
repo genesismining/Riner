@@ -13,4 +13,7 @@ namespace miner {
 
     ParsePoolAddressResult parsePoolAddress(const char *str);
 
+    //returns lowercase version of inStr
+    std::string toLower(const std::string &inStr);
+
 }

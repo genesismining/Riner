@@ -23,8 +23,6 @@ namespace miner {
     void Config::parse(const nl::json &j) {
         using namespace std::string_literals;
 
-        bool sanity = true;
-
         std::string version = j.at("config_version");
         const auto supported = "1.0"s;
         if (version != supported) {
@@ -35,16 +33,26 @@ namespace miner {
 
         //parse pools
         for (auto &jo : j.at("pools")) {
-            pools.emplace_back();
-            auto &pool = pools.back();
+            Pool pool;
 
-            std::string url = jo.at("url");
-            auto hostPort = parsePoolAddress(url.c_str());
+            pool.type = algoEnumFromString(jo.at("type"));
+            pool.protocol = protoEnumFromString(jo.at("protocol"));
 
-            pool.host = hostPort.host;
-            pool.port = hostPort.port;
+            if (pool.type == kAlgoTypeCount) {
+                LOG(WARNING) << "'" << jo.at("type") << "' is not a valid algorithm type, cannot add pool";
+                continue;
+            }
+            if (pool.protocol == kProtoCount) {
+                LOG(WARNING) << "'" << jo.at("protocol") << "' is not a valid protocol type, cannot add pool";
+                continue;
+            }
+
+            pool.host = jo.at("host");
+            pool.port = jo.at("port");
             pool.username = jo.at("username");
             pool.password = jo.at("password");
+
+            pools.push_back(pool);
         }
 
         //parse device profile
@@ -54,16 +62,6 @@ namespace miner {
             auto &jo = pair.second;
 
             devp.name = pair.first;
-            devp.core_clock_mhz_min = jo.at("core_clock_mhz_min");
-            devp.core_clock_mhz_max = jo.at("core_clock_mhz_max");
-
-            if (devp.core_clock_mhz_min > devp.core_clock_mhz_max) {
-                LOG(WARNING) << "core_clock_mhz_min is supposed to be smaller than core_clock_mhz_max";
-                devp.core_clock_mhz_max = devp.core_clock_mhz_min;
-            }
-
-            devp.memclock = jo.at("memclock");
-            devp.powertune = jo.at("powertune");
 
             //parse algorithm settings for this device profile
             for (auto &pair : asPairs(jo.at("algorithms"))) {
@@ -72,6 +70,18 @@ namespace miner {
                 auto &jo = pair.second;
 
                 algs.algoImplName = pair.first;
+
+                algs.core_clock_mhz_min = jo.at("core_clock_mhz_min");
+                algs.core_clock_mhz_max = jo.at("core_clock_mhz_max");
+
+                if (algs.core_clock_mhz_min > algs.core_clock_mhz_max) {
+                    LOG(WARNING) << "core_clock_mhz_min is supposed to be smaller than core_clock_mhz_max";
+                    algs.core_clock_mhz_max = algs.core_clock_mhz_min;
+                }
+
+                algs.memclock = jo.at("memclock");
+                algs.powertune = jo.at("powertune");
+
                 algs.num_threads = jo.at("num_threads");
                 algs.work_size = jo.at("work_size");
                 algs.raw_intensity = jo.at("raw_intensity");
@@ -111,6 +121,7 @@ namespace miner {
                 }
             }
 
+            profiles.push_back(prof);
         }
 
         //parse global settings
@@ -123,16 +134,13 @@ namespace miner {
             gs.temp_target = jo.at("temp_target");
             gs.temp_hysteresis = valueOr<uint32_t>(jo, "temp_hysteresis", 2);
 
-            sanity &= gs.temp_target   <= gs.temp_overheat;
-            sanity &= gs.temp_overheat <= gs.temp_cutoff;
-            if (!sanity) {
+            if (!(gs.temp_target <= gs.temp_overheat && gs.temp_overheat <= gs.temp_cutoff)) {
                 LOG(WARNING) << "temperature parameters don't satisfy 'temp_target <= temp_overheat <= temp_cutoff'";
                 gs.temp_cutoff = gs.temp_overheat = gs.temp_target; //TODO: come up with something better here
-                sanity = true;
             }
 
             gs.api_port = std::to_string(valueOr<uint32_t>(jo, "api_port", 4028));
-            gs.opencl_kernel_path = jo.at("opencl_kernel_path");
+            gs.opencl_kernel_dir = jo.at("opencl_kernel_dir");
             gs.start_profile = jo.at("start_profile");
 
             if (!getProfile(gs.start_profile)) {
@@ -144,11 +152,12 @@ namespace miner {
     }
 
     Config::Config(const std::string &configStr) {
-        const auto j = nl::json::parse(configStr);
-        if (!j.is_discarded()) {
+        try {
+            const auto j = nl::json::parse(configStr);
             tryParse(j);
-        } else {
-            LOG(ERROR) << "unable to parse config text as json";
+        }
+        catch (nl::json::exception &e) {
+            LOG(ERROR) << "exception while parsing json config string: " << e.what();
         }
     }
 
@@ -164,7 +173,7 @@ namespace miner {
             LOG(INFO) << "parsing config string - done";
         }
         catch (nl::json::exception &e) {
-            LOG(ERROR) << "error while parsing json config: " << e.what();
+            LOG(ERROR) << "exception while parsing json config: " << e.what();
         }
         catch (std::invalid_argument &e) {
             LOG(ERROR) << "invalid argument while parsing json config: " << e.what();
@@ -201,6 +210,10 @@ namespace miner {
 
     optional_ref<miner::Config::Profile> Config::getStartProfile() {
         return getProfile(globalSettings.start_profile);
+    }
+
+    const Config::GlobalSettings &Config::getGlobalSettings() const {
+        return globalSettings;
     }
 
 }

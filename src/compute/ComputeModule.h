@@ -9,14 +9,16 @@
 
 namespace miner {
     class CLProgramLoader;
+    class Config;
 
     class ComputeModule {
         std::vector<DeviceId> allDevices;
+        const Config &config;
 
         unique_ptr<CLProgramLoader> clProgramLoader; //lazy initialization
 
     public:
-        ComputeModule();
+        ComputeModule(const Config &);
         ~ComputeModule();
 
         const std::vector<DeviceId> &getAllDeviceIds();

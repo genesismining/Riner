@@ -18,7 +18,7 @@ namespace miner {
 
     void registerPoolTypes(PoolFactory &f) {
 
-        f.registerType<PoolEthashStratum>("PoolEthashStratum", kEthash, kStratum);
+        f.registerType<PoolEthashStratum>("PoolEthashStratum", kEthash, kStratumTcp);
         //add your new pool type here
 
     }

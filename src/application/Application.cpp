@@ -20,8 +20,6 @@ namespace miner {
     Application::Application(optional<std::string> configPath) {
         using namespace std::chrono;
 
-        Config config;
-
         if (configPath) {
             config = configUtils::loadConfig(configPath.value());
         } else {
@@ -30,7 +28,7 @@ namespace miner {
         }
 
         if (!config) {
-            LOG(ERROR) << "no config available";
+            LOG(ERROR) << "no valid config available";
             return;
         }
 
@@ -41,46 +39,9 @@ namespace miner {
         }
         auto &prof = maybeProf.value();
 
+        compute = std::make_unique<ComputeModule>(config);
+
         launchProfile(config, prof);
-
-/*
-#if 0
-        std::string host = "eth-eu1.nanopool.org", port = "9999";
-#else
-        //std::string host = "localhost", port = "9998";
-        std::string host = "192.168.30.39", port = "3001";
-#endif
-
-        ComputeModule compute;
-        for (auto &id : compute.getAllDeviceIds()) {
-            LOG(INFO) << "device id at: " << &id << " name: " << to_string(id.getName());
-        };
-
-        auto username = "user";
-        auto password = "password";
-
-        auto interval = seconds(1);
-        auto timeUntilDead = seconds(5);
-        PoolSwitcher poolSwitcher{interval, timeUntilDead};
-
-        poolSwitcher.emplace<PoolEthashStratum>({
-            host, port, username, password
-        });
-
-        poolSwitcher.emplace<PoolEthashStratum>({
-            "eth-eu1.nanopool.org", "9999", username, password
-        });
-
-        //PoolEthashStratum poolEthashStratum({host, port, username, password});
-
-        AlgoEthashCL algo({compute, compute.getAllDeviceIds(), poolSwitcher});
-
-        for (size_t i = 0; i < 60 * 4; ++i) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            //LOG(INFO) << "...";
-        }
-        LOG(INFO) << "test period over, closing application";
-        */
     }
 
     void Application::launchProfile(const Config &config, Config::Profile &prof) {
@@ -93,10 +54,12 @@ namespace miner {
             ptr.reset();
 
         //launch profile
-        auto &allIds = compute.getAllDeviceIds();
+        auto &allIds = compute->getAllDeviceIds();
 
         //find all Algo
         auto allRequiredImplNames = getUniqueAlgoImplNamesForProfile(prof, allIds);
+
+        LOG(INFO) << "starting profile '" << prof.name << "'";
 
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
@@ -127,10 +90,18 @@ namespace miner {
 
             MI_ENSURES(poolSwitchers[algoType]);
 
-            auto deviceInfos = getAllDeviceAlgoInfosForAlgoImplName(implName, config, prof, compute.getAllDeviceIds());
+            auto deviceInfos = getAllDeviceAlgoInfosForAlgoImplName(implName, config, prof, compute->getAllDeviceIds());
+
+            std::string logText = "launching algorithm '" + implName + "' with devices: ";
+            for (auto &devInfo : deviceInfos) {
+                logText += "#" + std::to_string(devInfo.deviceIndex) + " " + gsl::to_string(devInfo.id.getName());
+                if (&devInfo != &deviceInfos.back())
+                    logText += ", ";
+            }
+            LOG(INFO) << logText;
 
             AlgoConstructionArgs args {
-                compute,
+                *compute,
                 deviceInfos,
                 *poolSwitchers[algoType]
             };
@@ -141,74 +112,6 @@ namespace miner {
         }
     }
 
-
-    /*
-    void foo() {
-        Config config("");
-
-        auto &prof = config.getStartProfile().value();
-
-        add "for all unique algoImplName in all profiles {"
-        auto implName = prof.device_default.algoImplName; This is wrong, you start by iterating devs not by finding an algo
-
-        AlgoFactory algoFac; //instantiates appropriate class for algo name string
-        PoolFactory poolFac; //instantiates appropriate class for algoType and protocol
-
-        auto algoType = factory.getAlgoTypeForName(implName);
-
-        //create pools
-        PoolSwitchr poolSwitcher;
-
-        //for (auto &pool : config.getPoolsWithAlgoType(algoType));
-        for (auto &cpool : config.getPools()) {
-
-            if (cpool.type == algoType) {
-
-                if (auto pool = poolFac.makePool(cpool.type, cpool.protocol))
-                    poolSwitcher.push(std::move(pool));
-            }
-        }
-
-        //gather devices
-        ComputeModul compute;
-
-        std::vector<DeviceInfo> devInfos;
-
-        size_t i = 0;
-        for (auto &devId : compute.getAllDeviceIds()) {
-            //extract the following into a "getAlgoSettingsForDeviceId" function
-
-            optional<Config::Profile::Mapping> mapping;
-
-            //if there is an extra rule for device with index #i
-            if (prof.devices_by_index.count(i)) {
-                mapping = prof.devices_by_index.at(i);
-            }
-            else {
-                mapping = prof.device_default;
-            }
-
-            auto &devp = config.getDeviceProfile(mapping.value().deviceProfileName).value();
-
-            //are there settings for this algoImpl on this deviceProfile?
-            if (auto configAlgoSettings = devp.getAlgoSettings(implName)) {
-                devInfos.push_back({devId, configAlgoSettings.value()})
-            }
-            else {
-                LOG(WARNING) << "deviceProfile '" << devp.name << "' does not offer settings for the requested algorithm '" << implName << "'";
-            }
-
-            ++i;
-        }
-
-        AlgoConstructionArgs args {
-            compute, devInfos, poolSwitcher
-        };
-
-        unique_ptr<BaseAlgo> algo = factory.makeAlgo(implName, args);
-
-    }
-     */
 }
 
 

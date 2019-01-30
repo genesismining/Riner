@@ -26,7 +26,7 @@ namespace miner {
 
             std::string api_port;
 
-            std::string opencl_kernel_path;
+            std::string opencl_kernel_dir;
             std::string start_profile;
         };
 
@@ -39,14 +39,15 @@ namespace miner {
 
         struct DeviceProfile {
             std::string name;
-            uint32_t
-            core_clock_mhz_min, //engine_min
-            core_clock_mhz_max, //engine_max
-            memclock,
-            powertune;
 
             struct AlgoSettings {
                 std::string algoImplName; //e.g. "AlgoEthashCL"
+
+                uint32_t
+                core_clock_mhz_min, //engine_min
+                core_clock_mhz_max, //engine_max
+                memclock,
+                powertune;
 
                 uint32_t
                 num_threads,
@@ -84,6 +85,10 @@ namespace miner {
         void parse(const nl::json &j);
 
         GlobalSettings globalSettings;
+    public:
+        const GlobalSettings &getGlobalSettings() const;
+
+    private:
 
         bool valid = false;
 

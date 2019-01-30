@@ -7,9 +7,12 @@
 
 namespace miner {
 
+    using DeviceAlgoSettings = Config::DeviceProfile::AlgoSettings;
+
     struct DeviceAlgoInfo {
-        Config::DeviceProfile::AlgoSettings settings;
+        DeviceAlgoSettings settings;
         DeviceId id;
+        size_t deviceIndex = std::numeric_limits<size_t>::max();
     };
 
     namespace configUtils {

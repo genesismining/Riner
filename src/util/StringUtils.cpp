@@ -2,6 +2,7 @@
 //
 
 #include "StringUtils.h"
+#include <algorithm>
 
 namespace miner {
 
@@ -19,5 +20,12 @@ namespace miner {
         }
         return res;
     }
+
+    std::string toLower(const std::string &inStr) {
+        std::string str = inStr;
+        std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+        return str;
+    }
+
 
 }

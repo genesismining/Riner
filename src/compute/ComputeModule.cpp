@@ -5,11 +5,13 @@
 #include <src/util/Logging.h>
 #include <src/common/Assert.h>
 #include <src/compute/opencl/CLProgramLoader.h>
+#include <src/application/Config.h>
 
 namespace miner {
 
-    ComputeModule::ComputeModule()
-    : allDevices(gatherAllDeviceIds()) {
+    ComputeModule::ComputeModule(const Config &config)
+    : allDevices(gatherAllDeviceIds())
+    , config(config) {
     }
 
     ComputeModule::~ComputeModule() {
@@ -44,7 +46,10 @@ namespace miner {
 
     CLProgramLoader &ComputeModule::getProgramLoaderOpenCL() {
         if (!clProgramLoader) {
-            clProgramLoader = std::make_unique<CLProgramLoader>("/cppminer_bin/", "/tmp/kernels/precompiled/"); //TODO: make this path configurable
+            auto kernelDir = config.getGlobalSettings().opencl_kernel_dir;
+            auto precompiledDir = kernelDir + "precompiled/";
+
+            clProgramLoader = std::make_unique<CLProgramLoader>(kernelDir, precompiledDir);
         }
         MI_ENSURES(clProgramLoader);
         return *clProgramLoader;

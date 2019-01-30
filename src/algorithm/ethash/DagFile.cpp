@@ -29,18 +29,18 @@ namespace miner {
 
         if (allocationMaxEpoch < epoch) {
             allocationMaxEpoch = epoch + futureEpochs;
-	
-	    auto allocSize = EthGetDAGSize(allocationMaxEpoch);
-	    auto clDeviceMaxMemAllocSize = device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
-	    if (allocSize > clDeviceMaxMemAllocSize) {
-		    LOG(WARNING) << "trying to allocate clDagBuffer of size " << allocSize << " which exceeds " << clDeviceMaxMemAllocSize << " = CL_DEVICE_MAX_MEM_ALLOC_SIZE";
-	    }
 
-	    LOG(INFO) << "allocating clDagBuffer size = " << allocSize;
+            auto allocSize = EthGetDAGSize(allocationMaxEpoch);
+            auto clDeviceMaxMemAllocSize = device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>();
+            if (allocSize > clDeviceMaxMemAllocSize) {
+                LOG(WARNING) << "trying to allocate clDagBuffer of size " << allocSize << " which exceeds " << clDeviceMaxMemAllocSize << " = CL_DEVICE_MAX_MEM_ALLOC_SIZE";
+            }
+
+            LOG(INFO) << "allocating clDagBuffer size = " << allocSize;
             clDagBuffer = cl::Buffer{context,
-                CL_MEM_READ_WRITE |
-                CL_MEM_HOST_NO_ACCESS,
-                allocSize, nullptr, &err
+                                     CL_MEM_READ_WRITE |
+                                     CL_MEM_HOST_NO_ACCESS,
+                                     allocSize, nullptr, &err
             };
 
             if (err) {
@@ -49,7 +49,11 @@ namespace miner {
             }
 
         }
-        MI_ENSURES(clDagBuffer());
+
+        if (!clDagBuffer()) {
+            LOG(ERROR) << "clDagBuffer not valid";
+            return false;
+        }
 
         //upload dag cache which is required for dag creation
         auto cacheSpan = cache.getCache();
@@ -113,9 +117,5 @@ namespace miner {
         MI_EXPECTS(valid);
         return clDagBuffer;
     }
-
-
-
-
 
 }

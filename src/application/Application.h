@@ -14,10 +14,12 @@ namespace miner {
 
     class Application {
 
+        Config config; //referenced by other subsystem, and thus must outlive them
+
         AlgoFactory algoFactory;
         PoolFactory poolFactory;
 
-        ComputeModule compute;
+        unique_ptr<ComputeModule> compute; //lazy init, depends on config
 
         //this array is accessed with the AlgoEnum and may contain nullptr
         std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> poolSwitchers;
