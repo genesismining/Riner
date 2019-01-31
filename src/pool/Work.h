@@ -6,8 +6,6 @@
 #include <src/common/Optional.h>
 
 namespace miner {
-    class WorkBase;
-
     class WorkProtocolData {
         uint64_t poolUid = 0; //used to determine whether a WorkResult is
         // returned to the same pool that created the work to begin with.

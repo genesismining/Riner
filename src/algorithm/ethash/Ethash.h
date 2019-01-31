@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <src/pool/WorkEthash.h>
+#include <src/pool/Work.h>
 #include <src/common/Span.h>
 #include <src/util/DynamicBuffer.h>
 
