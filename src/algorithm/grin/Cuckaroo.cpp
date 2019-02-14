@@ -1,0 +1,190 @@
+#include <src/algorithm/grin/Cuckaroo.h>
+#include <string>
+#include <vector>
+
+#include <src/pool/WorkCuckaroo.h>
+#include <src/util/Logging.h>
+
+namespace miner {
+
+namespace {
+    constexpr uint32_t remainingEdges[8] =
+    {
+            1U << 31,
+            1357500000,
+             636100000,
+             376400000,
+             250700000,
+             180300000,
+             135400000,
+             105800000,
+    };
+
+
+    void checkErr(cl_int err) {
+
+    }
+
+}  // namespace
+
+    using std::shared_ptr;
+    using std::unique_ptr;
+    using std::make_unique;
+    using std::make_shared;
+
+unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header) {
+//    // Init active edges bitmap:
+//    const uint32_t blocksize = 2 * 1024;
+//    kernelFillBuffer_.setArg(0, bufferActiveEdges_);
+//    kernelFillBuffer_.setArg(1, 0xffffffff);
+//    kernelFillBuffer_.setArg(2, blocksize);
+//    uint32_t iterations = (edgeCount_ / 8 / sizeof(uint32_t)) / blocksize;
+//    LOG(INFO) << "iterations=" << iterations;
+//    cl_int err = queue_.enqueueNDRangeKernel(kernelFillBuffer_, {64 * iterations}, {64}, {});
+//    checkErr(err);
+//
+//    int uorv = 0;
+//    for(uint32_t round=0; round<pruneRounds_; ++round) {
+//        uint32_t active = remainingEdges[std::min(7U, round)];
+//        //Timer rt;
+//        //rt.start();
+//        VLOG(0) << "Round " << round << ", uorv=" << uorv;
+//        pruneActiveEdges(header, active, uorv, round == 0);
+//        //queue_->finish();
+//        //VLOG(0) << "elapsed: round=" << rt.getSecondsElapsed() <<", total=" << timer.getSecondsElapsed() << "s";
+//        uorv ^= 1;
+//    }
+//    queue_.finish();
+//
+//    uint32_t* actives = new uint32_t[edgeCount_ / 32];
+//    queue_->asyncReadBuffer(*bufferActiveEdges_, actives, 0 /* offset */, bufferActiveEdges_->getSize(), {});
+//    queue_->finish();
+//    uint32_t debugActive = 0;
+//    for(uint32_t i=0; i<edgeCount_ / 32; ++i) {
+//        debugActive += __builtin_popcount(actives[i]);
+//    }
+//    VLOG(0) << "active edges: " << debugActive;
+
+    unique_ptr<CuckooSolution> s = header->makeWorkResult<kCuckaroo31>();
+    return s;
+}
+
+void CuckatooSolver::pruneActiveEdges(const CuckooHeader& header, uint32_t activeEdges, int uorv, bool initial) {
+//    if (initial) {
+//        kernelCreateNodes_->setArg(0, header.keys);
+//        kernelCreateNodes_->setArg(2, uorv);
+//    } else {
+//        kernelKillEdgesAndCreateNodes_->setArg(0, header.keys);
+//        kernelKillEdgesAndCreateNodes_->setArg(2, uorv);
+//    }
+//
+//    uint32_t nodeCapacity = bufferNodes_->getSize() / sizeof(uint32_t) / 10 * 9;
+//    VLOG(0) << "node capacity = " << nodeCapacity;
+//    uint32_t nodePartitions = activeEdges / nodeCapacity + 1;
+//    //nodePartitions = 16;
+//    shared_ptr<cl::Event> accumulated = nullptr;
+//    const uint32_t totalWork = edgeCount_ / 32; /* Each thread processes 32 bit. */
+//    const uint32_t workPerPartition = (totalWork / nodePartitions) & ~2047;
+//    VLOG(0) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
+//
+//    uint32_t offset = 0;
+//    for(uint32_t partition = 0; partition < nodePartitions; ++partition) {
+//        queue_->fillBuffer(*bufferCounters_, 0 /* pattern */, 0 /* offset */, bufferCounters_->getSize(), {});
+//
+//        uint32_t work;
+//        if (partition == nodePartitions - 1) {
+//            work = totalWork - offset;
+//        } else {
+//            work = workPerPartition;
+//        }
+//        //VLOG(0) << partition << ": " << offset << ", " << work;
+//        if (initial) {
+//            queue_->asyncExecute(*kernelCreateNodes_, {work}, {64}, {offset}, {});
+//        } else {
+//            queue_->asyncExecute(*kernelKillEdgesAndCreateNodes_, {work}, {64}, {offset}, {});
+//        }
+//
+//        offset += workPerPartition;
+//
+//        //context_->asyncPrintEventTimings(created.get(), "CreateNodes");
+//        kernelAccumulateNodes_->setArg(4, (partition == 0) ? 1 : 0);
+//        queue_->asyncExecute(*kernelAccumulateNodes_, {buckets_ * 256}, {256}, {}, {});
+//    }
+//
+//    queue_->asyncExecute(*kernelCombineActiveNodes_, edgeCount_ / 64, {64}, {}, {});
+}
+
+void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
+    cl_int err;
+    int64_t availableBytes = device_.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
+    if (err) {
+        LOG(ERROR) << "Failed to get available memory count.";
+        return;
+    }
+    int64_t maxMemoryAlloc = device_.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(&err);
+    checkErr(err);
+
+
+    int64_t bitmapBytes = (edgeCount_ / 8) * 5 / 2;
+    int64_t availableNodeBytes = availableBytes - bitmapBytes;
+    int64_t nodeBytes = availableNodeBytes - 300* 1024 * 1024;
+    nodeBytes = (1ULL << 31) /9*11;
+    nodeBytes = std::min(nodeBytes, maxMemoryAlloc);
+    VLOG(0) << "Bytes: total=" << availableBytes << ", bitmaps=" << bitmapBytes << ", nodes=" << nodeBytes;
+
+    buckets_ = edgeCount_ >> bucketBitShift_;
+    maxBucketSize_ = nodeBytes / 4  / buckets_;
+    maxBucketSize_ = (maxBucketSize_ & (~31));
+    VLOG(0) << buckets_ << " buckets with max size " << maxBucketSize_;
+
+    std::vector<cstring_span> files;
+    files.push_back("siphash.h");
+    files.push_back("cuckatoo.cl");
+
+    // TODO proper error handling
+
+    std::string options = "-DBUCKET_BIT_SHIFT=" + std::to_string(bucketBitShift_);
+    program_ = programLoader.loadProgram(context_, files, options).value();
+
+    bufferActiveEdges_ = cl::Buffer(context_, CL_MEM_READ_WRITE, edgeCount_ / 8);
+    bufferActiveNodes_ = cl::Buffer(context_, CL_MEM_READ_WRITE, edgeCount_ / 8);
+    bufferActiveNodesCombined_ = cl::Buffer(context_, CL_MEM_READ_WRITE, edgeCount_ / 16);
+    bufferNodes_ = cl::Buffer(context_, CL_MEM_READ_WRITE, nodeBytes);
+    bufferCounters_ = cl::Buffer(context_, CL_MEM_READ_WRITE, 4 * buckets_);
+
+    // CreateNodes
+    kernelCreateNodes_ = cl::Kernel(program_, "CreateNodes");
+    kernelCreateNodes_.setArg(1, bufferActiveEdges_);
+    kernelCreateNodes_.setArg(3 /* nodeMask */, edgeCount_ - 1);
+    kernelCreateNodes_.setArg(4, bufferNodes_);
+    kernelCreateNodes_.setArg(5, bufferCounters_);
+    kernelCreateNodes_.setArg(6, maxBucketSize_);
+
+    // AccumulateNodes
+    kernelAccumulateNodes_ = cl::Kernel(program_, "AccumulateNodes");
+    kernelAccumulateNodes_.setArg(0, bufferNodes_);
+    kernelAccumulateNodes_.setArg(1, bufferCounters_);
+    kernelAccumulateNodes_.setArg(2, maxBucketSize_);
+    kernelAccumulateNodes_.setArg(3, bufferActiveNodes_);
+
+    // CombineActive
+    kernelCombineActiveNodes_ = cl::Kernel(program_, "CombineActiveNodes");
+    kernelCombineActiveNodes_.setArg(0, bufferActiveNodes_);
+    kernelCombineActiveNodes_.setArg(1, bufferActiveNodesCombined_);
+
+    // KillEdges
+    kernelKillEdgesAndCreateNodes_ = cl::Kernel(program_, "KillEdgesAndCreateNodes");
+    kernelKillEdgesAndCreateNodes_.setArg(1, bufferActiveNodesCombined_);
+    kernelKillEdgesAndCreateNodes_.setArg(3 /* nodeMask */, edgeCount_ - 1);
+    kernelKillEdgesAndCreateNodes_.setArg(4, bufferActiveEdges_);
+    kernelKillEdgesAndCreateNodes_.setArg(5, bufferNodes_);
+    kernelKillEdgesAndCreateNodes_.setArg(6, bufferCounters_);
+    kernelKillEdgesAndCreateNodes_.setArg(7, maxBucketSize_);
+
+    // FillBuffer
+    kernelFillBuffer_ = cl::Kernel(program_, "FillBuffer");
+
+    queue_ = cl::CommandQueue(context_);
+}
+
+} /* namespace miner */

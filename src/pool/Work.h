@@ -66,6 +66,9 @@ namespace miner {
     template<> class Work<kEthash>;
     template<> class WorkResult<kEthash>;
 
+    template<> class Work<kCuckaroo31>;
+    template<> class WorkResult<kCuckaroo31>;
+
     //template<> class Work<kEquihash>;
     //template<> class WorkResult<kEquihash>;
 

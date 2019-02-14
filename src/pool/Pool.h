@@ -10,11 +10,6 @@
 #include <atomic>
 
 namespace miner {
-    class WorkResultBase;
-    class WorkBase;
-    template<AlgoEnum A> class WorkResult;
-    template<AlgoEnum A> class Work;
-
     struct PoolConstructionArgs {
         //don't confuse this with Config::Pool. PoolConstructionArgs may be used
         //to pass refs to other subsystems in the future (e.g. io_service)

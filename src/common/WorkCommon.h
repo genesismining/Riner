@@ -8,6 +8,7 @@ namespace miner {
 
     enum AlgoEnum : uint8_t {
         kEthash,
+        kCuckaroo31,
 
         kAlgoTypeCount,
     };
