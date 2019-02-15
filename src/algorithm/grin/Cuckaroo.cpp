@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 
+#include <src/crypto/blake2.h>
+#include <src/common/Endian.h>
 #include <src/pool/WorkCuckaroo.h>
 #include <src/util/Logging.h>
 
@@ -49,6 +51,21 @@ using std::make_unique;
 using std::make_shared;
 
 unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header) {
+    // Calculate keys
+    SiphashKeys keys;
+    {
+        std::vector<uint8_t> h = header->prePow;
+        // TODO append nonce
+        uint64_t keyArray[4];
+        blake2b(keyArray, sizeof(keyArray), h.data(), h.size(), 0, 0);
+        keys.k0 = htole64(keyArray[0]);
+        keys.k1 = htole64(keyArray[1]);
+        keys.k2 = htole64(keyArray[2]);
+        keys.k3 = htole64(keyArray[3]);
+    }
+
+    LOG(INFO) << "siphash keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
+
     // Init active edges bitmap:
     const uint32_t blocksize = 2 * 1024;
     kernelFillBuffer_.setArg(0, bufferActiveEdges_);
@@ -65,7 +82,7 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
         //Timer rt;
         //rt.start();
         VLOG(0) << "Round " << round << ", uorv=" << uorv;
-        pruneActiveEdges(*header, active, uorv, round == 0);
+        pruneActiveEdges(keys, active, uorv, round == 0);
         //queue_->finish();
         //VLOG(0) << "elapsed: round=" << rt.getSecondsElapsed() <<", total=" << timer.getSecondsElapsed() << "s";
         uorv ^= 1;
@@ -84,12 +101,12 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
     return s;
 }
 
-void CuckatooSolver::pruneActiveEdges(const CuckooHeader& header, uint32_t activeEdges, int uorv, bool initial) {
+void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEdges, int uorv, bool initial) {
     if (initial) {
-        kernelCreateNodes_.setArg(0, header.keys);
+        kernelCreateNodes_.setArg(0, keys);
         kernelCreateNodes_.setArg(2, uorv);
     } else {
-        kernelKillEdgesAndCreateNodes_.setArg(0, header.keys);
+        kernelKillEdgesAndCreateNodes_.setArg(0, keys);
         kernelKillEdgesAndCreateNodes_.setArg(2, uorv);
     }
 

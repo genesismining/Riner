@@ -26,6 +26,7 @@ add_executable(Miner
         src/algorithm/grin/AlgoCuckaroo31Cl.cpp src/algorithm/grin/AlgoCuckaroo31Cl.h
         src/algorithm/grin/Cuckaroo.cpp src/algorithm/grin/Cuckaroo.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
+        src/crypto/blake2b-ref.cpp src/crypto/blake2.h src/crypto/blake2-impl.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h

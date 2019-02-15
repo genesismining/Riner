@@ -33,7 +33,7 @@ public:
 private:
     void prepare(CLProgramLoader& programLoader);
 
-    void pruneActiveEdges(const CuckooHeader& header, uint32_t activeEdges, int uorv, bool initial);
+    void pruneActiveEdges(const SiphashKeys& header, uint32_t activeEdges, int uorv, bool initial);
 
     static constexpr uint32_t bucketBitShift_ = 19;
     static constexpr uint32_t pruneRounds_ = 20;

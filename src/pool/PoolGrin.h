@@ -56,7 +56,7 @@ namespace miner {
 
         bool acceptMiningNotify = false;
 
-        void onMiningNotify (const nl::json &j);
+        void onMiningNotify (const nl::json &jparams);
     };
 
 }

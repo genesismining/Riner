@@ -82,7 +82,10 @@ namespace miner {
         sharedProtoData->jobId = std::to_string(id);
         work->difficulty = jparams.at("difficulty");
         work->height = jparams.at("height");
-        work->prePow = HexString(jparams.at("pre_pow"));
+
+        HexString powHex(jparams.at("pre_pow"));
+        work->prePow.resize(powHex.sizeBytes());
+        powHex.getBytes(work->prePow);
 
         workQueue->setMaster(std::move(work), cleanFlag);
     }

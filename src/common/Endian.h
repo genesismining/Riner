@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "portable_endian.h"
+
 #include <src/common/Span.h>
 
 namespace miner {

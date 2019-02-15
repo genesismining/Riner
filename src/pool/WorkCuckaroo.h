@@ -1,12 +1,10 @@
 #pragma once
 
-#include <src/algorithm/grin/siphash.h>
 #include <src/common/Pointers.h>
 #include <src/pool/Pool.h>
 #include <src/pool/Work.h>
 #include <src/util/Bytes.h>
 
-#include <string>
 #include <vector>
 
 namespace miner {
@@ -21,10 +19,9 @@ public:
     int64_t difficulty = 1;
     int64_t jobId = -1;
     int64_t height = 0;
-    std::string prePow;
+    std::vector<uint8_t> prePow;
 
     uint64_t nonce = 0;
-    SiphashKeys keys;
 
     AlgoEnum getAlgoEnum() const override {
         return kCuckaroo31;
