@@ -41,7 +41,7 @@ namespace miner {
         using QueueItem = std::unique_ptr<Work<kCuckaroo31>>;
         using WorkQueue = AutoRefillQueue<QueueItem>;
 
-        const PoolConstructionArgs args;
+        const PoolConstructionArgs args_;
         const uint64_t uid;
         std::unique_ptr<WorkQueue> workQueue;
 

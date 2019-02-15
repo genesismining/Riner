@@ -21,8 +21,8 @@ namespace miner {
 
         login->method("login")
             .param("agent", "grin-miner")
-            .param("login", args.username)
-            .param("pass", args.password);
+            .param("login", args_.username)
+            .param("pass", args_.password);
 
         login->onResponse([this, getjobtemplate] (const JrpcResponse& ret) {
             if (!ret.error()) {
@@ -130,9 +130,9 @@ namespace miner {
     }
 
     PoolGrinStratum::PoolGrinStratum(PoolConstructionArgs args)
-    : args(std::move(args))
+    : args_(std::move(args))
     , uid(createNewPoolUid())
-    , jrpc(args.host, args.port) {
+    , jrpc(args_.host, args_.port) {
         //initialize workQueue
         auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
 
@@ -168,6 +168,6 @@ namespace miner {
     }
 
     cstring_span PoolGrinStratum::getName() const {
-        return args.host;
+        return args_.host;
     }
 }
