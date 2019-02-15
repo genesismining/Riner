@@ -176,6 +176,7 @@ __kernel void KillEdgesAndCreateNodes(
     }, i, pos);
 }
 
+#define _LOCAL_SIZE (1 << BUCKET_BIT_SHIFT)
     
 __kernel void AccumulateNodes(
     __global const uint32_t* nodes,
@@ -184,10 +185,8 @@ __kernel void AccumulateNodes(
     __global Bitmap* activeNodes,
     int initBitmap)
 {
-    const uint32_t localSize = 1 << BUCKET_BIT_SHIFT;
-    //const uint32_t localSize = 1 << 17;
-    __local Bitmap bitmap[localSize / 32];
-    FOREACH_PARALLEL(bitmap[i] = 0, i, localSize / 32);
+    __local Bitmap bitmap[_LOCAL_SIZE / 32];
+    FOREACH_PARALLEL(bitmap[i] = 0, i, _LOCAL_SIZE / 32);
     barrier(CLK_LOCAL_MEM_FENCE);
     
     uint32_t bucket = get_group_id(0);
@@ -195,38 +194,38 @@ __kernel void AccumulateNodes(
     const __global uint32_t* myNodes = nodes + bucket * maxBucketSize;
 //
 //    FOREACH_PARALLEL({
-//        uint32_t node = myNodes[i] % localSize;
+//        uint32_t node = myNodes[i] % _LOCAL_SIZE;
 //        atomic_or(&bitmap[node / 32], 1 << (node % 32));
 //    }, i, count);
     
     FOREACH_PARALLEL({
         uint8 nodes = vload8(i, myNodes);
-        atomic_or(&bitmap[(nodes.s0 % localSize) / 32], 1 << (nodes.s0 % 32));
-        atomic_or(&bitmap[(nodes.s1 % localSize) / 32], 1 << (nodes.s1 % 32));
-        atomic_or(&bitmap[(nodes.s2 % localSize) / 32], 1 << (nodes.s2 % 32));
-        atomic_or(&bitmap[(nodes.s3 % localSize) / 32], 1 << (nodes.s3 % 32));
-        atomic_or(&bitmap[(nodes.s4 % localSize) / 32], 1 << (nodes.s4 % 32));
-        atomic_or(&bitmap[(nodes.s5 % localSize) / 32], 1 << (nodes.s5 % 32));
-        atomic_or(&bitmap[(nodes.s6 % localSize) / 32], 1 << (nodes.s6 % 32));
-        atomic_or(&bitmap[(nodes.s7 % localSize) / 32], 1 << (nodes.s7 % 32));
+        atomic_or(&bitmap[(nodes.s0 % _LOCAL_SIZE) / 32], 1 << (nodes.s0 % 32));
+        atomic_or(&bitmap[(nodes.s1 % _LOCAL_SIZE) / 32], 1 << (nodes.s1 % 32));
+        atomic_or(&bitmap[(nodes.s2 % _LOCAL_SIZE) / 32], 1 << (nodes.s2 % 32));
+        atomic_or(&bitmap[(nodes.s3 % _LOCAL_SIZE) / 32], 1 << (nodes.s3 % 32));
+        atomic_or(&bitmap[(nodes.s4 % _LOCAL_SIZE) / 32], 1 << (nodes.s4 % 32));
+        atomic_or(&bitmap[(nodes.s5 % _LOCAL_SIZE) / 32], 1 << (nodes.s5 % 32));
+        atomic_or(&bitmap[(nodes.s6 % _LOCAL_SIZE) / 32], 1 << (nodes.s6 % 32));
+        atomic_or(&bitmap[(nodes.s7 % _LOCAL_SIZE) / 32], 1 << (nodes.s7 % 32));
     }, i, count / 8);
     uint32_t i = (count / 8) * 8 + get_local_id(0);
     if (i < count) {
-        uint32_t node = myNodes[i] % localSize;
+        uint32_t node = myNodes[i] % _LOCAL_SIZE;
         atomic_or(&bitmap[node / 32], 1 << (node % 32));
     }
     
     barrier(CLK_LOCAL_MEM_FENCE);
     
-    __global uint32_t* myActiveNodes = activeNodes + bucket * (localSize / 32);
+    __global uint32_t* myActiveNodes = activeNodes + bucket * (_LOCAL_SIZE / 32);
     if (initBitmap) {
         FOREACH_PARALLEL({
             myActiveNodes[i] = bitmap[i];
-        }, i, localSize / 32);
+        }, i, _LOCAL_SIZE / 32);
     } else {
         FOREACH_PARALLEL({
             myActiveNodes[i] |= bitmap[i]; // TODO read-modify-write ... is there a better way?
-        }, i, localSize / 32);
+        }, i, _LOCAL_SIZE / 32);
     }
 }
 
