@@ -8,7 +8,7 @@ namespace miner {
 AlgoCuckaroo31Cl::AlgoCuckaroo31Cl(AlgoConstructionArgs args) :
         terminate_(false), args_(std::move(args)) {
 
-    for (DeviceAlgoInfo &deviceInfo : args.assignedDevices) {
+    for (DeviceAlgoInfo &deviceInfo : args_.assignedDevices) {
         if (optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(deviceInfo.id)) {
             cl::Device device = deviceOr.value();
             workers_.emplace_back([this, device] {
