@@ -4,6 +4,7 @@
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 #include <src/common/Assert.h>
+#include <src/util/Copy.h>
 #include <src/pool/Work.h>
 #include <src/common/StringSpan.h>
 #include <string>
@@ -25,6 +26,8 @@ namespace miner {
 
         StillAliveTrackable() = default;
         virtual ~StillAliveTrackable() = default;
+
+        DELETE_COPY_AND_ASSIGNMENT(StillAliveTrackable);
 
         clock::time_point getLastKnownAliveTime();
         void setLastKnownAliveTime(clock::time_point time);

@@ -38,6 +38,7 @@ add_executable(Miner
         src/pool/WorkEthash.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
+        src/pool/PoolGrin.cpp src/pool/PoolGrin.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h

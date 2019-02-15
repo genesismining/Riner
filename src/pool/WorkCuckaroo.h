@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <src/algorithm/grin/siphash.h>
@@ -7,35 +6,46 @@
 #include <src/pool/Work.h>
 #include <src/util/Bytes.h>
 
+#include <string>
+#include <vector>
+
 namespace miner {
 
-    template<>
-    class Work<kCuckaroo31> : public WorkBase {
-    public:
-        Work(std::weak_ptr<WorkProtocolData> data) : WorkBase(std::move(data)) {}
+template<>
+class Work<kCuckaroo31> : public WorkBase {
+public:
+    Work(std::weak_ptr<WorkProtocolData> data) :
+            WorkBase(std::move(data)) {
+    }
 
-        SiphashKeys keys;
+    int64_t difficulty = 1;
+    int64_t jobId = -1;
+    int64_t height = 0;
+    std::string prePow;
 
-        AlgoEnum getAlgoEnum() const override {
-            return kCuckaroo31;
-        }
-    };
+    uint64_t nonce = 0;
+    SiphashKeys keys;
 
-    template<>
-    class WorkResult<kCuckaroo31> : public WorkResultBase {
-    public:
-        WorkResult(std::weak_ptr<WorkProtocolData> data) : WorkResultBase(std::move(data)) {}
+    AlgoEnum getAlgoEnum() const override {
+        return kCuckaroo31;
+    }
+};
 
-        AlgoEnum getAlgoEnum() const override {
-            return kCuckaroo31;
-        }
-    };
+template<>
+class WorkResult<kCuckaroo31> : public WorkResultBase {
+public:
+    WorkResult(std::weak_ptr<WorkProtocolData> data) :
+            WorkResultBase(std::move(data)) {
+    }
 
-}
+    AlgoEnum getAlgoEnum() const override {
+        return kCuckaroo31;
+    }
 
+    int64_t height = 0;
+    uint64_t nonce = 0;
+    std::vector<uint32_t> pow;
+};
 
-
-
-
-
+} // namespace miner
 

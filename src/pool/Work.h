@@ -26,12 +26,11 @@ namespace miner {
         std::weak_ptr<WorkProtocolData> getProtocolData() const;
 
         template<class T>
-        optional<std::shared_ptr<T>> tryGetProtocolDataAs() const {
-            optional<std::shared_ptr<T>> opt;
+        std::shared_ptr<T> tryGetProtocolDataAs() const {
             if (auto pdata = protocolData.lock()) {
-                opt = std::move(std::static_pointer_cast<T>(pdata));
+                return std::static_pointer_cast<T>(pdata);
             }
-            return opt;
+            return nullptr;
         }
 
         virtual AlgoEnum getAlgoEnum() const = 0;
