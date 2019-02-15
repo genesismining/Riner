@@ -2,7 +2,27 @@
 #include <src/common/Assert.h>
 #include "JrpcBuilder.h"
 
+#include <string>
+
 namespace miner {
+
+namespace {
+
+optional<int> asInt(const nl::json &j) {
+    if (j.is_number()) {
+        return j.get<int>();
+    }
+    if (j.is_string()) {
+        try {
+            return std::stoi(j.get<std::string>());
+        } catch (std::invalid_argument& e) {
+        }
+    }
+    return nullopt;
+}
+
+
+} // namespace
 
     JrpcError::JrpcError(const nl::json &j) {
         if (j.count("code"))
@@ -58,15 +78,13 @@ namespace miner {
     optional<int> JrpcBuilder::getId() const {
         //todo: decide whether to handle "null" id differently
         if (json.count("id")) {
-            auto &jid = json.at("id");
-            if (jid.is_number())
-                return jid.get<int>();
+            return asInt(json.at("id"));
         }
         return nullopt;
     }
 
     JrpcBuilder &JrpcBuilder::id(int val) {
-        json["id"] = val;
+        json["id"] = std::to_string(val);
         return *this;
     }
 
@@ -79,8 +97,9 @@ namespace miner {
     }
 
     JrpcBuilder &JrpcBuilder::id(optional<int> val) {
-        if (val)
-            json["id"] = val.value();
+        if (val) {
+            id(val.value());
+        }
         return *this;
     }
 
@@ -109,9 +128,7 @@ namespace miner {
 
     optional<int> JrpcResponse::id() const {
         if (json.count("id")) {
-            auto & jid = json.at("id");
-            if (jid.is_number())
-                return jid.get<int>();
+            return asInt(json.at("id"));
         }
         return nullopt;
     }
