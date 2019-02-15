@@ -233,11 +233,12 @@ int32_t CuckatooSolver::getBucketBitShift() {
         return 19;
     }
     uint32_t localMem = opts_.device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
-    uint32_t bucketBitShift = 8;
-    while((1 << bucketBitShift) < localMem) {
-        bucketBitShift *= 2;
+    VLOG(1) << "local mem: " << localMem << "bytes";
+    uint32_t bucketBitShift = 1;
+    while((static_cast<uint32_t>(1) << bucketBitShift) < localMem * 8) {
+        bucketBitShift++;
     }
-    return bucketBitShift;
+    return bucketBitShift - 1;
 }
 
 } /* namespace miner */
