@@ -16,4 +16,6 @@ namespace miner {
     //returns lowercase version of inStr
     std::string toLower(const std::string &inStr);
 
+    bool startsWith(const std::string& string, const std::string& prefix);
+
 }

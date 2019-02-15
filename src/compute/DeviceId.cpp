@@ -3,6 +3,7 @@
 
 #include "DeviceId.h"
 #include <src/common/OpenCL.h>
+#include <src/util/StringUtils.h>
 #include <string>
 #include <cstdio>
 
@@ -102,7 +103,7 @@ namespace miner {
                 return nullopt;
             }
         }
-        else if (deviceVendor == "NVIDIA") {
+        else if (startsWith(deviceVendor, "NVIDIA")) {
             vendorEnum = kNvidia;
 #ifndef CL_DEVICE_PCI_BUS_ID_NV
 #define CL_DEVICE_PCI_BUS_ID_NV                     0x4008
