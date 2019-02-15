@@ -37,6 +37,7 @@ namespace miner {
         getjobtemplate->onResponse([this] (auto &ret) {
             if (!ret.error()) {
                 acceptMiningNotify = true;
+                onMiningNotify(ret.getJson());
             }
         });
 
