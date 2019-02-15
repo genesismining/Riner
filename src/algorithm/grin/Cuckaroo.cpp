@@ -139,7 +139,6 @@ void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
     int64_t maxMemoryAlloc = device_.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(&err);
     checkErr(err);
 
-
     int64_t bitmapBytes = (edgeCount_ / 8) * 5 / 2;
     int64_t availableNodeBytes = availableBytes - bitmapBytes;
     int64_t nodeBytes = availableNodeBytes - 300* 1024 * 1024;
@@ -154,8 +153,8 @@ void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
     VLOG(0) << buckets_ << " buckets with max size " << maxBucketSize_;
 
     std::vector<cstring_span> files;
-    files.push_back("siphash.h");
-    files.push_back("cuckatoo.cl");
+    files.push_back("grin/siphash.h");
+    files.push_back("grin/cuckatoo.cl");
 
     // TODO proper error handling
 
