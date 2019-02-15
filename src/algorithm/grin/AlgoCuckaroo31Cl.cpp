@@ -11,9 +11,15 @@ AlgoCuckaroo31Cl::AlgoCuckaroo31Cl(AlgoConstructionArgs args) :
     for (DeviceAlgoInfo &deviceInfo : args_.assignedDevices) {
         if (optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(deviceInfo.id)) {
             cl::Device device = deviceOr.value();
-            workers_.emplace_back([this, device] {
+            workers_.emplace_back([this, deviceInfo, device] {
                     cl::Context context(device);
-                    CuckatooSolver solver(31, context, device, args_.compute.getProgramLoaderOpenCL());
+                    CuckatooSolver::Options opts(args_.compute.getProgramLoaderOpenCL());
+                    opts.n = 31;
+                    opts.context = context;
+                    opts.device = device;
+                    opts.vendor = deviceInfo.id.getVendor();
+
+                    CuckatooSolver solver(std::move(opts));
                     run(context, solver);
                 });
 

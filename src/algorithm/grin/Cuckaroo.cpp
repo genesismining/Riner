@@ -152,14 +152,17 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
     queue_.enqueueNDRangeKernel(kernelCombineActiveNodes_, {}, {edgeCount_ / 64}, {64});
 }
 
-void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
+void CuckatooSolver::prepare() {
+    CLProgramLoader& programLoader = opts_.programLoader;
+    uint32_t bucketBitShift = getBucketBitShift();
+    LOG(INFO) << "Bucket bit shift = " << bucketBitShift;
     cl_int err;
-    int64_t availableBytes = device_.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
+    int64_t availableBytes = opts_.device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
     if (err) {
         LOG(ERROR) << "Failed to get available memory count.";
         return;
     }
-    int64_t maxMemoryAlloc = device_.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(&err);
+    int64_t maxMemoryAlloc = opts_.device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(&err);
     checkErr(err);
 
     int64_t bitmapBytes = (edgeCount_ / 8) * 5 / 2;
@@ -170,7 +173,7 @@ void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
     nodeBytes_ = nodeBytes;
     VLOG(0) << "Bytes: total=" << availableBytes << ", bitmaps=" << bitmapBytes << ", nodes=" << nodeBytes;
 
-    buckets_ = edgeCount_ >> bucketBitShift_;
+    buckets_ = edgeCount_ >> bucketBitShift;
     maxBucketSize_ = nodeBytes / 4  / buckets_;
     maxBucketSize_ = (maxBucketSize_ & (~31));
     VLOG(0) << buckets_ << " buckets with max size " << maxBucketSize_;
@@ -181,14 +184,14 @@ void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
 
     // TODO proper error handling
 
-    std::string options = "-DBUCKET_BIT_SHIFT=" + std::to_string(bucketBitShift_);
-    program_ = programLoader.loadProgram(context_, files, options).value();
+    std::string options = "-DBUCKET_BIT_SHIFT=" + std::to_string(bucketBitShift);
+    program_ = programLoader.loadProgram(opts_.context, files, options).value();
 
-    bufferActiveEdges_ = cl::Buffer(context_, CL_MEM_READ_WRITE, edgeCount_ / 8);
-    bufferActiveNodes_ = cl::Buffer(context_, CL_MEM_READ_WRITE, edgeCount_ / 8);
-    bufferActiveNodesCombined_ = cl::Buffer(context_, CL_MEM_READ_WRITE, edgeCount_ / 16);
-    bufferNodes_ = cl::Buffer(context_, CL_MEM_READ_WRITE, nodeBytes);
-    bufferCounters_ = cl::Buffer(context_, CL_MEM_READ_WRITE, 4 * buckets_);
+    bufferActiveEdges_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);
+    bufferActiveNodes_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);
+    bufferActiveNodesCombined_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 16);
+    bufferNodes_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, nodeBytes);
+    bufferCounters_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, 4 * buckets_);
 
     // CreateNodes
     kernelCreateNodes_ = cl::Kernel(program_, "CreateNodes");
@@ -222,7 +225,19 @@ void CuckatooSolver::prepare(CLProgramLoader& programLoader) {
     // FillBuffer
     kernelFillBuffer_ = cl::Kernel(program_, "FillBuffer");
 
-    queue_ = cl::CommandQueue(context_);
+    queue_ = cl::CommandQueue(opts_.context);
+}
+
+int32_t CuckatooSolver::getBucketBitShift() {
+    if (opts_.vendor == VendorEnum::kAMD) {
+        return 19;
+    }
+    uint32_t localMem = opts_.device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
+    uint32_t bucketBitShift = 8;
+    while((1 << bucketBitShift) < localMem) {
+        bucketBitShift *= 2;
+    }
+    return bucketBitShift;
 }
 
 } /* namespace miner */

@@ -7,6 +7,7 @@
 
 #include <src/common/OpenCL.h>
 #include <src/compute/opencl/CLProgramLoader.h>
+#include <src/compute/ComputeApiEnums.h>
 #include <stdint.h>
 #include <string>
 #include <lib/cl2hpp/include/cl2.hpp>
@@ -19,11 +20,20 @@ typedef WorkResult<kCuckaroo31> CuckooSolution;
 
 class CuckatooSolver {
 public:
-    CuckatooSolver(uint32_t n, cl::Context context, cl::Device device, CLProgramLoader& programLoader) :
-            n_(n),
-            edgeCount_(static_cast<uint32_t>(1) << n_),
-            context_(context), device_(device) {
-        prepare(programLoader);
+    struct Options {
+        Options(CLProgramLoader& programLoader): programLoader(programLoader) {}
+
+        uint32_t n = 0;
+        cl::Context context;
+        cl::Device device;
+        VendorEnum vendor = VendorEnum::kVendorEnumCount;
+        CLProgramLoader& programLoader;
+    };
+
+    CuckatooSolver(Options options) :
+            opts_(std::move(options)),
+            edgeCount_(static_cast<uint32_t>(1) << opts_.n) {
+        prepare();
     }
 
     DELETE_COPY_AND_ASSIGNMENT(CuckatooSolver);
@@ -31,17 +41,16 @@ public:
     std::unique_ptr<CuckooSolution> solve(std::unique_ptr<CuckooHeader> header);
 
 private:
-    void prepare(CLProgramLoader& programLoader);
+    void prepare();
 
     void pruneActiveEdges(const SiphashKeys& header, uint32_t activeEdges, int uorv, bool initial);
 
-    static constexpr uint32_t bucketBitShift_ = 19;
+    int32_t getBucketBitShift();
+
     static constexpr uint32_t pruneRounds_ = 20;
 
-    const uint32_t n_;
+    const Options opts_;
     const uint32_t edgeCount_;
-    const cl::Context context_;
-    const cl::Device device_;
 
     uint32_t buckets_ = 0;
     uint32_t maxBucketSize_ = 0;
