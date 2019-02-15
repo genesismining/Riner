@@ -43,8 +43,9 @@ private:
     const cl::Context context_;
     const cl::Device device_;
 
-    uint32_t buckets_;
-    uint32_t maxBucketSize_;
+    uint32_t buckets_ = 0;
+    uint32_t maxBucketSize_ = 0;
+    int64_t nodeBytes_ = -1;
 
     cl::Program program_;
 

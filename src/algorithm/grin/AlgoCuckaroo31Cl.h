@@ -10,11 +10,11 @@
 
 namespace miner {
 
-class AlgoCuckarooCl: public AlgoBase {
+class AlgoCuckaroo31Cl: public AlgoBase {
 
 public:
-    explicit AlgoCuckarooCl(AlgoConstructionArgs args);
-    ~AlgoCuckarooCl();
+    explicit AlgoCuckaroo31Cl(AlgoConstructionArgs args);
+    ~AlgoCuckaroo31Cl() override;
 
 private:
     void run(cl::Context& context, CuckatooSolver& solver);

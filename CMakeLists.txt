@@ -23,7 +23,7 @@ add_executable(Miner
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/algorithm/grin/siphash.h
-        src/algorithm/grin/AlgoCuckarooCl.cpp src/algorithm/grin/AlgoCuckarooCl.h
+        src/algorithm/grin/AlgoCuckaroo31Cl.cpp src/algorithm/grin/AlgoCuckaroo31Cl.h
         src/algorithm/grin/Cuckaroo.cpp src/algorithm/grin/Cuckaroo.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h

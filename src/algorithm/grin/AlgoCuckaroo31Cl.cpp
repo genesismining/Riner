@@ -1,13 +1,11 @@
-#include <src/algorithm/grin/AlgoCuckarooCl.h>
-
-#include <src/compute/opencl/CLProgramLoader.h>
 #include <src/pool/WorkCuckaroo.h>
 
 #include <lib/cl2hpp/include/cl2.hpp>
+#include <src/algorithm/grin/AlgoCuckaroo31Cl.h>
+
 
 namespace miner {
-
-AlgoCuckarooCl::AlgoCuckarooCl(AlgoConstructionArgs args) :
+AlgoCuckaroo31Cl::AlgoCuckaroo31Cl(AlgoConstructionArgs args) :
         terminate_(false), args_(std::move(args)) {
 
     for (DeviceAlgoInfo &deviceInfo : args.assignedDevices) {
@@ -23,14 +21,14 @@ AlgoCuckarooCl::AlgoCuckarooCl(AlgoConstructionArgs args) :
     }
 }
 
-AlgoCuckarooCl::~AlgoCuckarooCl() {
+AlgoCuckaroo31Cl::~AlgoCuckaroo31Cl() {
     terminate_ = true;
     for(auto& worker: workers_) {
         worker.join();
     }
 }
 
-void AlgoCuckarooCl::run(cl::Context& context, CuckatooSolver& solver) {
+void AlgoCuckaroo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
     while(!terminate_) {
         unique_ptr<CuckooHeader> work = args_.workProvider.tryGetWork<kCuckaroo31>().value_or(nullptr);
         if (!work) {
