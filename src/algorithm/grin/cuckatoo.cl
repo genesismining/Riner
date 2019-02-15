@@ -1,4 +1,4 @@
-#include "siphash.h"
+//#include "siphash.h"
 
 #define FOREACH_PARALLEL(cmd, i, n) \
     for(uint32_t i = get_local_id(0); i < (n); i += get_local_size(0)) { \
@@ -56,6 +56,9 @@ bool isActive(const __global Bitmap* bitmap, uint32_t node) {
     return (bitmap[partner/32] & (1 << (partner % 32))) != 0; 
 }
 
+#define _BUFFERS (1 << (31 - BUCKET_BIT_SHIFT))
+#define __BSIZE 120
+
 __kernel void CreateNodes(
     const struct SiphashKeys keys,
     __global const Bitmap* activeEdges,
@@ -68,13 +71,10 @@ __kernel void CreateNodes(
     // Every thread processes one word of input (32 bits).
     // TODO compact input node set to reduce hash count in non-first round
     
-    const uint32_t buffers = 1 << (31 - BUCKET_BIT_SHIFT);
-    const uint32_t bsize = 120;
+    __local uint32_t buf[_BUFFERS * __BSIZE];
+    __local uint32_t cnt[_BUFFERS];
     
-    __local uint32_t buf[buffers * bsize];
-    __local uint32_t cnt[buffers];
-    
-    FOREACH_PARALLEL(cnt[i] = 0, i, buffers);
+    FOREACH_PARALLEL(cnt[i] = 0, i, _BUFFERS);
     barrier(CLK_LOCAL_MEM_FENCE);
 
     uint32_t bits = activeEdges[get_global_id(0)];
@@ -88,38 +88,38 @@ __kernel void CreateNodes(
         uint32_t nodeOut = siphash24(keys, nonce) & nodeMask;
 
         addToNodes(nodeOut, nodes, bucketCounters, maxBucketSize);
-        //addToNodesL(nodeOut, buf, cnt, bsize);
+        //addToNodesL(nodeOut, buf, cnt, __BSIZE);
     }
 //    __local uint32_t m;
 //    m = 0;
 //    barrier(CLK_LOCAL_MEM_FENCE);
 //    
-//    __local uint32_t pos[buffers];
+//    __local uint32_t pos[_BUFFERS];
 //    FOREACH_PARALLEL({
-//        cnt[i] = min(bsize, cnt[i]);
+//        cnt[i] = min(__BSIZE, cnt[i]);
 //        pos[i] = atomic_add(&bucketCounters[i], cnt[i]);
 //        m = atomic_max(&m, cnt[i]);
-//    }, i, buffers);
+//    }, i, _BUFFERS);
 //    barrier(CLK_LOCAL_MEM_FENCE);
 
 //    FOREACH_PARALLEL({
 //        int c = cnt[i];
 //        __global uint32_t* n = &nodes[maxBucketSize * i + pos[i]];
 //        for(int j=0; j<c; j += 4) {
-//            *(__global uint4*)(&n[j]) = *(__local uint4*)(&buf[bsize * i + j]);
+//            *(__global uint4*)(&n[j]) = *(__local uint4*)(&buf[_BSIZE * i + j]);
 //        }
-//    }, i, buffers);
+//    }, i, _BUFFERS);
     
-//    for(int b = 0; b < buffers; ++b) {
+//    for(int b = 0; b < _BUFFERS; ++b) {
 //        __global uint32_t* n = &nodes[maxBucketSize * b + pos[b]];
 //        FOREACH_PARALLEL(
-//                //n[i] = buf[bsize * b + i],
-//                *(__global uint4*)(&n[4*i]) = *(__local uint4*)(&buf[bsize * b + 4*i]),
+//                //n[i] = buf[_BSIZE * b + i],
+//                *(__global uint4*)(&n[4*i]) = *(__local uint4*)(&buf[_BSIZE * b + 4*i]),
 //                i, cnt[i] / 4);
 //    }
-//    for(int b = 0; b < buffers; ++b) {
+//    for(int b = 0; b < _BUFFERS; ++b) {
 //        __global uint32_t* n = &nodes[maxBucketSize * b + pos[b]];        
-//        async_work_group_copy(n, &buf[bsize * b], cnt[b], 0);
+//        async_work_group_copy(n, &buf[_BSIZE * b], cnt[b], 0);
 //    }
 }
 
