@@ -63,8 +63,13 @@ namespace miner {
         JrpcBuilder &onResponse(ResponseFunc &&func);
 
         //set a custom id, if no id is set, the TcpJsonRpcProtocolUtil will choose an unused one automatically
-        JrpcBuilder &id(int val);
-        JrpcBuilder &id(optional<int> val);
+        JrpcBuilder &setId(int val);
+        JrpcBuilder &setId(optional<int> val);
+
+        JrpcBuilder& setSerializeIdAsString(bool serializeAsString) {
+            serializeIdAsString_ = serializeAsString;
+            return *this;
+        }
 
         optional<int> getId() const;
         const nl::json &getJson() const;
@@ -74,6 +79,7 @@ namespace miner {
         explicit JrpcBuilder(cstring_span version = "2.0");
 
     private:
+        bool serializeIdAsString_ = false;
         ResponseFunc responseFunc;
 
         nl::json json;

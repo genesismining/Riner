@@ -20,6 +20,7 @@ namespace miner {
         auto getjobtemplate = std::make_shared<JrpcBuilder>();
 
         login->method("login")
+            .setSerializeIdAsString(true)
             .param("agent", "grin-miner")
             .param("login", args_.username)
             .param("pass", args_.password);
@@ -30,7 +31,8 @@ namespace miner {
             }
         });
 
-        getjobtemplate->method("getjobtemplate");
+        getjobtemplate->method("getjobtemplate")
+                .setSerializeIdAsString(true);
 
         getjobtemplate->onResponse([this] (auto &ret) {
             if (!ret.error()) {
@@ -77,7 +79,8 @@ namespace miner {
 
         auto work = std::make_unique<Work<kCuckaroo31>>(weakProtoData);
 
-        sharedProtoData->jobId = jparams.at("job_id");
+        int id = jparams.at("job_id");
+        sharedProtoData->jobId = std::to_string(id);
         work->difficulty = jparams.at("difficulty");
         work->height = jparams.at("height");
         work->prePow = HexString(jparams.at("pre_pow"));
@@ -106,6 +109,7 @@ namespace miner {
             }
 
             submit->method("submit")
+                .setSerializeIdAsString(true)
                 .param("edge_bits", 31)
                 .param("height", result->height)
                 .param("job_id", protoData->jobId)

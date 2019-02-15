@@ -9,7 +9,7 @@ namespace miner {
 namespace {
 
 optional<int> asInt(const nl::json &j) {
-    if (j.is_number()) {
+    if (j.is_number_integer()) {
         return j.get<int>();
     }
     if (j.is_string()) {
@@ -83,8 +83,19 @@ optional<int> asInt(const nl::json &j) {
         return nullopt;
     }
 
-    JrpcBuilder &JrpcBuilder::id(int val) {
-        json["id"] = std::to_string(val);
+    JrpcBuilder &JrpcBuilder::setId(int val) {
+        if (serializeIdAsString_) {
+            json["id"] = std::to_string(val);
+        } else {
+            json["id"] = val;
+        }
+        return *this;
+    }
+
+    JrpcBuilder &JrpcBuilder::setId(optional<int> val) {
+        if (val) {
+            setId(val.value());
+        }
         return *this;
     }
 
@@ -94,13 +105,6 @@ optional<int> asInt(const nl::json &j) {
 
     void JrpcBuilder::callResponseFunc(const JrpcResponse &response) {
         responseFunc(response);
-    }
-
-    JrpcBuilder &JrpcBuilder::id(optional<int> val) {
-        if (val) {
-            id(val.value());
-        }
-        return *this;
     }
 
     JrpcResponse::JrpcResponse(const nl::json &j)
