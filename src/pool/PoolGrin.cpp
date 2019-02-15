@@ -37,7 +37,7 @@ namespace miner {
         getjobtemplate->onResponse([this] (auto &ret) {
             if (!ret.error()) {
                 acceptMiningNotify = true;
-                onMiningNotify(ret.getJson());
+                onMiningNotify(ret.getJson().at("result"));
             }
         });
 
@@ -45,7 +45,7 @@ namespace miner {
         jrpc.setOnReceiveUnhandled([this] (const JrpcResponse& ret) {
             if (acceptMiningNotify &&
                 ret.atEquals("method", "job")) {
-                onMiningNotify(ret.getJson());
+                onMiningNotify(ret.getJson().at("params"));
             }
             else if (ret.getJson().count("method")) {
                 //unsupported method
@@ -64,9 +64,7 @@ namespace miner {
         jrpc.call(*login);
     }
 
-    void PoolGrinStratum::onMiningNotify(const nl::json &j) {
-        nl::json jparams = j.at("params");
-
+    void PoolGrinStratum::onMiningNotify(const nl::json &jparams) {
         // TODO clear old jobs only if height changes
         bool cleanFlag = true;
         if (cleanFlag) {
