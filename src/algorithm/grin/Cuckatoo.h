@@ -14,8 +14,8 @@
 
 namespace miner {
 
-typedef Work<kCuckaroo31> CuckooHeader;
-typedef WorkResult<kCuckaroo31> CuckooSolution;
+typedef Work<kCuckatoo31> CuckooHeader;
+typedef WorkResult<kCuckatoo31> CuckooSolution;
 
 
 class CuckatooSolver {
@@ -47,7 +47,7 @@ private:
 
     int32_t getBucketBitShift();
 
-    static constexpr uint32_t pruneRounds_ = 20;
+    static constexpr uint32_t pruneRounds_ = 100;
 
     const Options opts_;
     const uint32_t edgeCount_;

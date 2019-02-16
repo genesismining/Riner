@@ -29,7 +29,6 @@ void addToNodes(
 {
     uint32_t bucket = (node >> BUCKET_BIT_SHIFT);
     uint32_t pos = atomic_inc(&bucketCounters[bucket]);
-    //uint32_t pos = bucketCounters[bucket]++;
     if (pos >= maxBucketSize) {
         return;
     }
@@ -57,7 +56,7 @@ bool isActive(const __global Bitmap* bitmap, uint32_t node) {
 }
 
 #define _BUFFERS (1 << (31 - BUCKET_BIT_SHIFT))
-#define __BSIZE 120
+//#define _BSIZE 120
 
 __kernel void CreateNodes(
     const struct SiphashKeys keys,
@@ -71,11 +70,11 @@ __kernel void CreateNodes(
     // Every thread processes one word of input (32 bits).
     // TODO compact input node set to reduce hash count in non-first round
     
-    __local uint32_t buf[_BUFFERS * __BSIZE];
-    __local uint32_t cnt[_BUFFERS];
+    //__local uint32_t buf[_BUFFERS * _BSIZE];
+    //__local uint32_t cnt[_BUFFERS];
     
-    FOREACH_PARALLEL(cnt[i] = 0, i, _BUFFERS);
-    barrier(CLK_LOCAL_MEM_FENCE);
+    //FOREACH_PARALLEL(cnt[i] = 0, i, _BUFFERS);
+    //barrier(CLK_LOCAL_MEM_FENCE);
 
     uint32_t bits = activeEdges[get_global_id(0)];
     for(int i=0; i<32; ++i) {
@@ -83,12 +82,12 @@ __kernel void CreateNodes(
             continue;
         }
         
-        uint32_t nodeIn = 32 * (uint64_t)get_global_id(0) + i;
-        uint32_t nonce = 2 * nodeIn + uorv;
+        uint32_t edge = 32 * (uint64_t)get_global_id(0) + i;
+        uint32_t nonce = 2 * edge + uorv;
         uint32_t nodeOut = siphash24(keys, nonce) & nodeMask;
 
         addToNodes(nodeOut, nodes, bucketCounters, maxBucketSize);
-        //addToNodesL(nodeOut, buf, cnt, __BSIZE);
+        //addToNodesL(nodeOut, buf, cnt, _BSIZE);
     }
 //    __local uint32_t m;
 //    m = 0;
@@ -96,7 +95,7 @@ __kernel void CreateNodes(
 //    
 //    __local uint32_t pos[_BUFFERS];
 //    FOREACH_PARALLEL({
-//        cnt[i] = min(__BSIZE, cnt[i]);
+//        cnt[i] = min(_BSIZE, cnt[i]);
 //        pos[i] = atomic_add(&bucketCounters[i], cnt[i]);
 //        m = atomic_max(&m, cnt[i]);
 //    }, i, _BUFFERS);

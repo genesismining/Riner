@@ -76,7 +76,7 @@ namespace miner {
         auto &sharedProtoData = protocolDatas.back();
         auto weakProtoData = make_weak(sharedProtoData);
 
-        auto work = std::make_unique<Work<kCuckaroo31>>(weakProtoData);
+        auto work = std::make_unique<Work<kCuckatoo31>>(weakProtoData);
 
         int id = jparams.at("job_id");
         sharedProtoData->jobId = std::to_string(id);
@@ -91,7 +91,7 @@ namespace miner {
     }
 
     void PoolGrinStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
-        auto result = static_unique_ptr_cast<WorkResult<kCuckaroo31>>(std::move(resultBase));
+        auto result = static_unique_ptr_cast<WorkResult<kCuckatoo31>>(std::move(resultBase));
 
         //build and send submitMessage on the tcp thread
 
@@ -145,7 +145,7 @@ namespace miner {
         auto refillFunc = [] (std::vector<QueueItem>& out, QueueItem& workMaster, size_t currentSize) {
             for (auto i = currentSize; i < 16; ++i) {
                 ++workMaster->nonce;
-                out.push_back(std::make_unique<Work<kCuckaroo31>>(*workMaster));
+                out.push_back(std::make_unique<Work<kCuckatoo31>>(*workMaster));
             }
             LOG(INFO) << "workQueue got refilled from " << currentSize << " to " << currentSize + out.size() << " items";
         };

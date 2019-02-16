@@ -1,4 +1,4 @@
-#include <src/algorithm/grin/Cuckaroo.h>
+#include <src/algorithm/grin/Cuckatoo.h>
 #include <string>
 #include <vector>
 
@@ -70,7 +70,7 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
         keys.k3 = htole64(keyArray[3]);
     }
 
-    LOG(INFO) << "siphash keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
+    VLOG(1) << "siphash keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
 
     // Init active edges bitmap:
     const uint32_t blocksize = 2 * 1024;
@@ -103,7 +103,7 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
     }
     VLOG(0) << "active edges: " << debugActive;
 
-    unique_ptr<CuckooSolution> s = header->makeWorkResult<kCuckaroo31>();
+    unique_ptr<CuckooSolution> s = header->makeWorkResult<kCuckatoo31>();
     return s;
 }
 

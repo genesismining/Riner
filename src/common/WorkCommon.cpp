@@ -11,8 +11,8 @@ namespace miner {
         if (toLower(str) == "ethash") {
             return kEthash;
         }
-        if (toLower(str) == "cuckaroo31") {
-            return kCuckaroo31;
+        if (toLower(str) == "cuckatoo31") {
+            return kCuckatoo31;
         }
         return kAlgoTypeCount;
     }
@@ -20,7 +20,7 @@ namespace miner {
     std::string stringFromAlgoEnum(AlgoEnum e) {
         switch(e) {
             case kEthash: return "ethash";
-            case kCuckaroo31: return "cuckaroo31";
+            case kCuckatoo31: return "cuckatoo31";
             default: return "invalid algo type";
         }
     }

@@ -2,19 +2,18 @@
 
 #include <src/algorithm/Algorithm.h>
 #include <lib/cl2hpp/include/cl2.hpp>
-#include <src/algorithm/grin/Cuckaroo.h>
-
+#include <src/algorithm/grin/Cuckatoo.h>
 #include <atomic>
 #include <vector>
 #include <thread>
 
 namespace miner {
 
-class AlgoCuckaroo31Cl: public AlgoBase {
+class AlgoCuckatoo31Cl: public AlgoBase {
 
 public:
-    explicit AlgoCuckaroo31Cl(AlgoConstructionArgs args);
-    ~AlgoCuckaroo31Cl() override;
+    explicit AlgoCuckatoo31Cl(AlgoConstructionArgs args);
+    ~AlgoCuckatoo31Cl() override;
 
 private:
     void run(cl::Context& context, CuckatooSolver& solver);

@@ -10,7 +10,7 @@
 namespace miner {
 
 template<>
-class Work<kCuckaroo31> : public WorkBase {
+class Work<kCuckatoo31> : public WorkBase {
 public:
     Work(std::weak_ptr<WorkProtocolData> data) :
             WorkBase(std::move(data)) {
@@ -24,19 +24,19 @@ public:
     uint64_t nonce = 0;
 
     AlgoEnum getAlgoEnum() const override {
-        return kCuckaroo31;
+        return kCuckatoo31;
     }
 };
 
 template<>
-class WorkResult<kCuckaroo31> : public WorkResultBase {
+class WorkResult<kCuckatoo31> : public WorkResultBase {
 public:
     WorkResult(std::weak_ptr<WorkProtocolData> data) :
             WorkResultBase(std::move(data)) {
     }
 
     AlgoEnum getAlgoEnum() const override {
-        return kCuckaroo31;
+        return kCuckatoo31;
     }
 
     int64_t height = 0;

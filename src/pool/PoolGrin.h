@@ -38,7 +38,7 @@ namespace miner {
         // Pool Uid
         uint64_t getPoolUid() const override;
 
-        using QueueItem = std::unique_ptr<Work<kCuckaroo31>>;
+        using QueueItem = std::unique_ptr<Work<kCuckatoo31>>;
         using WorkQueue = AutoRefillQueue<QueueItem>;
 
         const PoolConstructionArgs args_;
