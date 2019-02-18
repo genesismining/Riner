@@ -21,6 +21,12 @@ struct SiphashKeys {
     uint64_t k3;
 };
 
+struct Edge {
+    uint32_t nonce;
+    uint32_t u;
+    uint32_t v;
+};
+
 #define ROTL(x,b) (uint64_t)( ((x) << (b)) | ((x) >> (64 - (b))) )
 #define SIPROUND \
         do { \
@@ -31,11 +37,11 @@ struct SiphashKeys {
             v1 ^= v2; v3 ^= v0; v2 = ROTL(v2,32); \
         } while(0)
 
-inline uint64_t siphash24(struct SiphashKeys keys, uint64_t nonce) {
-    uint64_t v0 = keys.k0;
-    uint64_t v1 = keys.k1;
-    uint64_t v2 = keys.k2;
-    uint64_t v3 = keys.k3 ^ nonce;
+inline uint64_t siphash24(const struct SiphashKeys* keys, uint64_t nonce) {
+    uint64_t v0 = keys->k0;
+    uint64_t v1 = keys->k1;
+    uint64_t v2 = keys->k2;
+    uint64_t v3 = keys->k3 ^ nonce;
     SIPROUND;
     SIPROUND;
     v0 ^= nonce;

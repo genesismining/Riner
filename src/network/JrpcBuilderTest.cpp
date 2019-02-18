@@ -5,7 +5,6 @@
 
 namespace miner {
 
-
 TEST(JrpcBuilder, IdAsString) {
     JrpcBuilder::Options opt;
     opt.serializeIdAsString = true;

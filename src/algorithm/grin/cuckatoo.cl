@@ -51,8 +51,8 @@ void addToNodesL(
 
 
 bool isActive(const __global Bitmap* bitmap, uint32_t node) {
-    uint32_t partner = node >> 1;
-    return (bitmap[partner/32] & (1 << (partner % 32))) != 0; 
+    uint32_t combined = node >> 1;
+    return (bitmap[combined/32] & (1 << (combined % 32))) != 0; 
 }
 
 #define _BUFFERS (1 << (31 - BUCKET_BIT_SHIFT))
@@ -84,7 +84,7 @@ __kernel void CreateNodes(
         
         uint32_t edge = 32 * (uint64_t)get_global_id(0) + i;
         uint32_t nonce = 2 * edge + uorv;
-        uint32_t nodeOut = siphash24(keys, nonce) & nodeMask;
+        uint32_t nodeOut = siphash24(&keys, nonce) & nodeMask;
 
         addToNodes(nodeOut, nodes, bucketCounters, maxBucketSize);
         //addToNodesL(nodeOut, buf, cnt, _BSIZE);
@@ -122,7 +122,6 @@ __kernel void CreateNodes(
 //    }
 }
 
-
 __attribute__((reqd_work_group_size(64, 1, 1)))
 __kernel void KillEdgesAndCreateNodes(
     const struct SiphashKeys keys,
@@ -156,9 +155,9 @@ __kernel void KillEdgesAndCreateNodes(
         
         uint32_t edge  = 32 * (uint64_t)get_global_id(0) + i;
         uint32_t nonce = 2 * edge | uorv;
-        uint32_t nodeVorU = siphash24(keys, nonce ^ 1) & nodeMask;
+        uint32_t nodeVorU = siphash24(&keys, nonce ^ 1) & nodeMask;
 
-        if (!isActive(activeNodes, nodeVorU)) {
+        if (!isActive(activeNodes, nodeVorU)) { // Call to isActive is the slow part.
             bits ^= (1 << i);
             continue;
         }
@@ -170,7 +169,7 @@ __kernel void KillEdgesAndCreateNodes(
     barrier(CLK_LOCAL_MEM_FENCE);
     
     FOREACH_PARALLEL({
-        uint32_t nodeUorV = siphash24(keys, nonces[i]) & nodeMask;
+        uint32_t nodeUorV = siphash24(&keys, nonces[i]) & nodeMask;
         addToNodes(nodeUorV, nodes, bucketCounters, maxBucketSize);
     }, i, pos);
 }
@@ -228,6 +227,7 @@ __kernel void AccumulateNodes(
     }
 }
 
+// TODO merge with last accumulate iteration?
 __kernel void CombineActiveNodes(
         const __global Bitmap* activeNodesIn,
         __global Bitmap* activeNodesOut
@@ -261,7 +261,7 @@ __kernel void KillEdges(
         
         uint32_t nodeIn = 32 * (uint64_t)get_global_id(0) + i;
         uint32_t nonce = 2 * nodeIn + uorv;
-        uint32_t nodeOut = siphash24(keys, nonce) & nodeMask;
+        uint32_t nodeOut = siphash24(&keys, nonce) & nodeMask;
 
         if (!isActive(activeNodes, nodeOut)) {
             bits ^= (1 << i);
@@ -270,7 +270,42 @@ __kernel void KillEdges(
     activeEdges[get_global_id(0)] = bits;
 }
 
-
-
-
-
+/*
+__kernel void GenerateEdges(
+        const struct SiphashKeys keys,
+        __global Bitmap* activeEdges,
+        __global Edge* edges,
+        __global uint32_t* edgeCounter
+)
+{
+    // Every thread processes one word of input (32 bits).
+    __local uint32_t edges[32 * 64];
+    __local uint32_t pos;
+    
+    if (get_local_id(0) == 0) {
+        pos = 0;
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
+    uint32_t bits = activeEdges[get_global_id(0)];
+    uint32_t rem = bits;
+    for(int i=0; rem != 0; ++i) {
+        int i = 31 - clz(rem);
+        rem  ^= 1 << i;
+        
+        uint32_t edge  = 32 * (uint64_t)get_global_id(0) + i;
+        uint32_t p = atomic_inc(&pos);
+        edges[p] = edge;
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
+    FOREACH_PARALLEL({
+        uint32_t nodeU = siphash24(&keys, 2 * edge + 0) & nodeMask;
+        uint32_t nodeU = siphash24(&keys, 2 * edge + 0) & nodeMask;
+        uint32_t pos = atomic_inc(edgeCounter);
+        
+        addToNodes(nodeUorV, nodes, bucketCounters, maxBucketSize);
+    }, i, pos);
+    
+}
+*/
