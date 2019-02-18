@@ -53,6 +53,16 @@ namespace miner {
     public:
         using ResponseFunc = std::function<void(const JrpcResponse &)>;
 
+        struct Options {
+            bool serializeIdAsString = false;
+            cstring_span version = "2.0";
+        };
+
+        JrpcBuilder(): JrpcBuilder(Options()) {}
+        explicit JrpcBuilder(Options options): options_(std::move(options)) {
+            json["jsonrpc"] = gsl::to_string(options.version);
+        }
+
         //builder pattern methods
         JrpcBuilder &method(cstring_span name);
 
@@ -66,20 +76,14 @@ namespace miner {
         JrpcBuilder &setId(int val);
         JrpcBuilder &setId(optional<int> val);
 
-        JrpcBuilder& setSerializeIdAsString(bool serializeAsString) {
-            serializeIdAsString_ = serializeAsString;
-            return *this;
-        }
-
         optional<int> getId() const;
         const nl::json &getJson() const;
 
         void callResponseFunc(const JrpcResponse &);
 
-        explicit JrpcBuilder(cstring_span version = "2.0");
-
     private:
-        bool serializeIdAsString_ = false;
+        Options options_;
+
         ResponseFunc responseFunc;
 
         nl::json json;

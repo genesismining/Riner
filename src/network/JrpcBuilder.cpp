@@ -41,10 +41,6 @@ optional<int> asInt(const nl::json &j) {
     , data(data) {
     }
 
-    JrpcBuilder::JrpcBuilder(cstring_span version) {
-        json["jsonrpc"] = gsl::to_string(version);
-    }
-
     JrpcBuilder &JrpcBuilder::method(cstring_span name) {
         json["method"] = gsl::to_string(name);
         return *this;
@@ -84,7 +80,7 @@ optional<int> asInt(const nl::json &j) {
     }
 
     JrpcBuilder &JrpcBuilder::setId(int val) {
-        if (serializeIdAsString_) {
+        if (options_.serializeIdAsString) {
             json["id"] = std::to_string(val);
         } else {
             json["id"] = val;

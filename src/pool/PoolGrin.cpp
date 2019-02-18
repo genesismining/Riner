@@ -16,11 +16,13 @@ namespace miner {
 
         acceptMiningNotify = false;
 
-        auto login = std::make_shared<JrpcBuilder>();
-        auto getjobtemplate = std::make_shared<JrpcBuilder>();
+        JrpcBuilder::Options options;
+        options.serializeIdAsString = true;
+
+        auto login = std::make_shared<JrpcBuilder>(options);
+        auto getjobtemplate = std::make_shared<JrpcBuilder>(options);
 
         login->method("login")
-            .setSerializeIdAsString(true)
             .param("agent", "grin-miner")
             .param("login", args_.username)
             .param("pass", args_.password);
@@ -31,9 +33,7 @@ namespace miner {
             }
         });
 
-        getjobtemplate->method("getjobtemplate")
-                .setSerializeIdAsString(true);
-
+        getjobtemplate->method("getjobtemplate");
         getjobtemplate->onResponse([this] (auto &ret) {
             if (!ret.error()) {
                 acceptMiningNotify = true;
@@ -103,7 +103,9 @@ namespace miner {
                 return; //work has expired
             }
 
-            auto submit = std::make_shared<JrpcBuilder>();
+            JrpcBuilder::Options options;
+            options.serializeIdAsString = true;
+            auto submit = std::make_shared<JrpcBuilder>(options);
 
             nl::json pow;
             for(uint32_t i: result->pow) {
@@ -111,7 +113,6 @@ namespace miner {
             }
 
             submit->method("submit")
-                .setSerializeIdAsString(true)
                 .param("edge_bits", 31)
                 .param("height", result->height)
                 .param("job_id", protoData->jobId)

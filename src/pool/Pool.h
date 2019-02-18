@@ -9,6 +9,7 @@
 #include <src/common/StringSpan.h>
 #include <string>
 #include <atomic>
+#include <chrono>
 
 namespace miner {
     struct PoolConstructionArgs {
