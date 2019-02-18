@@ -1,8 +1,9 @@
 #include <src/algorithm/grin/Cuckatoo.h>
 
+#include <src/common/Optional.h>
+#include <src/compute/DeviceId.h>
 #include <src/pool/WorkCuckaroo.h>
 #include <src/util/Logging.h>
-#include <src/common/Optional.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -13,8 +14,17 @@ namespace miner {
 namespace {
 
 TEST(CuckatooSolver, Solve29) {
-    cl::Device device = cl::Device::getDefault();
-    LOG(INFO) << "Running on device " << device.getInfo<CL_DEVICE_NAME>();
+    cl_int err;
+    cl::Device device = cl::Device::getDefault(&err);
+    if (err) {
+        LOG(WARNING) << "Failed to obtain a OpenCL device. Skipping test";
+        return;
+    }
+
+    optional<DeviceId> deviceInfo = obtainDeviceIdFromOpenCLDevice(device);
+    ASSERT_TRUE(deviceInfo.has_value());
+    LOG(INFO) << "Running on device " <<  gsl::to_string(deviceInfo.value().getName());
+
     cl::Context context(device);
 
     CLProgramLoader programLoader("src/algorithm/", "");
@@ -22,7 +32,7 @@ TEST(CuckatooSolver, Solve29) {
     options.n = 29;
     options.context = context;
     options.device = device;
-    options.vendor = VendorEnum::kAMD; // FIXME
+    options.vendor = deviceInfo.value().getVendor();
 
     CuckatooSolver solver(std::move(options));
 

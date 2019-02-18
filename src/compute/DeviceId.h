@@ -15,7 +15,7 @@ namespace cl {
 namespace miner {
 
     struct PcieIndex {
-        std::array<uint8_t, 3> data;
+        std::array<uint8_t, 3> data{};
 
         size_t byteSize() const;
         const uint8_t *begin() const;
