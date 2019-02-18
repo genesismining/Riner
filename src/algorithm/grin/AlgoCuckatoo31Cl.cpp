@@ -44,6 +44,15 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
         }
 
         std::vector<CuckatooSolver::Cycle> cycles  = solver.solve(std::move(work));
+        LOG(INFO) << "Found " << cycles.size() << " cycles of target length.";
+        // TODO sha pow and compare to difficulty
+        for(auto& cycle: cycles) {
+            unique_ptr<CuckooPow> pow = work->makeWorkResult<kCuckatoo31>();
+            pow->height = work->height;
+            pow->nonce = work->nonce;
+            pow->pow = std::move(cycle.edges);
+            args_.workProvider.submitWork(std::move(pow));
+        }
     }
 }
 
