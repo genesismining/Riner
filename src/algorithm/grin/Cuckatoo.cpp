@@ -1,11 +1,16 @@
 #include <src/algorithm/grin/Cuckatoo.h>
-#include <string>
-#include <vector>
+
+#include "Graph.h"
 
 #include <src/crypto/blake2.h>
 #include <src/common/Endian.h>
 #include <src/pool/WorkCuckaroo.h>
+#include <src/util/HexString.h>
 #include <src/util/Logging.h>
+
+#include <string>
+#include <vector>
+
 
 namespace miner {
 
@@ -24,7 +29,7 @@ constexpr uint32_t remainingEdges[8] =
 
 
 void checkErr(cl_int err) {
-
+    // TODO
 }
 
 void fillBuffer(cl::CommandQueue queue, cl::Buffer buffer, uint8_t pattern, size_t bufferOffset, size_t size) {
@@ -42,6 +47,20 @@ void fillBuffer(cl::CommandQueue queue, cl::Buffer buffer, uint8_t pattern, size
 #endif
 }
 
+void foreachActiveEdge(uint32_t n, uint32_t* edges, std::function<void(uint32_t)> f) {
+    const uint32_t edgeCount = static_cast<uint32_t>(1) << n;
+    const uint32_t nodemask = (edgeCount - 1);
+    for (uint32_t i = 0; i < edgeCount / 32; ++i) {
+        uint32_t bits = edges[i];
+        while (bits != 0) {
+            int b = 31 - __builtin_clz(bits);
+            bits ^= 1 << b;
+            uint32_t edge = 32 * (uint64_t) i + b;
+            f(edge);
+        }
+    }
+}
+
 
 }  // namespace
 
@@ -50,7 +69,7 @@ using std::unique_ptr;
 using std::make_unique;
 using std::make_shared;
 
-unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header) {
+std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(unique_ptr<CuckooHeader> header) {
     // Calculate keys
     SiphashKeys keys;
     {
@@ -62,6 +81,8 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
             h.push_back(nonce & 0xFF);
             nonce = nonce >> 8;
         }
+        HexString s(h);
+        LOG(INFO) << "header = " << s.str();
         uint64_t keyArray[4];
         blake2b(keyArray, sizeof(keyArray), h.data(), h.size(), 0, 0);
         keys.k0 = htole64(keyArray[0]);
@@ -70,7 +91,7 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
         keys.k3 = htole64(keyArray[3]);
     }
 
-    VLOG(1) << "siphash keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
+    VLOG(0) << "Siphash Keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
 
     // Init active edges bitmap:
     const uint32_t blocksize = 2 * 1024;
@@ -95,16 +116,64 @@ unique_ptr<CuckooSolution> CuckatooSolver::solve(unique_ptr<CuckooHeader> header
     }
     queue_.finish();
 
-    uint32_t* actives = new uint32_t[edgeCount_ / 32];
-    queue_.enqueueReadBuffer(bufferActiveEdges_, true, 0 /* offset */, edgeCount_ / 8, actives);
+    // TODO This is not very efficient. Would be better to just copy a list of edges. Or do all on GPU.
+    //      Of course we can also do this in parallel to anything on the GPU.
+    std::vector<uint32_t> edges;
+    edges.resize(edgeCount_ / 32);
+    queue_.enqueueReadBuffer(bufferActiveEdges_, true, 0 /* offset */, edgeCount_ / 8, edges.data());
     uint32_t debugActive = 0;
-    for(uint32_t i=0; i<edgeCount_ / 32; ++i) {
-        debugActive += __builtin_popcount(actives[i]);
-    }
+
+    Graph graph(opts_.n, opts_.n - 7, opts_.n - 7); // TODO this should be determined by the estimate of remaining edges
+
+    foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &graph, &debugActive](uint32_t edge) {
+            uint32_t nodemask = edgeCount_ - 1;
+            uint32_t u = siphash24(&keys, 2 * edge + 0) & nodemask;
+            uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
+            graph.addUToV(u, v);
+            graph.addVToU(v, u);
+            debugActive++;
+    });
+
     VLOG(0) << "active edges: " << debugActive;
 
-    unique_ptr<CuckooSolution> s = header->makeWorkResult<kCuckatoo31>();
-    return s;
+    if ((pruneRounds_ % 2) == 0) {
+        graph.pruneFromV();
+    } else {
+        graph.pruneFromU();
+    }
+    LOG(INFO) << "pruning is done";
+    std::vector<Graph::Cycle> cycles = graph.findCycles(opts_.cycleLength);
+    LOG(INFO) << "Found " << cycles.size() << " potential cycles";
+
+    std::vector<Cycle> result;
+    if (!cycles.empty()) {
+        for(auto& cycle: cycles) {
+            cycle.edges.resize(opts_.cycleLength, 0);
+        }
+        foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &cycles](uint32_t edge) {
+            uint32_t nodemask = edgeCount_ - 1;
+            uint32_t u = siphash24(&keys, 2 * edge + 0) & nodemask;
+            uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
+            for(auto& cycle: cycles) {
+                for(size_t i = 0; i < cycle.uvs.size(); i++) {
+                    if (u == cycle.uvs[2*i] && v == cycle.uvs[2*i+1]) {
+                        cycle.edges[i] = edge;
+                    }
+                }
+            }
+        });
+        for(auto& cycle: cycles) {
+            std::sort(cycle.edges.begin(), cycle.edges.end());
+            if (cycle.edges[0] == cycle.edges[1]) {
+                // Not a true cycle of full length.
+                continue;
+            }
+            Cycle c;
+            c.edges = std::move(cycle.edges);
+            result.push_back(std::move(c));
+        }
+    }
+    return result;
 }
 
 void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEdges, int uorv, bool initial) {

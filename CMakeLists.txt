@@ -119,10 +119,11 @@ include(GoogleTest)
 find_package(GTest REQUIRED)
  
 add_executable(tests 
+    src/algorithm/grin/CuckatooTest.cpp    
     src/algorithm/grin/GraphTest.cpp
     src/network/JrpcBuilderTest.cpp
 )
-target_link_libraries(tests gtest gtest_main gmock  Threads::Threads)
+target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
  

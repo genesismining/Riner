@@ -43,7 +43,7 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
             continue;
         }
 
-        std::unique_ptr<CuckooSolution> solution = solver.solve(std::move(work));
+        std::vector<CuckatooSolver::Cycle> cycles  = solver.solve(std::move(work));
     }
 }
 

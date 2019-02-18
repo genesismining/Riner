@@ -8,7 +8,6 @@
 
 namespace miner {
 
-
 class Graph {
 public:
     struct Cycle {
@@ -43,7 +42,13 @@ public:
         v_.removeEdges(vv, u_, deactivatedUs);
     }
 
-    void prune();
+    void pruneFromU() {
+        u_.prune(v_);
+    }
+
+    void pruneFromV() {
+        v_.prune(u_);
+    }
 
     uint32_t getEdgeCount();
     uint32_t getOverflowBucketCount(int uorv) {
@@ -58,11 +63,11 @@ public:
 
 private:
     struct Bucket {
-        static constexpr uint8_t kCapacity = 6;
-        uint32_t value[6];
-        uint8_t key[6];
-        uint8_t insertions = 0;
-        uint8_t full = 0;
+        static constexpr uint32_t kCapacity = 7;
+        uint32_t value[kCapacity];
+        uint32_t key[kCapacity];
+        uint32_t insertions = 0;
+        uint32_t full = 0;
     };
 
     class Cyclefinder;
@@ -71,7 +76,7 @@ private:
     public:
         Table(uint32_t n, uint32_t bits) :
                 bits_(bits), mask_((static_cast<uint32_t>(1) << bits) - 1), shift_(n - bits) {
-            MI_EXPECTS(n - bits <= 9);
+            MI_EXPECTS(sizeof(Bucket) == 64);
             uint32_t count = static_cast<uint32_t>(1) << bits;
             buckets_ = (Bucket*)aligned_alloc(sizeof(Bucket), sizeof(Bucket) * count);
             memset(buckets_, 0, sizeof(Bucket) * count);
@@ -100,8 +105,8 @@ private:
 
         bool hasSingleActive(uint32_t key) {
             uint32_t bucket = key >> shift_;
-            const uint8_t key1 = key;
-            const uint8_t key2 = key ^ 1;
+            const uint32_t key1 = key;
+            const uint32_t key2 = key ^ 1;
             bool active1 = false;
             bool active2 = false;
             for (;;) {
@@ -116,23 +121,22 @@ private:
 
         void removeEdges(uint32_t key, Table& reverse, std::vector<uint32_t>& deactivated) {
             uint32_t bucket = key >> shift_;
-            const uint8_t lookup = static_cast<uint8_t>(key) >> 1;
-            const uint32_t prefix = bucket << shift_;
+            const uint32_t lookup = key >> 1;
             for (;;) {
                 Bucket& b = buckets_[bucket];
-                uint8_t bound = b.insertions;
-                bool overflow = (bound > 6);
+                uint32_t bound = b.insertions;
+                bool overflow = (bound > Bucket::kCapacity);
                 if (overflow) {
-                    bound = 6;
+                    bound = Bucket::kCapacity;
                 }
-                for (uint8_t i = 0; i < bound; ++i) {
+                for (uint32_t i = 0; i < bound; ++i) {
                     if ((b.full & (1 << i)) == 0) {
                         continue;
                     }
                     if ((b.key[i] >> 1) != lookup) {
                         continue;
                     }
-                    if (!reverse.removeEdge(b.value[i], prefix | b.key[i])) {
+                    if (!reverse.removeEdge(b.value[i], b.key[i])) {
                         deactivated.push_back(b.value[i]);
                     }
                     b.full ^= (1 << i);
@@ -148,19 +152,18 @@ private:
             uint32_t bucket = key >> shift_;
             bool active = false;
             bool removed = false;
-            const uint8_t lookup = key;
             for (;;) {
                 Bucket& b = buckets_[bucket];
-                uint8_t bound = b.insertions;
-                bool overflow = (bound > 6);
+                uint32_t bound = b.insertions;
+                bool overflow = (bound > Bucket::kCapacity);
                 if (overflow) {
-                    bound = 6;
+                    bound = Bucket::kCapacity;
                 }
-                for (uint8_t i = 0; i < bound; ++i) {
+                for (uint32_t i = 0; i < bound; ++i) {
                     if ((b.full & (1 << i)) == 0) {
                         continue;
                     }
-                    if (b.key[i] != lookup) {
+                    if (b.key[i] != key) {
                         continue;
                     }
                     if (b.value[i] == value && !removed) {
@@ -179,6 +182,8 @@ private:
             //MI_ENSURES(removed);
             return active;
         }
+
+        void prune(Table& reverse);
 
     private:
         const uint32_t bits_;
@@ -204,7 +209,7 @@ private:
 
 
     static bool insert(Bucket& bucket, uint32_t key, uint32_t value) {
-        if (bucket.insertions >= 6) {
+        if (bucket.insertions >= Bucket::kCapacity) {
             // Bucket is already full :-(
             bucket.insertions++;
             return false;
@@ -216,13 +221,13 @@ private:
         return true;
     }
 
-    static bool scanActive12(Bucket& b, uint8_t key1, uint8_t key2, bool& active1, bool& active2) {
-        uint8_t bound = b.insertions;
-        bool overflow = (bound > 6);
+    static bool scanActive12(Bucket& b, uint32_t key1, uint32_t key2, bool& active1, bool& active2) {
+        uint32_t bound = b.insertions;
+        bool overflow = (bound > Bucket::kCapacity);
         if (overflow) {
-            bound = 6;
+            bound = Bucket::kCapacity;
         }
-        for (uint8_t i = 0; i < bound; ++i) {
+        for (uint32_t i = 0; i < bound; ++i) {
             if ((b.full & (1 << i)) == 0) {
                 continue;
             }

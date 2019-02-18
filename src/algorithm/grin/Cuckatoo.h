@@ -15,7 +15,7 @@
 namespace miner {
 
 typedef Work<kCuckatoo31> CuckooHeader;
-typedef WorkResult<kCuckatoo31> CuckooSolution;
+typedef WorkResult<kCuckatoo31> CuckooPow;
 
 
 class CuckatooSolver {
@@ -24,10 +24,15 @@ public:
         Options(CLProgramLoader& programLoader): programLoader(programLoader) {}
 
         uint32_t n = 0;
+        uint32_t cycleLength = 42;
         cl::Context context;
         cl::Device device;
         VendorEnum vendor = VendorEnum::kVendorEnumCount;
         CLProgramLoader& programLoader;
+    };
+
+    struct Cycle {
+        std::vector<uint32_t> edges;
     };
 
     CuckatooSolver(Options options) :
@@ -38,7 +43,7 @@ public:
 
     DELETE_COPY_AND_ASSIGNMENT(CuckatooSolver);
 
-    std::unique_ptr<CuckooSolution> solve(std::unique_ptr<CuckooHeader> header);
+    std::vector<Cycle> solve(std::unique_ptr<CuckooHeader> header);
 
 private:
     void prepare();
@@ -47,7 +52,7 @@ private:
 
     int32_t getBucketBitShift();
 
-    static constexpr uint32_t pruneRounds_ = 100;
+    static constexpr uint32_t pruneRounds_ = 99;
 
     const Options opts_;
     const uint32_t edgeCount_;

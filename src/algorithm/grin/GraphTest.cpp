@@ -136,7 +136,10 @@ TEST(Graph, FindCycles) {
 TEST(Graph, PruneAndFindCycles) {
     Graph g(14 /* n */, 8 /* ubits */,  7 /* vbits */);
     fillGraph(g);
-    g.prune();
+    g.pruneFromU();
+    LOG(INFO) << "r =" << g.getEdgeCount();
+    g.pruneFromV();
+    EXPECT_EQ(4, g.getEdgeCount());
     std::vector<Graph::Cycle> cycles = g.findCycles(4);
     ASSERT_EQ(1, cycles.size());
     EXPECT_THAT(cycles[0].uvs, testing::ElementsAre(0x430, 0x270, 0x437, 0x271, 0x436, 0x273, 0x431, 0x272));
@@ -174,7 +177,8 @@ TEST(CuckatooGraph, Find42Cycles) {
         g.addVToU(v, u);
     }
     LOG(INFO) << "Overflow counts: u=" << g.getOverflowBucketCount(0) << ", v=" << g.getOverflowBucketCount(1);
-    g.prune();
+    g.pruneFromU();
+    g.pruneFromV();
     EXPECT_EQ(84, g.getEdgeCount());
     std::vector<Graph::Cycle> cycles = g.findCycles(42);
     EXPECT_EQ(3, cycles.size());

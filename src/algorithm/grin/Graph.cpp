@@ -2,6 +2,8 @@
 
 namespace miner {
 
+const uint32_t Graph::Bucket::kCapacity;
+
 Graph::Graph(uint32_t n, uint32_t ubits, uint32_t vbits) :
         n_(n), u_(n, ubits), v_(n, vbits) {
 }
@@ -13,7 +15,7 @@ uint32_t Graph::getEdgeCount() {
 
 uint32_t Graph::Table::getEdgeCount() {
     uint32_t edges = 0;
-    for (uint32_t i = 0; i < (1 << bits_); ++i) {
+    for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << bits_); ++i) {
         Bucket& bucket = buckets_[i];
         edges += __builtin_popcount(bucket.full);
     }
@@ -22,37 +24,33 @@ uint32_t Graph::Table::getEdgeCount() {
 
 uint32_t Graph::Table::getOverflowBucketCount() {
     uint32_t overflows = 0;
-    uint8_t maxi = 0;
-    for (uint32_t i = 0; i < (1 << bits_); ++i) {
+    for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << bits_); ++i) {
         Bucket& bucket = buckets_[i];
-        if (bucket.insertions > 6) {
+        if (bucket.insertions > Bucket::kCapacity) {
             overflows++;
         }
-        maxi = std::max(bucket.insertions, maxi);
     }
-    LOG(INFO) << "max insertions: " << (uint32_t)maxi;
     return overflows;
 }
 
 std::vector<uint32_t> Graph::Table::getValues(uint32_t key) {
     uint32_t bucket = key >> shift_;
-    uint8_t lookup = key;
     std::vector<uint32_t> values;
     for (;;) {
         Bucket& b = buckets_[bucket];
-        uint8_t bound = b.insertions;
+        uint32_t bound = b.insertions;
         if (bound == 0) {
             break;
         }
-        bool overflow = (bound > 6);
+        bool overflow = (bound > Bucket::kCapacity);
         if (overflow) {
-            bound = 6;
+            bound = Bucket::kCapacity;
         }
-        for (uint8_t i = 0; i < bound; ++i) {
+        for (uint32_t i = 0; i < bound; ++i) {
             if ((b.full & (1 << i)) == 0) {
                 continue;
             }
-            if (b.key[i] != lookup) {
+            if (b.key[i] != key) {
                 continue;
             }
             values.push_back(b.value[i]);
@@ -65,50 +63,6 @@ std::vector<uint32_t> Graph::Table::getValues(uint32_t key) {
     return values;
 }
 
-void Graph::prune() {
-    std::vector<uint32_t> deactivatedU;
-    std::vector<uint32_t> deactivatedV;
-
-    const uint32_t nodes = static_cast<uint32_t>(1) << n_;
-    for (uint32_t u = 0; u < nodes; u += 2) {
-        if (!uSingleActive(u)) {
-            continue;
-        }
-        removeUU(u, deactivatedV);
-        while (!deactivatedV.empty()) {
-            uint32_t v = deactivatedV.back();
-            deactivatedV.pop_back();
-            removeVV(v, deactivatedU);
-            while (!deactivatedU.empty()) {
-                uint32_t uu = deactivatedU.back();
-                deactivatedU.pop_back();
-                removeUU(uu, deactivatedV);
-            }
-        }
-    }
-
-    LOG(INFO)<< "Remaining edges after scanning u nodes: " << getEdgeCount();
-
-    for (uint32_t v = 0; v < nodes; v += 2) {
-        if (!vSingleActive(v)) {
-            continue;
-        }
-        removeVV(v, deactivatedU);
-        while (!deactivatedU.empty()) {
-            uint32_t u = deactivatedU.back();
-            deactivatedU.pop_back();
-            removeUU(u, deactivatedV);
-            while (!deactivatedV.empty()) {
-                uint32_t vv = deactivatedV.back();
-                deactivatedV.pop_back();
-                removeVV(vv, deactivatedU);
-            }
-        }
-    }
-
-    LOG(INFO)<<"Remaining edges after scanning u nodes: " << getEdgeCount();
-}
-
 std::vector<Graph::Cycle> Graph::findCycles(int length) {
     Cyclefinder cyclefinder(n_, u_, v_);
     return cyclefinder.findCycles(length);
@@ -117,10 +71,14 @@ std::vector<Graph::Cycle> Graph::findCycles(int length) {
 std::vector<Graph::Cycle> Graph::Cyclefinder::findCycles(int length) {
     cycles_.clear();
 
-    for (uint32_t u = 0; u < static_cast<uint32_t>(1) << n_; u += 2) {
-        appendFromU(u, length);
-        std::vector<uint32_t> ignore;
-        u_.removeEdges(u, v_, ignore);
+  for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << u_.bits_); ++i) {
+        Bucket& bucket = u_.buckets_[i];
+        for(uint32_t j = 0; j<std::min(bucket.insertions, Bucket::kCapacity); ++j) {
+            uint32_t u = bucket.key[j];
+            appendFromU(u, length);
+            std::vector<uint32_t> ignore;
+            u_.removeEdges(u, v_, ignore);
+        }
     }
 
     return cycles_;
@@ -157,6 +115,31 @@ void Graph::Cyclefinder::appendFromV(uint32_t v, int length) {
     }
 }
 
+void Graph::Table::prune(Table& reverse) {
+    std::vector<uint32_t> deactivatedK;
+    std::vector<uint32_t> deactivatedV;
+
+    for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << bits_); ++i) {
+        Bucket& bucket = buckets_[i];
+        for(uint32_t j = 0; j<std::min(bucket.insertions, Bucket::kCapacity); ++j) {
+            uint32_t key = bucket.key[j];
+            if (!hasSingleActive(key)) {
+                continue;
+            }
+            removeEdges(key, reverse, deactivatedV);
+            while (!deactivatedV.empty()) {
+                uint32_t v = deactivatedV.back();
+                deactivatedV.pop_back();
+                reverse.removeEdges(v, *this, deactivatedK);
+                while (!deactivatedK.empty()) {
+                    uint32_t key2 = deactivatedK.back();
+                    deactivatedK.pop_back();
+                    removeEdges(key2, reverse, deactivatedV);
+                }
+            }
+        }
+    }
+}
 
 }
 /* namespace miner */
