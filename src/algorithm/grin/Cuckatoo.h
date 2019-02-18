@@ -10,13 +10,8 @@
 #include <src/compute/ComputeApiEnums.h>
 #include <stdint.h>
 #include <string>
-#include <lib/cl2hpp/include/cl2.hpp>
 
 namespace miner {
-
-typedef Work<kCuckatoo31> CuckooHeader;
-typedef WorkResult<kCuckatoo31> CuckooPow;
-
 
 class CuckatooSolver {
 public:
@@ -43,7 +38,7 @@ public:
 
     DELETE_COPY_AND_ASSIGNMENT(CuckatooSolver);
 
-    std::vector<Cycle> solve(std::unique_ptr<CuckooHeader> header);
+    std::vector<Cycle> solve(SiphashKeys keys);
 
 private:
     void prepare();

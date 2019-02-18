@@ -2,15 +2,12 @@
 
 #include "Graph.h"
 
-#include <src/crypto/blake2.h>
 #include <src/common/Endian.h>
 #include <src/pool/WorkCuckaroo.h>
-#include <src/util/HexString.h>
 #include <src/util/Logging.h>
 
 #include <string>
 #include <vector>
-
 
 namespace miner {
 
@@ -69,28 +66,7 @@ using std::unique_ptr;
 using std::make_unique;
 using std::make_shared;
 
-std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(unique_ptr<CuckooHeader> header) {
-    // Calculate keys
-    SiphashKeys keys;
-    {
-        std::vector<uint8_t> h = header->prePow;
-        auto nonce = header->nonce;
-        LOG(INFO) << "nonce = " << nonce;
-        for (size_t i = 0; i < sizeof(nonce); ++i) {
-            // little endian
-            h.push_back(nonce & 0xFF);
-            nonce = nonce >> 8;
-        }
-        HexString s(h);
-        LOG(INFO) << "header = " << s.str();
-        uint64_t keyArray[4];
-        blake2b(keyArray, sizeof(keyArray), h.data(), h.size(), 0, 0);
-        keys.k0 = htole64(keyArray[0]);
-        keys.k1 = htole64(keyArray[1]);
-        keys.k2 = htole64(keyArray[2]);
-        keys.k3 = htole64(keyArray[3]);
-    }
-
+std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
     VLOG(0) << "Siphash Keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
 
     // Init active edges bitmap:
@@ -108,7 +84,7 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(unique_ptr<CuckooHeader
         uint32_t active = remainingEdges[std::min(7U, round)];
         //Timer rt;
         //rt.start();
-        VLOG(0) << "Round " << round << ", uorv=" << uorv;
+        VLOG(2) << "Round " << round << ", uorv=" << uorv;
         pruneActiveEdges(keys, active, uorv, round == 0);
         //queue_->finish();
         //VLOG(0) << "elapsed: round=" << rt.getSecondsElapsed() <<", total=" << timer.getSecondsElapsed() << "s";
@@ -173,6 +149,9 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(unique_ptr<CuckooHeader
             result.push_back(std::move(c));
         }
     }
+    if (!result.empty()) {
+        LOG(INFO) << "Found " << result.size() << " full cycles";
+    }
     return result;
 }
 
@@ -186,13 +165,13 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
     }
 
     uint32_t nodeCapacity = nodeBytes_ / sizeof(uint32_t) / 10 * 9;
-    VLOG(0) << "node capacity = " << nodeCapacity;
+    VLOG(1) << "node capacity = " << nodeCapacity;
     uint32_t nodePartitions = activeEdges / nodeCapacity + 1;
     //nodePartitions = 16;
     shared_ptr<cl::Event> accumulated = nullptr;
     const uint32_t totalWork = edgeCount_ / 32; /* Each thread processes 32 bit. */
     const uint32_t workPerPartition = (totalWork / nodePartitions) & ~2047;
-    VLOG(0) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
+    VLOG(1) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
 
     uint32_t offset = 0;
     for(uint32_t partition = 0; partition < nodePartitions; ++partition) {
@@ -204,7 +183,6 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
         } else {
             work = workPerPartition;
         }
-        //VLOG(0) << partition << ": " << offset << ", " << work;
         if (initial) {
             queue_.enqueueNDRangeKernel(kernelCreateNodes_, {offset}, {work}, {64});
         } else {
@@ -213,7 +191,6 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
 
         offset += workPerPartition;
 
-        //context_->asyncPrintEventTimings(created.get(), "CreateNodes");
         kernelAccumulateNodes_.setArg(4, (partition == 0) ? 1 : 0);
         queue_.enqueueNDRangeKernel(kernelAccumulateNodes_, {}, {buckets_ * 256}, {256});
     }
@@ -224,20 +201,21 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
 void CuckatooSolver::prepare() {
     CLProgramLoader& programLoader = opts_.programLoader;
     uint32_t bucketBitShift = getBucketBitShift();
-    LOG(INFO) << "Bucket bit shift = " << bucketBitShift;
-    cl_int err;
-    int64_t availableBytes = opts_.device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
+    VLOG(0) << "Bucket bit shift = " << bucketBitShift;
+    cl_int err = 0;
+    cl_ulong availableBytes = opts_.device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
     if (err) {
         LOG(ERROR) << "Failed to get available memory count.";
         return;
     }
-    int64_t maxMemoryAlloc = opts_.device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(&err);
+    cl_ulong maxMemoryAlloc = opts_.device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>(&err);
+    VLOG(0) << "Max memory alloc = " << maxMemoryAlloc;
     checkErr(err);
 
     int64_t bitmapBytes = (edgeCount_ / 8) * 5 / 2;
     int64_t availableNodeBytes = availableBytes - bitmapBytes;
-    int64_t nodeBytes = availableNodeBytes - 300* 1024 * 1024;
-    nodeBytes = (1ULL << 31) /9*11;
+    cl_ulong nodeBytes = availableNodeBytes - 300* 1024 * 1024;
+    nodeBytes = (1ULL << 31) / 9*11;
     nodeBytes = std::min(nodeBytes, maxMemoryAlloc);
     nodeBytes_ = nodeBytes;
     VLOG(0) << "Bytes: total=" << availableBytes << ", bitmaps=" << bitmapBytes << ", nodes=" << nodeBytes;

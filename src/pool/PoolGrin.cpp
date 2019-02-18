@@ -73,10 +73,9 @@ namespace miner {
 
         //create work package
         protocolDatas.emplace_back(std::make_shared<GrinStratumProtocolData>(getPoolUid()));
-        auto &sharedProtoData = protocolDatas.back();
-        auto weakProtoData = make_weak(sharedProtoData);
+        auto& sharedProtoData = protocolDatas.back();
 
-        auto work = std::make_unique<Work<kCuckatoo31>>(weakProtoData);
+        auto work = std::make_unique<Work<kCuckatoo31>>(sharedProtoData);
 
         int id = jparams.at("job_id");
         sharedProtoData->jobId = std::to_string(id);

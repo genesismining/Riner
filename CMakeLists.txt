@@ -122,6 +122,7 @@ add_executable(tests
     src/algorithm/grin/CuckatooTest.cpp    
     src/algorithm/grin/GraphTest.cpp
     src/network/JrpcBuilderTest.cpp
+    src/pool/WorkTest.cpp
 )
 target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)

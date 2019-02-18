@@ -12,12 +12,11 @@ namespace miner {
 template<>
 class Work<kCuckatoo31> : public WorkBase {
 public:
-    Work(std::weak_ptr<WorkProtocolData> data) :
-            WorkBase(std::move(data)) {
+    Work(std::shared_ptr<WorkProtocolData> data) :
+            WorkBase(make_weak(data)) {
     }
 
     int64_t difficulty = 1;
-    int64_t jobId = -1;
     int64_t height = 0;
     std::vector<uint8_t> prePow;
 
