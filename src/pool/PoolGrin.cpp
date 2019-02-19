@@ -116,7 +116,7 @@ namespace miner {
             submit->method("submit")
                 .param("edge_bits", 31)
                 .param("height", result->height)
-                .param("job_id", protoData->jobId)
+                .param("job_id", std::stoll(protoData->jobId))
                 .param("nonce", result->nonce)
                 .param("pow", pow);
 
