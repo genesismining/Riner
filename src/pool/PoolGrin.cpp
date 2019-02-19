@@ -115,7 +115,7 @@ namespace miner {
                 .param("edge_bits", 31)
                 .param("height", result->height)
                 .param("job_id", protoData->jobId)
-                .param("nonce")
+                .param("nonce", result->nonce)
                 .param("pow", pow);
 
             submit->onResponse([] (const JrpcResponse& ret) {
