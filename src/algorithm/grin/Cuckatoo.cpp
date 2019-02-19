@@ -141,7 +141,7 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
             uint32_t u = siphash24(&keys, 2 * edge + 0) & nodemask;
             uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
             for(auto& cycle: cycles) {
-                for(size_t i = 0; i < cycle.uvs.size(); i++) {
+                for(size_t i = 0; i < opts_.cycleLength; i++) {
                     if (u == cycle.uvs.at(2*i) && v == cycle.uvs.at(2*i+1)) {
                         cycle.edges.at(i) = edge;
                     }
