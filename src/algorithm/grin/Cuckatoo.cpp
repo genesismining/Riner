@@ -286,13 +286,10 @@ void CuckatooSolver::prepare() {
 }
 
 int32_t CuckatooSolver::getBucketBitShift() {
-    if (opts_.vendor == VendorEnum::kAMD) {
-        return 19;
-    }
     uint32_t localMem = opts_.device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>();
     VLOG(1) << "local mem: " << localMem << "bytes";
     uint32_t bucketBitShift = 1;
-    while((static_cast<uint32_t>(1) << bucketBitShift) < localMem * 8) {
+    while((static_cast<uint32_t>(1) << bucketBitShift) <= localMem * 8) {
         bucketBitShift++;
     }
     return bucketBitShift - 1;
