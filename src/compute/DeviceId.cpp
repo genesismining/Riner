@@ -96,6 +96,7 @@ namespace miner {
                 pcieId.data[2] = static_cast<uint8_t>(topology.pcie.function);
 
                 idVariant = pcieId;
+                pcieIdFound = true;
 
                 //printf("ComputeModule: detected PCIe topology 0000:%.2x:%.2x.%.1x\n",
                 //          pcieId.data[0], pcieId.data[1], pcieId.data[2]);
