@@ -84,7 +84,7 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
         uint32_t active = remainingEdges[std::min(7U, round)];
         //Timer rt;
         //rt.start();
-        VLOG(0) << "Round " << round << ", uorv=" << uorv;
+        VLOG(2) << "Round " << round << ", uorv=" << uorv;
         pruneActiveEdges(keys, active, uorv, round == 0);
         //queue_->finish();
         //VLOG(0) << "elapsed: round=" << rt.getSecondsElapsed() <<", total=" << timer.getSecondsElapsed() << "s";
@@ -181,7 +181,7 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
     shared_ptr<cl::Event> accumulated = nullptr;
     const uint32_t totalWork = edgeCount_ / 32; /* Each thread processes 32 bit. */
     const uint32_t workPerPartition = (totalWork / nodePartitions) & ~2047;
-    VLOG(0) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
+    VLOG(3) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
 
     uint32_t offset = 0;
     for(uint32_t partition = 0; partition < nodePartitions; ++partition) {
