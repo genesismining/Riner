@@ -35,11 +35,12 @@ namespace miner {
 
         void submitWork(unique_ptr<WorkResultBase> result) override;
     private:
-        // Pool Uid
-        uint64_t getPoolUid() const override;
-
         using QueueItem = std::unique_ptr<Work<kCuckatoo31>>;
         using WorkQueue = AutoRefillQueue<QueueItem>;
+
+        uint64_t getPoolUid() const override;
+        void onMiningNotify (const nl::json &jparams);
+        void restart();
 
         const PoolConstructionArgs args_;
         const uint64_t uid;
@@ -49,14 +50,12 @@ namespace miner {
 
         std::vector<std::shared_ptr<GrinStratumProtocolData>> protocolDatas;
 
-        void restart();
         TcpJsonRpcProtocolUtil jrpc;
 
         std::unique_ptr<TcpJsonProtocolUtil> tcp;
 
         bool acceptMiningNotify = false;
-
-        void onMiningNotify (const nl::json &jparams);
+        int64_t currentHeight = -1;
     };
 
 }

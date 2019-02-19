@@ -65,11 +65,13 @@ namespace miner {
     }
 
     void PoolGrinStratum::onMiningNotify(const nl::json &jparams) {
-        // TODO clear old jobs only if height changes
-        bool cleanFlag = true;
+        int64_t height = jparams.at("height");
+        bool cleanFlag = (currentHeight != height);
         if (cleanFlag) {
+            LOG(INFO) << "Clearing pending work.";
             protocolDatas.clear(); //invalidates all gpu work that links to them
         }
+        currentHeight = height;
 
         //create work package
         protocolDatas.emplace_back(std::make_shared<GrinStratumProtocolData>(getPoolUid()));
@@ -80,13 +82,13 @@ namespace miner {
         int id = jparams.at("job_id");
         sharedProtoData->jobId = std::to_string(id);
         work->difficulty = jparams.at("difficulty");
-        work->height = jparams.at("height");
+        work->height = height;
 
         HexString powHex(jparams.at("pre_pow"));
         work->prePow.resize(powHex.sizeBytes());
         powHex.getBytes(work->prePow);
 
-        workQueue->setMaster(std::move(work), cleanFlag);
+        workQueue->setMaster(std::move(work), true);
     }
 
     void PoolGrinStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
