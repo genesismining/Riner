@@ -96,7 +96,12 @@ namespace miner {
     }
 
     void PoolSwitcher::submitWork(unique_ptr<WorkResultBase> result) {
-        auto resultPoolUid = result->getProtocolData().lock()->getPoolUid();
+        std::shared_ptr<WorkProtocolData> data = result->getProtocolData().lock();
+        if (!data) {
+            LOG(INFO) << "work result cannot be submitted because it has expired";
+            return;
+        }
+        auto resultPoolUid = data->getPoolUid();
         auto activePoolUid = std::numeric_limits<decltype(resultPoolUid)>::max();
         bool sameUid = true;
 
