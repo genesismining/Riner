@@ -6,6 +6,7 @@
 #include <src/pool/WorkCuckaroo.h>
 #include <src/util/HexString.h>
 #include <src/util/Logging.h>
+#include <src/util/StringUtils.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -66,7 +67,6 @@ TEST_F(CuckatooSolverTest, Solve29) {
     std::unique_ptr<CuckatooSolver> solver = createSolver(29);
     std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header));
     ASSERT_EQ(1, cycles.size());
-
     EXPECT_THAT(cycles[0].edges,
             testing::ElementsAreArray( { 31512508, 59367126, 60931190, 94763886, 104277898, 116747030, 127554684,
                     142281893, 197249170, 210206965, 211338509, 256596889, 259030601, 261857131, 268667508, 271769895,
@@ -91,7 +91,14 @@ TEST_F(CuckatooSolverTest, Solve31) {
     std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header));
     ASSERT_EQ(1, cycles.size());
     EXPECT_THAT(cycles[0].edges,
-            testing::ElementsAreArray( { 1 /* TODO */, }));
+            testing::ElementsAreArray( {
+                    40778812, 45624768, 48317588, 66386056, 100584285, 236190618,
+                    246446957, 286867101, 296430628, 308121924, 318525521, 534437425,
+                    574947317, 701022016, 726150994, 763011423, 777629599, 809282263,
+                    869636888, 937277103, 938751072, 1097494066, 1119540307, 1164059537,
+                    1215435736, 1258075186, 1296647487, 1307948060, 1341542971, 1390228227,
+                    1441771255, 1443696283, 1475085213, 1616615237, 1621535967, 1735854578,
+                    1829645800, 1959427709, 1989573565, 2044045378, 2081416868, 2126250393 }));
 }
 
 } // namespace
