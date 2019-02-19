@@ -84,13 +84,14 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
         uint32_t active = remainingEdges[std::min(7U, round)];
         //Timer rt;
         //rt.start();
-        VLOG(2) << "Round " << round << ", uorv=" << uorv;
+        VLOG(0) << "Round " << round << ", uorv=" << uorv;
         pruneActiveEdges(keys, active, uorv, round == 0);
         //queue_->finish();
         //VLOG(0) << "elapsed: round=" << rt.getSecondsElapsed() <<", total=" << timer.getSecondsElapsed() << "s";
         uorv ^= 1;
     }
     queue_.finish();
+    VLOG(0) << "Done";
 
     // TODO This is not very efficient. Would be better to just copy a list of edges. Or do all on GPU.
     //      Of course we can also do this in parallel to anything on the GPU.
@@ -99,7 +100,13 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
     queue_.enqueueReadBuffer(bufferActiveEdges_, true, 0 /* offset */, edgeCount_ / 8, edges.data());
     uint32_t debugActive = 0;
 
+    VLOG(1) << "Bulding Graph";
     Graph graph(opts_.n, opts_.n - 7, opts_.n - 7); // TODO this should be determined by the estimate of remaining edges
+
+    foreachActiveEdge(opts_.n, edges.data(), [&debugActive](uint32_t edge) {
+        debugActive++;
+    });
+    VLOG(0) << "active edges: " << debugActive;
 
     foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &graph, &debugActive](uint32_t edge) {
             uint32_t nodemask = edgeCount_ - 1;
@@ -107,7 +114,6 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
             uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
             graph.addUToV(u, v);
             graph.addVToU(v, u);
-            debugActive++;
     });
 
     VLOG(0) << "active edges: " << debugActive;
@@ -124,6 +130,10 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
     std::vector<Cycle> result;
     if (!cycles.empty()) {
         for(auto& cycle: cycles) {
+            if (cycle.uvs.size() != 2 * opts_.cycleLength) {
+                LOG(ERROR) << "Invalid uvs size: " << cycle.uvs.size();
+                cycle.uvs.clear();
+            }
             cycle.edges.resize(opts_.cycleLength, 0);
         }
         foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &cycles](uint32_t edge) {
@@ -132,8 +142,8 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
             uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
             for(auto& cycle: cycles) {
                 for(size_t i = 0; i < cycle.uvs.size(); i++) {
-                    if (u == cycle.uvs[2*i] && v == cycle.uvs[2*i+1]) {
-                        cycle.edges[i] = edge;
+                    if (u == cycle.uvs.at(2*i) && v == cycle.uvs.at(2*i+1)) {
+                        cycle.edges.at(i) = edge;
                     }
                 }
             }
@@ -141,7 +151,7 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
         for(auto& cycle: cycles) {
             std::sort(cycle.edges.begin(), cycle.edges.end());
             if (cycle.edges[0] == cycle.edges[1]) {
-                // Not a true cycle of full length.
+                // Not a true cycle of full length. TODO do the check before resolving edges
                 continue;
             }
             Cycle c;
@@ -171,7 +181,7 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
     shared_ptr<cl::Event> accumulated = nullptr;
     const uint32_t totalWork = edgeCount_ / 32; /* Each thread processes 32 bit. */
     const uint32_t workPerPartition = (totalWork / nodePartitions) & ~2047;
-    VLOG(1) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
+    VLOG(0) << "node partitions=" << nodePartitions << ", work per partition=" << workPerPartition;
 
     uint32_t offset = 0;
     for(uint32_t partition = 0; partition < nodePartitions; ++partition) {

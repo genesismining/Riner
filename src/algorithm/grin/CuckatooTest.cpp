@@ -89,6 +89,9 @@ TEST_F(CuckatooSolverTest, Solve31) {
     workProtocolData = nullptr;
     std::unique_ptr<CuckatooSolver> solver = createSolver(31);
     std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header));
+    ASSERT_EQ(1, cycles.size());
+    EXPECT_THAT(cycles[0].edges,
+            testing::ElementsAreArray( { 1 /* TODO */, }));
 }
 
 } // namespace
