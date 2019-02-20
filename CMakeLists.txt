@@ -61,6 +61,7 @@ add_library(LibMiner
         src/util/Copy.h
         src/util/Logging.h
         src/util/ConfigUtils.cpp src/util/ConfigUtils.h
+        src/util/Random.h
         src/util/StringUtils.cpp src/util/StringUtils.h
         src/util/OptionalAccess.h
         src/util/LockUtils.cpp src/util/LockUtils.h

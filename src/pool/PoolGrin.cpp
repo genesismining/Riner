@@ -13,7 +13,6 @@
 namespace miner {
 
     void PoolGrinStratum::restart() {
-
         acceptMiningNotify = false;
 
         JrpcBuilder::Options options;
@@ -83,6 +82,7 @@ namespace miner {
         sharedProtoData->jobId = std::to_string(id);
         work->difficulty = jparams.at("difficulty");
         work->height = height;
+        work->nonce = random_.nextInt();
 
         HexString powHex(jparams.at("pre_pow"));
         work->prePow.resize(powHex.sizeBytes());

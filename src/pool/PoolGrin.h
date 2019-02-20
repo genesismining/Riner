@@ -10,6 +10,7 @@
 #include <src/network/TcpJsonRpcProtocolUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
+#include <src/util/Random.h>
 #include <src/pool/WorkQueue.h>
 #include <src/common/Pointers.h>
 #include <atomic>
@@ -44,14 +45,12 @@ namespace miner {
 
         const PoolConstructionArgs args_;
         const uint64_t uid;
+
+        Random random_;
         std::unique_ptr<WorkQueue> workQueue;
-
         std::atomic<bool> shutdown {false};
-
         std::vector<std::shared_ptr<GrinStratumProtocolData>> protocolDatas;
-
         TcpJsonRpcProtocolUtil jrpc;
-
         std::unique_ptr<TcpJsonProtocolUtil> tcp;
 
         bool acceptMiningNotify = false;
