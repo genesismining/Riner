@@ -4,9 +4,8 @@
 namespace miner {
 
     uint64_t WorkProvider::createNewPoolUid() {
-        static uint64_t uid = 0;
-        ++uid;
-        return uid;
+        static std::atomic<uint64_t> uid = {1};
+        return uid.fetch_add(1);
     }
 
     void StillAliveTrackable::onStillAlive() {
