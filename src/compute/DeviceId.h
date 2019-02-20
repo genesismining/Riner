@@ -28,11 +28,12 @@ namespace miner {
     using DeviceVendorId = uint32_t; //DeviceVendorId is used as a fallback for devices where detecting the PcieIndex fails. it may not work as a cross-api unique identifier
 
     class DeviceId {
-        VendorEnum vendorEnum = VendorEnum::kUnknown;
+        VendorEnum vendorEnum;
         variant<PcieIndex, DeviceVendorId> id;
         std::string name; //name is not used in comparison operators
 
     public:
+        DeviceId(): DeviceId(VendorEnum::kUnknown, DeviceVendorId(0), "uninitialized") {}
         DeviceId(VendorEnum vendor, const decltype(id) &id, cstring_span name);
 
         VendorEnum getVendor() const;
