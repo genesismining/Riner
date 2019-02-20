@@ -13,8 +13,6 @@
 namespace miner {
 
     void PoolGrinStratum::restart() {
-        acceptMiningNotify = false;
-
         JrpcBuilder::Options options;
         options.serializeIdAsString = true;
 
@@ -27,31 +25,26 @@ namespace miner {
             .param("pass", args_.password);
 
         login->onResponse([this, getjobtemplate] (const JrpcResponse& ret) {
-            if (!ret.error()) {
-                jrpc.call(*getjobtemplate);
+            if (ret.error()) {
+                restart();
+                return;
             }
+            jrpc.call(*getjobtemplate);
         });
 
         getjobtemplate->method("getjobtemplate");
         getjobtemplate->onResponse([this] (auto &ret) {
             if (!ret.error()) {
-                acceptMiningNotify = true;
                 onMiningNotify(ret.getJson().at("result"));
             }
         });
 
         //set handler for receiving incoming messages that are not responses to sent rpcs
         jrpc.setOnReceiveUnhandled([this] (const JrpcResponse& ret) {
-            if (acceptMiningNotify &&
-                ret.atEquals("method", "job")) {
+            if (ret.atEquals("method", "job")) {
                 onMiningNotify(ret.getJson().at("params"));
-            }
-            else if (ret.getJson().count("method")) {
-                //unsupported method
-                jrpc.respond({ret.id(), {JrpcError::method_not_found, "method not supported"}});
-            }
-            else {
-                LOG(INFO) << "unhandled response: " << ret.getJson().dump();
+            } else {
+                LOG(WARNING) << "Ignoring unexpected message from server: " << ret.getJson().dump();
             }
         });
 
@@ -126,6 +119,11 @@ namespace miner {
 
                 std::string acceptedStr = accepted ? "accepted" : "rejected";
                 LOG(INFO) << "share with id " << idStr << " got " << acceptedStr;
+
+                if (!accepted) {
+                    int code = ret.error().value_or(JrpcError({})).code;
+                    LOG_IF(code == -32502, FATAL) << "Invalid share";
+                }
             });
 
             jrpc.callRetryNTimes(*submit, 5, std::chrono::seconds(5), [submit] {

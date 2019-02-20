@@ -53,7 +53,6 @@ namespace miner {
         TcpJsonRpcProtocolUtil jrpc;
         std::unique_ptr<TcpJsonProtocolUtil> tcp;
 
-        bool acceptMiningNotify = false;
         int64_t currentHeight = -1;
     };
 
