@@ -3,6 +3,7 @@
 #include "AlgoCuckatoo31Cl.h"
 
 #include <src/common/OpenCL.h>
+#include <src/util/HexString.h>
 #include <src/crypto/blake2.h>
 
 namespace miner {
@@ -47,6 +48,9 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
         h.push_back(nonce & 0xFF);
         nonce = nonce >> 8;
     }
+    HexString x(h);
+    LOG(INFO) << x.str();
+    LOG(INFO) << "header len=" << h.size();
     uint64_t keyArray[4];
     blake2b(keyArray, sizeof(keyArray), h.data(), h.size(), 0, 0);
     keys.k0 = htole64(keyArray[0]);
