@@ -52,6 +52,7 @@ namespace miner {
     class JrpcBuilder {
     public:
         using ResponseFunc = std::function<void(const JrpcResponse &)>;
+        using IdType = uint64_t;
 
         //builder pattern methods
         JrpcBuilder &method(cstring_span name);
@@ -63,10 +64,10 @@ namespace miner {
         JrpcBuilder &onResponse(ResponseFunc &&func);
 
         //set a custom id, if no id is set, the TcpJsonRpcProtocolUtil will choose an unused one automatically
-        JrpcBuilder &id(int val);
+        JrpcBuilder &id(IdType val);
         JrpcBuilder &id(optional<int> val);
 
-        optional<int> getId() const;
+        optional<IdType> getId() const;
         const nl::json &getJson() const;
 
         void callResponseFunc(const JrpcResponse &);

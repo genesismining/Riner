@@ -12,9 +12,7 @@ namespace miner {
 
     AlgoEthashCL::AlgoEthashCL(AlgoConstructionArgs args)
             : pool(args.workProvider)
-            , clProgramLoader(args.compute.getProgramLoaderOpenCL())
-            , rawIntensity(1024 * 1024) {
-
+            , clProgramLoader(args.compute.getProgramLoaderOpenCL()) {
         LOG(INFO) << "launching " << args.assignedDevices.size() << " gpu-tasks";
 
         for (auto &device : args.assignedDevices) {
@@ -123,11 +121,6 @@ namespace miner {
             return;
         }
 
-        err = state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, state.blankOutputBuffer.size() * sizeof(state.blankOutputBuffer[0]), state.blankOutputBuffer.data());
-        if (err) {
-            LOG(ERROR) << "unable to enqueue initial blank write into output buffer";
-        }
-
         while (!shutdown) {
             std::shared_ptr<const Work<kEthash>> work = pool.tryGetWork<kEthash>().value_or(nullptr);
             if (!work)
@@ -137,12 +130,14 @@ namespace miner {
                 break; //terminate task
             }
 
-            for (uint64_t nonce = 0; nonce < UINT32_MAX && !shutdown; nonce += rawIntensity) {
+            auto raw_intensity = state.settings.raw_intensity;
+
+            for (uint64_t nonce = 0; nonce < UINT32_MAX && !shutdown; nonce += raw_intensity) {
 
                 uint64_t shiftedExtraNonce = uint64_t(work->extraNonce) << 32ULL;
 
                 uint64_t nonceBegin = nonce | shiftedExtraNonce;
-                uint64_t nonceEnd = nonceBegin + rawIntensity;
+                uint64_t nonceEnd = nonceBegin + raw_intensity;
 
                 auto resultNonces = runKernel(state, dag, *work, nonceBegin, nonceEnd);
 
@@ -280,7 +275,7 @@ namespace miner {
         }
         else if (numFoundNonces > 0) {
             //clear the clOutputBuffer by overwriting it with blank
-            state.cmdQueue.enqueueWriteBuffer(state.clOutputBuffer, CL_FALSE, 0, state.blankOutputBuffer.size() * sizeof(state.blankOutputBuffer[0]), state.blankOutputBuffer.data());
+            state.cmdQueue.enqueueFillBuffer(state.clOutputBuffer, (uint8_t)0, 0, state.outputBuffer.size() * sizeof(state.outputBuffer[0]));
 
             //populate the result vector and compute the actual 32 bit nonces by adding the outputBuffer contents
             results.resize(numFoundNonces);

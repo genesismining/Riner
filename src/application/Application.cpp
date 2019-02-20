@@ -56,7 +56,7 @@ namespace miner {
         //launch profile
         auto &allIds = compute->getAllDeviceIds();
 
-        //find all Algo
+        //find all Algo Implementations that need to be launched
         auto allRequiredImplNames = getUniqueAlgoImplNamesForProfile(prof, allIds);
 
         LOG(INFO) << "starting profile '" << prof.name << "'";

@@ -55,7 +55,7 @@ namespace miner {
         return *this;
     }
 
-    optional<int> JrpcBuilder::getId() const {
+    optional<JrpcBuilder::IdType> JrpcBuilder::getId() const {
         //todo: decide whether to handle "null" id differently
         if (json.count("id")) {
             auto &jid = json.at("id");
@@ -65,7 +65,7 @@ namespace miner {
         return nullopt;
     }
 
-    JrpcBuilder &JrpcBuilder::id(int val) {
+    JrpcBuilder &JrpcBuilder::id(IdType val) {
         json["id"] = val;
         return *this;
     }
