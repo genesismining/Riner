@@ -66,7 +66,7 @@ using std::unique_ptr;
 using std::make_unique;
 using std::make_shared;
 
-std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
+std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys, AbortFn abortFn) {
     VLOG(0) << "Siphash Keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
 
     // Init active edges bitmap:
@@ -89,8 +89,16 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys) {
         //queue_->finish();
         //VLOG(0) << "elapsed: round=" << rt.getSecondsElapsed() <<", total=" << timer.getSecondsElapsed() << "s";
         uorv ^= 1;
+        if (abortFn()) {
+            VLOG(0) << "Aborting solve.";
+            return {};
+        }
     }
     queue_.finish();
+    if (abortFn()) {
+        VLOG(0) << "Aborting solve.";
+        return {};
+    }
     VLOG(0) << "Done";
 
     // TODO This is not very efficient. Would be better to just copy a list of edges. Or do all on GPU.

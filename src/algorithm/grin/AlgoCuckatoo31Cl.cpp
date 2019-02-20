@@ -62,7 +62,9 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
             continue;
         }
 
-        std::vector<CuckatooSolver::Cycle> cycles = solver.solve(calculateKeys(*work));
+        std::vector<CuckatooSolver::Cycle> cycles = solver.solve(calculateKeys(*work), [&work]() {
+            return work->expired();
+        });
         LOG(INFO)<< "Found " << cycles.size() << " cycles of target length.";
         // TODO sha pow and compare to difficulty
         for (auto& cycle : cycles) {

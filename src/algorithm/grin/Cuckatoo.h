@@ -15,6 +15,8 @@ namespace miner {
 
 class CuckatooSolver {
 public:
+    typedef std::function<bool()> AbortFn;
+
     struct Options {
         Options(CLProgramLoader& programLoader): programLoader(programLoader) {}
 
@@ -38,7 +40,7 @@ public:
 
     DELETE_COPY_AND_ASSIGNMENT(CuckatooSolver);
 
-    std::vector<Cycle> solve(SiphashKeys keys);
+    std::vector<Cycle> solve(SiphashKeys keys, AbortFn abortFn);
 
 private:
     void prepare();

@@ -65,7 +65,7 @@ TEST_F(CuckatooSolverTest, Solve29) {
     header->nonce = static_cast<uint64_t>(21) << 32;
 
     std::unique_ptr<CuckatooSolver> solver = createSolver(29);
-    std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header));
+    std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header), [] {return false;});
     ASSERT_EQ(1, cycles.size());
     EXPECT_THAT(cycles[0].edges,
             testing::ElementsAreArray( { 31512508, 59367126, 60931190, 94763886, 104277898, 116747030, 127554684,
@@ -88,7 +88,7 @@ TEST_F(CuckatooSolverTest, Solve31) {
 
     workProtocolData = nullptr;
     std::unique_ptr<CuckatooSolver> solver = createSolver(31);
-    std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header));
+    std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header), [] {return false;});
     ASSERT_EQ(1, cycles.size());
     EXPECT_THAT(cycles[0].edges,
             testing::ElementsAreArray( {
