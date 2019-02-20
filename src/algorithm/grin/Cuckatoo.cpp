@@ -5,8 +5,8 @@
 #include <src/common/Endian.h>
 #include <src/pool/WorkCuckaroo.h>
 #include <src/util/Logging.h>
+#include <src/util/StringUtils.h>
 
-#include <string>
 #include <vector>
 
 namespace miner {
@@ -66,7 +66,7 @@ using std::unique_ptr;
 using std::make_unique;
 using std::make_shared;
 
-std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys, AbortFn abortFn) {
+std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(const SiphashKeys& keys, AbortFn abortFn) {
     VLOG(0) << "Siphash Keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
 
     // Init active edges bitmap:
@@ -117,9 +117,8 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys, Abort
     VLOG(0) << "active edges: " << debugActive;
 
     foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &graph, &debugActive](uint32_t edge) {
-            uint32_t nodemask = edgeCount_ - 1;
-            uint32_t u = siphash24(&keys, 2 * edge + 0) & nodemask;
-            uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
+            uint32_t u = getNode(keys, edge, 0);
+            uint32_t v = getNode(keys, edge, 1);
             graph.addUToV(u, v);
             graph.addVToU(v, u);
     });
@@ -145,9 +144,8 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys, Abort
             cycle.edges.resize(opts_.cycleLength, 0);
         }
         foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &cycles](uint32_t edge) {
-            uint32_t nodemask = edgeCount_ - 1;
-            uint32_t u = siphash24(&keys, 2 * edge + 0) & nodemask;
-            uint32_t v = siphash24(&keys, 2 * edge + 1) & nodemask;
+            uint32_t u = getNode(keys, edge, 0);
+            uint32_t v = getNode(keys, edge, 1);
             for(auto& cycle: cycles) {
                 for(size_t i = 0; i < opts_.cycleLength; i++) {
                     if (u == cycle.uvs.at(2*i) && v == cycle.uvs.at(2*i+1)) {
@@ -164,8 +162,12 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(SiphashKeys keys, Abort
             }
             Cycle c;
             c.edges = std::move(cycle.edges);
+            if (!isValidCycle(opts_.n, opts_.cycleLength, keys, c)) {
+                LOG(FATAL) << "GPU " << getDeviceName() << " produced invalid cycle [" << toString(cycle.edges) << "]!";
+            }
             result.push_back(std::move(c));
         }
+
     }
     if (!result.empty()) {
         LOG(INFO) << "Found " << result.size() << " full cycles";
@@ -217,7 +219,6 @@ void CuckatooSolver::pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEd
 }
 
 void CuckatooSolver::prepare() {
-    CLProgramLoader& programLoader = opts_.programLoader;
     uint32_t bucketBitShift = getBucketBitShift();
     VLOG(0) << "Bucket bit shift = " << bucketBitShift;
     cl_int err = 0;
@@ -250,7 +251,7 @@ void CuckatooSolver::prepare() {
     // TODO proper error handling
 
     std::string options = "-DBUCKET_BIT_SHIFT=" + std::to_string(bucketBitShift);
-    program_ = programLoader.loadProgram(opts_.context, files, options).value();
+    program_ = opts_.programLoader->loadProgram(opts_.context, files, options).value();
 
     bufferActiveEdges_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);
     bufferActiveNodes_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);
@@ -301,6 +302,66 @@ int32_t CuckatooSolver::getBucketBitShift() {
         bucketBitShift++;
     }
     return bucketBitShift - 1;
+}
+
+uint32_t CuckatooSolver::getNode(const SiphashKeys& keys, uint32_t edge, uint32_t uOrV) {
+    return siphash24(&keys, (2 * edge) | uOrV) & (edgeCount_ - 1);
+}
+
+/* static */ bool CuckatooSolver::isValidCycle(uint32_t n, uint32_t cycleLength, const SiphashKeys& keys, const Cycle& cycle) {
+    if (cycle.edges.size() != cycleLength) {
+        return false;
+    }
+    for (uint32_t i = 1; i < cycleLength; ++i) {
+        if (cycle.edges[i] <= cycle.edges[i - 1]) {
+            return false;
+        }
+    }
+
+    // Build maps u->v and v->u.
+    std::unordered_map<uint32_t, uint32_t> uToV;
+    std::unordered_map<uint32_t, uint32_t> vToU;
+
+    uint32_t nodemask = (static_cast<uint32_t>(1) << n) - 1;
+    for(uint32_t edge: cycle.edges) {
+        uint32_t u = siphash24(&keys, (2 * edge) | 0) & nodemask;
+        uint32_t v = siphash24(&keys, (2 * edge) | 1) & nodemask;
+        uToV[u] = v;
+        vToU[v] = u;
+    }
+
+    // Follow cycle length edges starting at any u.
+    // We remove edges from the maps to make sure they only get used once.
+    uint32_t start = uToV.begin()->first;
+    uint32_t u = start;
+    for (uint32_t i = 0; i < cycleLength / 2; ++i) {
+        auto it = uToV.find(u);
+        if (it == uToV.end()) {
+            return false;
+        }
+        uint32_t v = it->second;
+        uToV.erase(it);
+        vToU.erase(v);
+        v ^= 1;
+
+        it = vToU.find(v);
+        if (it == vToU.end()) {
+            return false;
+        }
+        u = it->second;
+        vToU.erase(it);
+        uToV.erase(u);
+        u ^= 1;
+    }
+
+    CHECK(uToV.empty());
+    CHECK(vToU.empty());
+
+    return u == start;
+}
+
+std::string CuckatooSolver::getDeviceName() {
+    return gsl::to_string(opts_.deviceAlgoInfo.id.getName());
 }
 
 } /* namespace miner */

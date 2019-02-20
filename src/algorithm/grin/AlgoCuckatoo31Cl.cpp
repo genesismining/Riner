@@ -9,22 +9,24 @@ namespace miner {
 AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
         terminate_(false), args_(std::move(args)) {
 
-    for (DeviceAlgoInfo &deviceInfo : args_.assignedDevices) {
-        if (optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(deviceInfo.id)) {
-            cl::Device device = deviceOr.value();
-            workers_.emplace_back([this, deviceInfo, device] {
-                cl::Context context(device);
-                CuckatooSolver::Options opts(args_.compute.getProgramLoaderOpenCL());
-                opts.n = 31;
-                opts.context = context;
-                opts.device = device;
-                opts.vendor = deviceInfo.id.getVendor();
-
-                CuckatooSolver solver(std::move(opts));
-                run(context, solver);
-            });
-
+    for (DeviceAlgoInfo &deviceAlgoInfo : args_.assignedDevices) {
+        optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(deviceAlgoInfo.id);
+        if (!deviceOr) {
+            continue;
         }
+        cl::Device device = deviceOr.value();
+        workers_.emplace_back([this, deviceAlgoInfo, device] {
+            cl::Context context(device);
+            CuckatooSolver::Options opts;
+            opts.n = 31;
+            opts.context = context;
+            opts.device = device;
+            opts.deviceAlgoInfo = deviceAlgoInfo;
+            opts.programLoader = &args_.compute.getProgramLoaderOpenCL();
+
+            CuckatooSolver solver(std::move(opts));
+            run(context, solver);
+        });
     }
 }
 

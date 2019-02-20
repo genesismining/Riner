@@ -161,16 +161,13 @@ void resolveEdges(const SiphashKeys* keys, int n, Graph::Cycle& cycle) {
     std::sort(cycle.edges.begin(), cycle.edges.end());
 }
 
-TEST(CuckatooGraph, Find42Cycles) {
+TEST(Graph, Find42Cycles) {
     const int n = 19;
     SiphashKeys keys { 0x8a15fa55af1d8dc3, 0xe59246b80d41ad02, 0xb6d8c79874229737, 0x7dc6b1b676f6976 };
     Graph g(n, n - 2, n - 2);
     const uint32_t edges = 1 << n;
     const uint32_t nodemask = edges - 1;
     for(uint32_t i=0; i<edges; ++i) {
-        if (i % (1<<(n-4)) == 0) {
-            LOG(INFO) << i;
-        }
         uint32_t u = siphash24(&keys, 2 * i + 0) & nodemask;
         uint32_t v = siphash24(&keys, 2 * i + 1) & nodemask;
         g.addUToV(u, v);

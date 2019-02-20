@@ -3,6 +3,7 @@
 #include "siphash.h"
 
 #include <src/util/Copy.h>
+#include <src/util/ConfigUtils.h>
 #include <src/pool/Work.h>
 
 #include <src/common/OpenCL.h>
@@ -18,14 +19,12 @@ public:
     typedef std::function<bool()> AbortFn;
 
     struct Options {
-        Options(CLProgramLoader& programLoader): programLoader(programLoader) {}
-
         uint32_t n = 0;
         uint32_t cycleLength = 42;
         cl::Context context;
         cl::Device device;
-        VendorEnum vendor = VendorEnum::kVendorEnumCount;
-        CLProgramLoader& programLoader;
+        DeviceAlgoInfo deviceAlgoInfo;
+        CLProgramLoader* programLoader = nullptr;
     };
 
     struct Cycle {
@@ -35,19 +34,26 @@ public:
     CuckatooSolver(Options options) :
             opts_(std::move(options)),
             edgeCount_(static_cast<uint32_t>(1) << opts_.n) {
+        CHECK(opts_.cycleLength % 2 == 0) << "Cycle length must be even!";
         prepare();
     }
 
     DELETE_COPY_AND_ASSIGNMENT(CuckatooSolver);
 
-    std::vector<Cycle> solve(SiphashKeys keys, AbortFn abortFn);
+    std::vector<Cycle> solve(const SiphashKeys& keys, AbortFn abortFn);
+
+    static bool isValidCycle(uint32_t n, uint32_t cycleLength, const SiphashKeys& keys, const Cycle& cycle);
 
 private:
     void prepare();
 
-    void pruneActiveEdges(const SiphashKeys& header, uint32_t activeEdges, int uorv, bool initial);
+    void pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEdges, int uorv, bool initial);
 
     int32_t getBucketBitShift();
+
+    uint32_t getNode(const SiphashKeys& keys, uint32_t edge, uint32_t uOrV);
+
+    std::string getDeviceName();
 
     static constexpr uint32_t pruneRounds_ = 99;
 
