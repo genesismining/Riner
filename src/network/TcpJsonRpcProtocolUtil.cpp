@@ -133,13 +133,10 @@ namespace miner {
     }
 
     void TcpJsonRpcProtocolUtil::assignIdIfNecessary(JrpcBuilder &rpc) {
-        LOG(INFO) << "enter assignIdIfNecessary";
         if (!rpc.getId()) {
-            LOG(INFO) << "assign id";
             rpc.setId(++highestUsedIdYet);
         }
         MI_ENSURES(rpc.getId());
-        LOG(INFO) << "leave assignIdIfNecessary";
     }
 
     void TcpJsonRpcProtocolUtil::respond(const JrpcResponse &response) {

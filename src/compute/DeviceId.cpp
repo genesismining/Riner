@@ -3,7 +3,6 @@
 
 #include "DeviceId.h"
 #include <src/common/OpenCL.h>
-#include <src/util/StringUtils.h>
 #include <string>
 #include <cstdio>
 
@@ -65,7 +64,6 @@ namespace miner {
 
     optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &device) {
         variant<PcieIndex, DeviceVendorId> idVariant = PcieIndex{};
-        bool pcieIdFound = false;
         VendorEnum vendorEnum = VendorEnum::kUnknown;
 
         auto deviceName = device.getInfo<CL_DEVICE_NAME>();
@@ -74,7 +72,7 @@ namespace miner {
 
         //function taken from sgminer-gm
 
-        if (deviceVendor == "Advanced Micro Devices, Inc." || startsWith(deviceVendor, "AMD")) {
+        if (deviceVendor == "Advanced Micro Devices, Inc.") {
             vendorEnum = kAMD;
 #ifndef CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD
 #define CL_DEVICE_TOPOLOGY_TYPE_PCIE_AMD        1
@@ -96,13 +94,15 @@ namespace miner {
                 pcieId.data[2] = static_cast<uint8_t>(topology.pcie.function);
 
                 idVariant = pcieId;
-                pcieIdFound = true;
 
                 //printf("ComputeModule: detected PCIe topology 0000:%.2x:%.2x.%.1x\n",
                 //          pcieId.data[0], pcieId.data[1], pcieId.data[2]);
             }
+            else {
+                return nullopt;
+            }
         }
-        else if (startsWith(deviceVendor, "NVIDIA")) {
+        else if (deviceVendor == "NVIDIA") {
             vendorEnum = kNvidia;
 #ifndef CL_DEVICE_PCI_BUS_ID_NV
 #define CL_DEVICE_PCI_BUS_ID_NV                     0x4008
@@ -123,17 +123,20 @@ namespace miner {
                 pcieId.data[1] = static_cast<uint8_t>(device_id);
                 pcieId.data[2] = 0;
                 idVariant = pcieId;
-                pcieIdFound = true;
+            }
+            else {
+                return nullopt;
             }
         }
         else if (deviceVendor == "Intel") {
             vendorEnum = kIntel;
-        }
-
-        if (!pcieIdFound) {
-            LOG(WARNING)<< "could not find PCIe ID for OpenCL device '" << deviceName << "' with vendor name '" << deviceVendor << "'";
-            cl_uint id = device.getInfo<CL_DEVICE_VENDOR_ID>();
+            auto id = device.getInfo<CL_DEVICE_VENDOR_ID>();
             idVariant = id;
+        }
+        else {
+            auto name = device.getInfo<CL_DEVICE_NAME>();
+            LOG(INFO) << "could not find PCIe ID for OpenCL device '" << name << "' with vendor name '" << deviceVendor << "'";
+            return nullopt;
         }
 
         return DeviceId(vendorEnum, idVariant, deviceName);
