@@ -46,7 +46,6 @@ void fillBuffer(cl::CommandQueue queue, cl::Buffer buffer, uint8_t pattern, size
 
 void foreachActiveEdge(uint32_t n, uint32_t* edges, std::function<void(uint32_t)> f) {
     const uint32_t edgeCount = static_cast<uint32_t>(1) << n;
-    const uint32_t nodemask = (edgeCount - 1);
     for (uint32_t i = 0; i < edgeCount / 32; ++i) {
         uint32_t bits = edges[i];
         while (bits != 0) {
@@ -312,17 +311,24 @@ uint32_t CuckatooSolver::getNode(const SiphashKeys& keys, uint32_t edge, uint32_
     if (cycle.edges.size() != cycleLength) {
         return false;
     }
+    // Edges must be strictly ascending.
     for (uint32_t i = 1; i < cycleLength; ++i) {
         if (cycle.edges[i] <= cycle.edges[i - 1]) {
             return false;
         }
     }
+    // Edges must not be in range [0..2^n-1].
+    const uint32_t edgeCount = (static_cast<uint32_t>(1) << n);
+    if (cycle.edges.back() >= edgeCount) {
+        return false;
+    }
 
     // Build maps u->v and v->u.
+    // TODO This excludes cycles that go through the same u and v twice but on different edges.
     std::unordered_map<uint32_t, uint32_t> uToV;
     std::unordered_map<uint32_t, uint32_t> vToU;
 
-    uint32_t nodemask = (static_cast<uint32_t>(1) << n) - 1;
+    uint32_t nodemask = edgeCount- 1;
     for(uint32_t edge: cycle.edges) {
         uint32_t u = siphash24(&keys, (2 * edge) | 0) & nodemask;
         uint32_t v = siphash24(&keys, (2 * edge) | 1) & nodemask;

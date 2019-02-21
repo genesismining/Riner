@@ -41,16 +41,11 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
 /* static */SiphashKeys AlgoCuckatoo31Cl::calculateKeys(const CuckooHeader& header) {
     SiphashKeys keys;
     std::vector<uint8_t> h = header.prePow;
-    auto nonce = header.nonce;
+    uint64_t nonce = header.nonce;
     LOG(INFO)<< "nonce = " << nonce;
-    for (size_t i = 0; i < sizeof(nonce); ++i) {
-        // little endian
-        h.push_back(nonce & 0xFF);
-        nonce = nonce >> 8;
-    }
-    HexString x(h);
-    LOG(INFO) << x.str();
-    LOG(INFO) << "header len=" << h.size();
+    size_t len = h.size();
+    h.resize(len + sizeof(nonce));
+    *reinterpret_cast<uint64_t*>(&h[len]) = htobe64(nonce);
     uint64_t keyArray[4];
     blake2b(keyArray, sizeof(keyArray), h.data(), h.size(), 0, 0);
     keys.k0 = htole64(keyArray[0]);
