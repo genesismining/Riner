@@ -19,25 +19,22 @@ public:
         engine_.seed(s);
     }
 
-    void nextBytes(char* bytes, int numRequested) {
+    void getNextBytes(char* bytes, int numRequested) {
         std::uniform_int_distribution<char> d;
         for (int i = 0; i < numRequested; i++) {
             bytes[i] = d(engine_);
         }
     }
 
-    bool nextBool() {
-        std::uniform_int_distribution<char> d(0, 1);
-        return d(engine_) == 0;
-    }
-
-    int32_t nextInt() {
-        std::uniform_int_distribution<int32_t> d;
+    template<typename T>
+    T getUniform() {
+        std::uniform_int_distribution<T> d;
         return d(engine_);
     }
 
-    int32_t nextInt(int n) {
-        std::uniform_int_distribution<int32_t> d(0, n - 1);
+    template<typename T>
+    T getUniform(T max) {
+        std::uniform_int_distribution<T> d(0, max);
         return d(engine_);
     }
 

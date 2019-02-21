@@ -1,12 +1,12 @@
-#include <src/pool/WorkCuckaroo.h>
-
 #include "AlgoCuckatoo31Cl.h"
 
+#include <src/common/Endian.h>
 #include <src/common/OpenCL.h>
-#include <src/util/HexString.h>
 #include <src/crypto/blake2.h>
+#include <src/pool/WorkCuckaroo.h>
 
 namespace miner {
+
 AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
         terminate_(false), args_(std::move(args)) {
 
@@ -42,7 +42,7 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
     SiphashKeys keys;
     std::vector<uint8_t> h = header.prePow;
     uint64_t nonce = header.nonce;
-    LOG(INFO)<< "nonce = " << nonce;
+    VLOG(0) << "nonce = " << nonce;
     size_t len = h.size();
     h.resize(len + sizeof(nonce));
     *reinterpret_cast<uint64_t*>(&h[len]) = htobe64(nonce);

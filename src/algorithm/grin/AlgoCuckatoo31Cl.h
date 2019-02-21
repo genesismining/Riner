@@ -1,7 +1,6 @@
 #pragma once
 
 #include <src/algorithm/Algorithm.h>
-#include <lib/cl2hpp/include/cl2.hpp>
 #include <src/algorithm/grin/Cuckatoo.h>
 #include <atomic>
 #include <vector>
@@ -27,7 +26,6 @@ private:
 
     AlgoConstructionArgs args_;
     std::vector<std::thread> workers_;
-
 };
 
 } /* namespace miner */

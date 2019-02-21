@@ -75,7 +75,7 @@ namespace miner {
         sharedProtoData->jobId = std::to_string(id);
         work->difficulty = jparams.at("difficulty");
         work->height = height;
-        work->nonce = random_.nextInt();
+        work->nonce = random_.getUniform<uint64_t>();
 
         HexString powHex(jparams.at("pre_pow"));
         work->prePow.resize(powHex.sizeBytes());
