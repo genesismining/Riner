@@ -21,10 +21,12 @@ namespace miner {
         Code code = uninitialized;
         std::string message;
         optional<nl::json> data;
-        nl::json errorJson; //full json
+        nl::json id;
 
-        JrpcError(Code code, cstring_span message, const optional<nl::json> &data = nullopt);;
+        JrpcError(Code code, cstring_span message, const optional<nl::json> &data = nullopt);
         explicit JrpcError(const nl::json &);
+
+        nl::json getJson();
     };
 
     //utility class for reading/checking whether entries exist
@@ -38,7 +40,7 @@ namespace miner {
 
         optional<JrpcError> error() const;
 
-        optional<nl::json> result() const; //returns empty json if error
+        optional<nl::json> result() const;
 
         optional<int> id() const;
 

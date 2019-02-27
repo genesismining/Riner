@@ -11,8 +11,6 @@ namespace miner {
             message = j.at("message");
         if (j.count("data"))
             data = j.at("data");
-
-        errorJson = j;
     }
 
     JrpcError::JrpcError(JrpcError::Code code, cstring_span message, const optional<nl::json> &data)
