@@ -28,7 +28,6 @@ namespace miner {
         }
 
         void launch();
-
         void asyncWrite(std::string request, bool reenterCoroutine = false);
         void asyncRead();
 
@@ -52,8 +51,6 @@ namespace miner {
 
         asio::streambuf request;
         asio::streambuf response;
-
-        std::atomic_int numAsyncReads {0}; //todo: remove
 
         struct AsyncRetry;
         LockGuarded<std::list<std::shared_ptr<AsyncRetry>>> activeRetries;
