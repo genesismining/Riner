@@ -20,7 +20,6 @@ namespace miner {
         LockGuarded<DagCacheContainer> dagCache;
         WorkProvider &pool;
         CLProgramLoader &clProgramLoader;
-        const uint32_t rawIntensity;
 
         std::atomic<bool> shutdown {false};
 
@@ -37,12 +36,10 @@ namespace miner {
 
             //Statistics &statistics;
 
-            constexpr static size_t bufferCount = 0x100;
-
             DeviceAlgoSettings settings;
 
-            std::vector<uint32_t> outputBuffer            = std::vector<uint32_t>(bufferCount, 0); //this is where clOutputBuffer gets read into
-            const std::vector<uint32_t> blankOutputBuffer = std::vector<uint32_t>(bufferCount, 0); //used to clear the clOutputBuffer
+            constexpr static size_t bufferCount = 0x100;
+            std::vector<uint32_t> outputBuffer = std::vector<uint32_t>(bufferCount, 0); //this is where clOutputBuffer gets read into
         };
 
         //submit tasks are created from several threads, therefore LockGuarded

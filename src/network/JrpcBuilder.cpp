@@ -8,9 +8,9 @@ namespace miner {
 
 namespace {
 
-optional<int> asInt(const nl::json &j) {
+optional<JrpcBuilder::IdType> asId(const nl::json &j) {
     if (j.is_number_integer()) {
-        return j.get<int>();
+        return j.get<JrpcBuilder::IdType>();
     }
     if (j.is_string()) {
         try {
@@ -71,15 +71,15 @@ optional<int> asInt(const nl::json &j) {
         return *this;
     }
 
-    optional<int> JrpcBuilder::getId() const {
+    optional<JrpcBuilder::IdType> JrpcBuilder::getId() const {
         //todo: decide whether to handle "null" id differently
         if (json.count("id")) {
-            return asInt(json.at("id"));
+            return asId(json.at("id"));
         }
         return nullopt;
     }
 
-    JrpcBuilder &JrpcBuilder::setId(int val) {
+    JrpcBuilder &JrpcBuilder::setId(IdType val) {
         if (options_.serializeIdAsString) {
             json["id"] = std::to_string(val);
         } else {
@@ -88,7 +88,7 @@ optional<int> asInt(const nl::json &j) {
         return *this;
     }
 
-    JrpcBuilder &JrpcBuilder::setId(optional<int> val) {
+    JrpcBuilder &JrpcBuilder::setId(optional<IdType> val) {
         if (val) {
             setId(val.value());
         }
@@ -107,7 +107,7 @@ optional<int> asInt(const nl::json &j) {
     : json(j) {
     }
 
-    JrpcResponse::JrpcResponse(optional<int> id, const JrpcError &inErr, cstring_span version) {
+    JrpcResponse::JrpcResponse(optional<IdType> id, const JrpcError &inErr, cstring_span version) {
         json["jsonrpc"] = gsl::to_string(version);
 
         std::string idStr = id ? std::to_string(id.value()) : "null";
@@ -126,9 +126,9 @@ optional<int> asInt(const nl::json &j) {
         return json;
     }
 
-    optional<int> JrpcResponse::id() const {
+    optional<JrpcResponse::IdType> JrpcResponse::id() const {
         if (json.count("id")) {
-            return asInt(json.at("id"));
+            return asId(json.at("id"));
         }
         return nullopt;
     }

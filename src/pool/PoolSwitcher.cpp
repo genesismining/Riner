@@ -91,6 +91,7 @@ namespace miner {
 
         LOG(INFO) << "PoolSwitcher cannot provide work since there is no active pool";
         //wait for a short period of time to prevent busy waiting in the algorithms' loops
+        //TODO: better solution would be to wait for a short time, and if a pool becomes available in that time period it can be used immediately and the function returns
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return nullopt;
     }
@@ -101,6 +102,7 @@ namespace miner {
             LOG(INFO) << "work result cannot be submitted because it has expired";
             return;
         }
+        
         auto resultPoolUid = data->getPoolUid();
         auto activePoolUid = std::numeric_limits<decltype(resultPoolUid)>::max();
         bool sameUid = true;

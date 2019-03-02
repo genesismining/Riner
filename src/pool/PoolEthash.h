@@ -55,8 +55,6 @@ namespace miner {
         void restart();
         TcpJsonRpcProtocolUtil jrpc;
 
-        unique_ptr<TcpJsonProtocolUtil> tcp;
-
         bool acceptMiningNotify = false;
 
         void onMiningNotify (const nl::json &j);

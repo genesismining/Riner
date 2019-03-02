@@ -31,8 +31,9 @@ namespace miner {
     class JrpcResponse {
         nl::json json;
     public:
+        using IdType = uint64_t;
         explicit JrpcResponse(const nl::json &);
-        JrpcResponse(optional<int> id, const JrpcError &, cstring_span version = "2.0");
+        JrpcResponse(optional<IdType> id, const JrpcError &, cstring_span version = "2.0");
 
         const nl::json &getJson() const;
 
@@ -40,7 +41,7 @@ namespace miner {
 
         optional<nl::json> result() const; //returns empty json if error
 
-        optional<int> id() const;
+        optional<IdType> id() const;
 
         template<class T>
         bool atEquals(const char *key, const T &t) const {
@@ -52,6 +53,7 @@ namespace miner {
     class JrpcBuilder {
     public:
         using ResponseFunc = std::function<void(const JrpcResponse &)>;
+        using IdType = JrpcResponse::IdType;
 
         struct Options {
             bool serializeIdAsString = false;
@@ -73,10 +75,10 @@ namespace miner {
         JrpcBuilder &onResponse(ResponseFunc &&func);
 
         //set a custom id, if no id is set, the TcpJsonRpcProtocolUtil will choose an unused one automatically
-        JrpcBuilder &setId(int val);
-        JrpcBuilder &setId(optional<int> val);
+        JrpcBuilder &setId(IdType val);
+        JrpcBuilder &setId(optional<IdType> val);
 
-        optional<int> getId() const;
+        optional<IdType> getId() const;
         const nl::json &getJson() const;
 
         void callResponseFunc(const JrpcResponse &);

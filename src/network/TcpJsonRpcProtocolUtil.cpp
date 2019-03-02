@@ -7,8 +7,6 @@
 
 namespace miner {
 
-
-
     TcpJsonRpcProtocolUtil::TcpJsonRpcProtocolUtil(cstring_span host, cstring_span port) {
         tcpJson = std::make_unique<TcpJsonProtocolUtil>(host, port, [this]
                 (auto responseJson, auto &error, auto &coro) {
@@ -40,6 +38,10 @@ namespace miner {
             }
         }
         else {
+            if (incomingJsonModifierFunc) {//if modifier was set, apply it
+                incomingJsonModifierFunc(json);
+            }
+
             bool msgHandled = false;
             JrpcResponse res(json);
 
@@ -79,21 +81,36 @@ namespace miner {
         onReceiveFunc = std::move(func);
     }
 
-    void TcpJsonRpcProtocolUtil::setOnRestart(std::function<void()> &&func ) {
+    void TcpJsonRpcProtocolUtil::setOnRestart(std::function<void()> &&func) {
         onRestartFunc = std::move(func);
+    }
+
+    void TcpJsonRpcProtocolUtil::setOutgoingJsonModifier(JsonModifierFunc &&func) {
+        outgoingJsonModifierFunc = std::move(func);
+    }
+
+    void TcpJsonRpcProtocolUtil::setIncomingJsonModifier(JsonModifierFunc &&func) {
+        incomingJsonModifierFunc = std::move(func);
     }
 
     void TcpJsonRpcProtocolUtil::call(JrpcBuilder rpc) {
         assignIdIfNecessary(rpc);
 
-        tcpJson->asyncWrite(rpc.getJson());
+        if (outgoingJsonModifierFunc) { //if a modify function was set, copy the json and modify it before sending
+            nl::json j = rpc.getJson();
+            outgoingJsonModifierFunc(j);
+            tcpJson->asyncWrite(j);
+        }
+        else {
+            tcpJson->asyncWrite(rpc.getJson());
+        }
 
         auto id = rpc.getId().value();
         MI_EXPECTS(pendingRpcs.count(id) == 0); //id should not exist yet
 
         pendingRpcs[id] = {
-                std::chrono::system_clock::now(),
-                std::move(rpc)
+            std::chrono::system_clock::now(),
+            std::move(rpc)
         };
     }
 
@@ -121,7 +138,6 @@ namespace miner {
             if (tries > 0) {//tracking already started, just resend the string
                 LOG(INFO) << "retrying to send share with id " << id
                           << " (try #" << (tries + 1) << ")";
-
                 tcpJson->asyncWrite(rpc.getJson().dump());
             }
             ++tries;

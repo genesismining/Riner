@@ -14,9 +14,9 @@ namespace miner {
     class TcpJsonRpcProtocolUtil {
     public:
         using OnReceiveFunc = std::function<void(const JrpcResponse &j)>;
+        using JsonModifierFunc = std::function<void(nl::json &)>;
 
         explicit TcpJsonRpcProtocolUtil(cstring_span host, cstring_span port);
-
 
         void setOnRestart(std::function<void()> &&);
 
@@ -30,6 +30,9 @@ namespace miner {
 
         void setOnReceive(OnReceiveFunc &&);
 
+        void setOutgoingJsonModifier(JsonModifierFunc &&);
+        void setIncomingJsonModifier(JsonModifierFunc &&);
+
         void call(JrpcBuilder);
         void respond(const JrpcResponse &);
 
@@ -41,9 +44,12 @@ namespace miner {
         void assignIdIfNecessary(JrpcBuilder &);
 
     private:
-        std::function<void()> onRestartFunc; //may not be initialized
-        OnReceiveFunc onReceiveUnhandledFunc; //may not be initialized
-        OnReceiveFunc onReceiveFunc; //may not be initialized
+        std::function<void()> onRestartFunc; //might not be initialized
+        OnReceiveFunc onReceiveUnhandledFunc; //might not be initialized
+        OnReceiveFunc onReceiveFunc; //might not be initialized
+
+        JsonModifierFunc outgoingJsonModifierFunc; //might not be initialized
+        JsonModifierFunc incomingJsonModifierFunc; //might not be initialized
 
         int highestUsedIdYet = 0;
 
