@@ -1,11 +1,10 @@
 Language:             Cpp
-Standard:             Cpp14
+Standard:             Cpp11
 BasedOnStyle:         LLVM
 ColumnLimit:          120
 IndentWidth:          4
 AccessModifierOffset: -4
 AlignEscapedNewlines: Left
-AlignAfterOpenBracket: false
 AllowShortLoopsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: true
