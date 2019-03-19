@@ -15,6 +15,7 @@ add_executable(Miner
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
         src/application/Types.cpp src/application/Types.h
+        src/application/ApiServer.cpp src/application/ApiServer.h
         src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
@@ -23,10 +24,13 @@ add_executable(Miner
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
+        src/statistics/Record.cpp src/statistics/Record.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
         src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
+        src/network/JrpcServer.cpp src/network/JrpcServer.h
+        src/network/TcpLineServer.cpp src/network/TcpLineServer.h
         src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
@@ -39,6 +43,7 @@ add_executable(Miner
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h
         src/compute/opencl/CLProgramLoader.cpp src/compute/opencl/CLProgramLoader.h
+        src/common/Chrono.h
         src/common/Endian.h
         src/common/WorkCommon.cpp src/common/WorkCommon.h
         src/common/Pointers.h
@@ -64,7 +69,7 @@ add_executable(Miner
         src/util/sph/sph_types.h
 
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
-)
+        )
 
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
