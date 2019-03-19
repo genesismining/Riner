@@ -13,7 +13,6 @@
 #include <future>
 #include <list>
 #include <atomic>
-#include <asio/yield.hpp>
 
 namespace miner {
     template<class T>
