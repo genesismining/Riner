@@ -5,7 +5,9 @@ ColumnLimit:          120
 IndentWidth:          4
 AccessModifierOffset: -4
 AlignEscapedNewlines: Left
-AlignAfterOpenBracket: false
+AlignAfterOpenBracket: DontAlign
+IncludeBlocks: Preserve
+CompactNamespaces: true
 AllowShortLoopsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: true
