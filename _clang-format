@@ -1,0 +1,13 @@
+Language:             Cpp
+Standard:             Cpp14
+BasedOnStyle:         LLVM
+ColumnLimit:          120
+IndentWidth:          4
+AccessModifierOffset: -4
+AlignEscapedNewlines: Left
+AllowShortLoopsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: true
+BreakConstructorInitializersBeforeComma: true
+KeepEmptyLinesAtTheStartOfBlocks: true
+SpacesBeforeTrailingComments: 1
