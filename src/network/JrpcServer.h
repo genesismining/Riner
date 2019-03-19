@@ -69,6 +69,7 @@ namespace miner {
 
             //create a wrapper that converts the Ret(Args...) function to a JsonResponse(const nl::json &) function
             registerJrpcFunc({method, [this, func = std::move(func), argNames...] (const nl::json &argsJson) {
+                (void)this; //silence 'unused this capture' warning
                 return func(parseSingleArg<Args>(argsJson, argNames)...);
             }});
         }

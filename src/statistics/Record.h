@@ -31,7 +31,7 @@ namespace miner {
         double avg;
 
     public:
-        MovingAvgExp()
+        MovingAvgExp();
         void update(double value, clock::time_point time = clock::now());
     };
 
@@ -45,8 +45,8 @@ namespace miner {
 
         AggregateValue total;
 
-        Aggregate<double> avgRate5s;
-        Aggregate<double> avgRate1m;
+        AggregateValue avgRate5s;
+        AggregateValue avgRate1m;
 
         inline static double getExpAvg(double avg, clock::duration deltaT, std::chrono::seconds lambda, double new_value = 0) {
             std::chrono::duration<double> seconds(deltaT);
@@ -59,14 +59,12 @@ namespace miner {
             firstUpdateTime = lastUpdateTime = clock::now(); //TODO: risk of division by zero?
             total = decltype(total)();
             avgRate5s.count = avgRate1m.count = 0;
-            avgRate5s.weight = avgRate1m.weight = 0;
+            avgRate5s.value = avgRate1m.value = 0;
         }
 
     };
 
     class RecordNode {
-        LockGuarded<Record>
-
     };
 
     void foo() {
