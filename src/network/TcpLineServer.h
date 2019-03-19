@@ -25,7 +25,7 @@ namespace miner {
         void listen(std::shared_ptr<TcpLineConnection> sharedThis);
     public:
 
-        TcpLineConnection(unique_ptr<tcp::socket> socket);
+        explicit TcpLineConnection(unique_ptr<tcp::socket> socket);
 
         void asyncWrite(std::string response);
     };

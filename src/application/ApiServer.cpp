@@ -9,12 +9,12 @@ namespace miner {
 
         //json exceptions will get caught by the caller of these functions
 
-        jrpc->registerFunc("divide", [] (int a, int b) -> JrpcReturn {
+        jrpc->registerFunc("divide", [] (float a, float b) -> JrpcReturn {
 
             if (b == 0)
                 return {JrpcError::invalid_params, "division by zero"};
 
-            return float(a) / b;
+            return a / b;
 
         }, "a", "b");
 

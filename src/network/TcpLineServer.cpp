@@ -24,7 +24,7 @@ namespace miner {
         MI_EXPECTS(thread == nullptr); //don't call launch twice on the same object!
 
         //start io service thread which will handle the async calls
-        thread = std::make_unique<std::thread>([this]() {
+        thread = std::make_unique<std::thread>([this] () {
             try {
                 while(true) {
                     ioService.run();

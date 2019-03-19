@@ -26,45 +26,47 @@ namespace miner {
         std::string method;
         nl::json args;
 
-        if (!parseLine(line, version, id, method, args)) {
-            //TODO: respond with parse error
-            return;
+        optional<JrpcReturn> jreturn;
+
+        if (parseLine(line, version, id, method, args)) {
+
+            if (auto funcOr = funcWithName(method)) {
+                auto &func = funcOr.value();
+
+                try {
+                    jreturn = func.callable(args);
+                }
+                catch (nl::json::exception &e) {
+                    std::string errStr =
+                            "json exception while running Jrpc method '" + func.methodName + ": " + e.what();
+                    LOG(ERROR) << errStr << "\nline string: " << line;
+                    jreturn = JrpcError{JrpcError::internal_error, errStr};
+                }
+                catch (std::invalid_argument &e) {
+                    std::string errStr =
+                            "invalid argument while running Jrpc method '" + func.methodName + "': " + e.what();
+                    LOG(ERROR) << errStr << "\nline string: " << line;
+                    jreturn = JrpcError{JrpcError::invalid_params, errStr};
+                }
+
+            } else {
+                std::string errStr = "no method with name " + method;
+                jreturn = JrpcError{JrpcError::method_not_found, errStr};
+            }
+
         }
 
-        if (auto funcOr = funcWithName(method)) {
-            auto &func = funcOr.value();
+        if (jreturn) {
+            auto key = jreturn.value().getKey();
+            auto &value = jreturn.value().getValue();
 
-            optional<JrpcReturn> jreturn;
+            nl::json response = {
+                    {"jsonrpc", version},
+                    {"id",      id},
+                    {key,       value}
+            };
 
-            try {
-                jreturn = func.callable(args);
-            }
-            catch (nl::json::exception &e) {
-                std::string errStr = "json exception while running Jrpc method '" + func.methodName + ": " + e.what();
-                LOG(ERROR) << errStr << "\nline string: " << line;
-                jreturn = JrpcError{JrpcError::parse_error, errStr};
-            }
-            catch (std::invalid_argument &e) {
-                std::string errStr = "invalid argument while running Jrpc method '" + func.methodName + "': " + e.what();
-                LOG(ERROR) << errStr << "\nline string: " << line;
-                jreturn = JrpcError{JrpcError::invalid_params, errStr};
-            }
-
-            if (jreturn) {
-                auto key = jreturn.value().getKey();
-                auto &value = jreturn.value().getValue();
-
-                nl::json response = {
-                        {"jsonrpc", version},
-                        {"id", id},
-                        {key, value}
-                };
-
-                conn.asyncWrite(response.dump());
-            }
-        }
-        else {
-            //TODO: respond with method not found jrpcError
+            conn.asyncWrite(response.dump());
         }
     }
 
