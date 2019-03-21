@@ -24,7 +24,8 @@ add_executable(Miner
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
-        src/statistics/Record.cpp src/statistics/Record.h
+        src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
+        src/statistics/Average.cpp src/statistics/Average.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
