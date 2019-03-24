@@ -59,7 +59,6 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
     while (!terminate_) {
         unique_ptr<CuckooHeader> work = args_.workProvider.tryGetWork<kCuckatoo31>().value_or(nullptr);
         if (!work) {
-            // TODO maybe sleep some
             continue;
         }
 

@@ -2,27 +2,7 @@
 #include <src/common/Assert.h>
 #include "JrpcBuilder.h"
 
-#include <string>
-
 namespace miner {
-
-namespace {
-
-optional<JrpcBuilder::IdType> asId(const nl::json &j) {
-    if (j.is_number_integer()) {
-        return j.get<JrpcBuilder::IdType>();
-    }
-    if (j.is_string()) {
-        try {
-            return std::stoi(j.get<std::string>());
-        } catch (std::invalid_argument& e) {
-        }
-    }
-    return nullopt;
-}
-
-
-} // namespace
 
     JrpcError::JrpcError(const nl::json &j) {
         if (j.count("code"))
@@ -74,17 +54,15 @@ optional<JrpcBuilder::IdType> asId(const nl::json &j) {
     optional<JrpcBuilder::IdType> JrpcBuilder::getId() const {
         //todo: decide whether to handle "null" id differently
         if (json.count("id")) {
-            return asId(json.at("id"));
+            auto &jid = json.at("id");
+            if (jid.is_number())
+                return jid.get<int>();
         }
         return nullopt;
     }
 
     JrpcBuilder &JrpcBuilder::setId(IdType val) {
-        if (options_.serializeIdAsString) {
-            json["id"] = std::to_string(val);
-        } else {
-            json["id"] = val;
-        }
+        json["id"] = val;
         return *this;
     }
 
@@ -128,7 +106,9 @@ optional<JrpcBuilder::IdType> asId(const nl::json &j) {
 
     optional<JrpcResponse::IdType> JrpcResponse::id() const {
         if (json.count("id")) {
-            return asId(json.at("id"));
+            auto & jid = json.at("id");
+            if (jid.is_number())
+                return jid.get<int>();
         }
         return nullopt;
     }

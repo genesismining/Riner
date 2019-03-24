@@ -66,8 +66,8 @@ private:
         static constexpr uint32_t kCapacity = 7;
         uint32_t value[kCapacity];
         uint32_t key[kCapacity];
-        uint32_t insertions = 0;
-        uint32_t full = 0;
+        uint32_t insertions;
+        uint32_t full;
     };
 
     class Cyclefinder;
@@ -78,7 +78,7 @@ private:
                 bits_(bits), mask_((static_cast<uint32_t>(1) << bits) - 1), shift_(n - bits) {
             MI_EXPECTS(sizeof(Bucket) == 64);
             uint32_t count = static_cast<uint32_t>(1) << bits;
-            buckets_ = (Bucket*)aligned_alloc(sizeof(Bucket), sizeof(Bucket) * count);
+            buckets_ = new Bucket[count];
             memset(buckets_, 0, sizeof(Bucket) * count);
         }
 

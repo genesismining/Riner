@@ -60,11 +60,6 @@ void foreachActiveEdge(uint32_t n, uint32_t* edges, std::function<void(uint32_t)
 
 }  // namespace
 
-using std::shared_ptr;
-using std::unique_ptr;
-using std::make_unique;
-using std::make_shared;
-
 std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(const SiphashKeys& keys, AbortFn abortFn) {
     VLOG(0) << "Siphash Keys: " << keys.k0 << ", " << keys.k1 << ", " << keys.k2 << ", " << keys.k3;
 

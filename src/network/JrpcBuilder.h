@@ -56,7 +56,6 @@ namespace miner {
         using IdType = JrpcResponse::IdType;
 
         struct Options {
-            bool serializeIdAsString = false;
             cstring_span version = "2.0";
         };
 

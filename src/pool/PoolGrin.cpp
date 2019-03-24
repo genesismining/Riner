@@ -13,11 +13,8 @@
 namespace miner {
 
     void PoolGrinStratum::restart() {
-        JrpcBuilder::Options options;
-        options.serializeIdAsString = true;
-
-        auto login = std::make_shared<JrpcBuilder>(options);
-        auto getjobtemplate = std::make_shared<JrpcBuilder>(options);
+        auto login = std::make_shared<JrpcBuilder>();
+        auto getjobtemplate = std::make_shared<JrpcBuilder>();
 
         login->method("login")
             .param("agent", "grin-miner")
@@ -97,9 +94,7 @@ namespace miner {
                 return; //work has expired
             }
 
-            JrpcBuilder::Options options;
-            options.serializeIdAsString = true;
-            auto submit = std::make_shared<JrpcBuilder>(options);
+            auto submit = std::make_shared<JrpcBuilder>();
 
             nl::json pow;
             for(uint32_t i: result->pow) {
@@ -155,6 +150,12 @@ namespace miner {
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
         jrpc.setOnRestart([this] {
             restart();
+        });
+        jrpc.setIncomingJsonModifier([] (nl::json &json) {
+            json["id"] = std::stoi(json.at("id").get<std::string>());
+        });
+        jrpc.setOutgoingJsonModifier([] (nl::json &json) {
+            json["id"] = std::to_string(json.at("id").get<JrpcBuilder::IdType>());
         });
     }
 
