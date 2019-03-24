@@ -152,7 +152,11 @@ namespace miner {
             restart();
         });
         jrpc.setIncomingJsonModifier([] (nl::json &json) {
-            json["id"] = std::stoi(json.at("id").get<std::string>());
+            try {
+                json["id"] = std::stoi(json.at("id").get<std::string>());
+            } catch(std::invalid_argument&) {
+                json["id"] = 0;
+            }
         });
         jrpc.setOutgoingJsonModifier([] (nl::json &json) {
             json["id"] = std::to_string(json.at("id").get<JrpcBuilder::IdType>());
