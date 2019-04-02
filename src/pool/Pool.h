@@ -4,17 +4,14 @@
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 #include <src/common/Assert.h>
+#include <src/util/Copy.h>
 #include <src/pool/Work.h>
 #include <src/common/StringSpan.h>
 #include <string>
 #include <atomic>
+#include <chrono>
 
 namespace miner {
-    class WorkResultBase;
-    class WorkBase;
-    template<AlgoEnum A> class WorkResult;
-    template<AlgoEnum A> class Work;
-
     struct PoolConstructionArgs {
         //don't confuse this with Config::Pool. PoolConstructionArgs may be used
         //to pass refs to other subsystems in the future (e.g. io_service)
@@ -30,6 +27,8 @@ namespace miner {
 
         StillAliveTrackable() = default;
         virtual ~StillAliveTrackable() = default;
+
+        DELETE_COPY_AND_ASSIGNMENT(StillAliveTrackable);
 
         clock::time_point getLastKnownAliveTime();
         void setLastKnownAliveTime(clock::time_point time);

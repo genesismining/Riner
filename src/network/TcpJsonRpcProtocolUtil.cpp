@@ -7,8 +7,6 @@
 
 namespace miner {
 
-
-
     TcpJsonRpcProtocolUtil::TcpJsonRpcProtocolUtil(cstring_span host, cstring_span port) {
         tcpJson = std::make_unique<TcpJsonProtocolUtil>(host, port, [this]
                 (auto responseJson, auto &error, auto &coro) {
@@ -152,7 +150,7 @@ namespace miner {
 
     void TcpJsonRpcProtocolUtil::assignIdIfNecessary(JrpcBuilder &rpc) {
         if (!rpc.getId()) {
-            rpc.id(++highestUsedIdYet);
+            rpc.setId(++highestUsedIdYet);
         }
         MI_ENSURES(rpc.getId());
     }

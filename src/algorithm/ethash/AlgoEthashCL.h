@@ -5,7 +5,7 @@
 #include <atomic>
 #include <vector>
 #include <src/algorithm/Algorithm.h>
-#include <src/pool/Work.h>
+#include <src/pool/Pool.h>
 #include <src/algorithm/ethash/DagCache.h>
 #include <src/algorithm/ethash/DagFile.h>
 #include <src/util/LockUtils.h>

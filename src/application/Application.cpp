@@ -99,7 +99,8 @@ namespace miner {
 
             MI_ENSURES(poolSwitchers[algoType]);
 
-            auto deviceInfos = getAllDeviceAlgoInfosForAlgoImplName(implName, config, prof, compute->getAllDeviceIds());
+            std::vector<DeviceAlgoInfo> deviceInfos =
+                    getAllDeviceAlgoInfosForAlgoImplName(implName, config, prof, compute->getAllDeviceIds());
 
             std::string logText = "launching algorithm '" + implName + "' with devices: ";
             for (auto &devInfo : deviceInfos) {

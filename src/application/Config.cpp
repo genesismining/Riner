@@ -8,6 +8,8 @@
 
 namespace miner {
 
+    namespace {
+
     //returns json.at(key) or defaultVal
     template<class T>
     static T valueOr(const nl::json &j, const char *key, const T &defaultVal) {
@@ -19,6 +21,9 @@ namespace miner {
     Config::Profile::Mapping parseProfileMapping(const nl::json &j) {
         return {j.at(0), j.at(1)};
     }
+
+    }
+
 
     void Config::parse(const nl::json &j) {
         using namespace std::string_literals;

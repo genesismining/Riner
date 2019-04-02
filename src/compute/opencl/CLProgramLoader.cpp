@@ -14,24 +14,29 @@ namespace miner {
     , precompiledKernelDir(std::move(precompiledKernelDir)) {
     }
 
-    optional<cl::Program> CLProgramLoader::loadProgram(cl::Context &context, cstring_span clFileInDir, cstring_span options) {
-        auto clFilePath = clSourceDir;
-        clFilePath.append(clFileInDir.data(), static_cast<size_t>(clFileInDir.size()));
+    optional<cl::Program> CLProgramLoader::loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span options) {
+        std::vector<std::string> sources;
+        for(auto& file: clFilesInDir) {
+            std::string clFilePath = clSourceDir;
+            clFilePath.append(file.data(), static_cast<size_t>(file.size()));
 
-        return compileCLFile(context, clFilePath, options);
+            optional<std::string> source = file::readFileIntoString(clFilePath);
+            if (!source) {
+                LOG(ERROR) << "failed to read " << clFilePath;
+                return nullopt;
+            }
+            sources.push_back(std::move(source.value()));
+        }
+        return compileCLFile(context, sources, options);
     }
 
-    optional<cl::Program> CLProgramLoader::compileCLFile(cl::Context &context, cstring_span clFile, cstring_span options) {
-        auto source = file::readFileIntoString(clFile);
-        if (!source)
-            return nullopt;
-
+    optional<cl::Program> CLProgramLoader::compileCLFile(cl::Context context, std::vector<std::string> sources, cstring_span options) {
         cl_int err = 0;
 
         std::string fullOptions = " -I " + clSourceDir + " ";
         fullOptions.append(options.data(), (size_t)options.size());
 
-        cl::Program program(context, {source.value()}, err);
+        cl::Program program(context, sources, &err);
 
         { //compilation
             std::mutex mut;
@@ -68,15 +73,15 @@ namespace miner {
                 auto name = device.getInfo<CL_DEVICE_NAME>();
                 auto log = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device);
 
-                LOG(ERROR) << "#" << status << " failed building cl program " << gsl::to_string(clFile) <<
-                "\non device '" << name <<
+                LOG(ERROR) << "#" << status << " failed building cl program on device '" << name <<
                 "\nwith options '" << fullOptions << "'" <<
                 "\nbuild log: \n" << log;
             }
         }
 
-        if (atLeastOneFailed)
+        if (atLeastOneFailed) {
             return nullopt;
+        }
         return std::move(program);
     }
 

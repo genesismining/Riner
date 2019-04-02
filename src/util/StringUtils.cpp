@@ -23,8 +23,13 @@ namespace miner {
 
     std::string toLower(const std::string &inStr) {
         std::string str = inStr;
-        std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+        std::transform(str.begin(), str.end(), str.begin(),
+                [](unsigned char c){ return std::tolower(c); });
         return str;
+    }
+
+    bool startsWith(const std::string& string, const std::string& prefix) {
+        return string.compare(0, prefix.length(), prefix) == 0;
     }
 
 

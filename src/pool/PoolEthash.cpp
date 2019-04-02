@@ -98,7 +98,8 @@ namespace miner {
 
         jrpc.postAsync([this, result = std::move(result)] {
 
-            auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>();
+            std::shared_ptr<EthashStratumProtocolData> protoData =
+                    result->tryGetProtocolDataAs<EthashStratumProtocolData>();
             if (!protoData) {
                 LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
@@ -108,7 +109,7 @@ namespace miner {
 
             submit->method("mining.submit")
                 .param(args.username)
-                .param(protoData.value()->jobId)
+                .param(protoData->jobId)
                 .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
                 .param("0x" + HexString(result->proofOfWorkHash).str())
                 .param("0x" + HexString(result->mixHash).str());

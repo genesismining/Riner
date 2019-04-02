@@ -5,8 +5,10 @@
 
 namespace miner {
 
-    template<class T, class DeleterT = std::default_delete<T>>
-    using unique_ptr = std::unique_ptr<T, DeleterT>;
+    using std::shared_ptr;
+    using std::unique_ptr;
+    using std::make_unique;
+    using std::make_shared;
 
     template<class T, class U>
     unique_ptr<T> static_unique_ptr_cast(unique_ptr<U> uUnique) {
