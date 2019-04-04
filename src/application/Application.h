@@ -17,8 +17,6 @@ namespace miner {
 
         Config config; //referenced by other subsystem, and thus must outlive them
 
-        unique_ptr<ApiServer> apiServer; //lazy init, needs port from config
-
         AlgoFactory algoFactory;
         PoolFactory poolFactory;
 
@@ -31,6 +29,8 @@ namespace miner {
         std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> poolSwitchers;
 
         std::list<unique_ptr<AlgoBase>> algorithms;
+
+        unique_ptr<ApiServer> apiServer; //lazy init, uses devicesInUse
 
         void launchProfile(const Config &config, Config::Profile &prof);
 

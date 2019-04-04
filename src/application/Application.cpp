@@ -32,8 +32,13 @@ namespace miner {
             return;
         }
 
+        compute = std::make_unique<ComputeModule>(config);
+
+        //init devicesInUse
+        devicesInUse.resize(compute->getAllDeviceIds().size());
+
         auto port = config.getGlobalSettings().api_port;
-        apiServer = make_unique<ApiServer>(port);
+        apiServer = make_unique<ApiServer>(port, devicesInUse);
 
         auto maybeProf = config.getStartProfile();
         if (!maybeProf) {
@@ -41,11 +46,6 @@ namespace miner {
             return;
         }
         auto &prof = maybeProf.value();
-
-        compute = std::make_unique<ComputeModule>(config);
-
-        //init devicesInUse
-        devicesInUse.resize(compute->getAllDeviceIds().size());
 
         launchProfile(config, prof);
     }
@@ -107,8 +107,8 @@ namespace miner {
             MI_ENSURES(poolSwitchers[algoType]);
 
             auto assignedDeviceRefs = prepareAssignedDevicesForAlgoImplName(implName, config, prof, devicesInUse, allIds);
-
             logLaunchInfo(implName, assignedDeviceRefs);
+
 
             AlgoConstructionArgs args {
                 *compute,
