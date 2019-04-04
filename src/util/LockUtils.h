@@ -44,6 +44,10 @@ namespace miner {
             return {mut, t};
         }
 
+        Locked<const T> lock() const {
+            return {mut, t};
+        }
+
     };
 
 }
