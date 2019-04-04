@@ -30,7 +30,7 @@ namespace miner {
     template<class T>
     class LockGuarded {
         T t;
-        std::mutex mut;
+        mutable std::mutex mut;
 
     public:
         using value_type = T;
