@@ -14,4 +14,11 @@ namespace miner {
         return j.get<nl::json::object_t>();
     }
 
+    class JsonSerializable {
+    public:
+        virtual nl::json toJson() const = 0;
+
+        virtual ~JsonSerializable() = default;
+    };
+
 }

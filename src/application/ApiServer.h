@@ -11,7 +11,7 @@ namespace miner {
         unique_ptr<JrpcServer> jrpc;
 
     public:
-        explicit ApiServer(uint64_t port);
+        explicit ApiServer(uint16_t port);
         ~ApiServer();
     };
 

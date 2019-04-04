@@ -16,10 +16,10 @@ namespace miner {
         LOG(INFO) << "launching " << args.assignedDevices.size() << " gpu-tasks";
 
         for (auto &device : args.assignedDevices) {
-            if (auto clDevice = args.compute.getDeviceOpenCL(device.id)) {
+            if (auto clDevice = args.compute.getDeviceOpenCL(device.get().id)) {
 
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
-                                              std::move(clDevice.value()), device.settings));
+                                              std::move(clDevice.value()), device.get().settings));
             }
         }
     }
@@ -29,7 +29,7 @@ namespace miner {
         //implicitly waits for gpuTasks and submitTasks to finish
     }
 
-    void AlgoEthashCL::gpuTask(cl::Device clDevice, DeviceAlgoSettings settings) {
+    void AlgoEthashCL::gpuTask(cl::Device clDevice, Device::AlgoSettings settings) {
         const unsigned numGpuSubTasks = settings.num_threads;
 
         //Statistics statistics;
@@ -91,7 +91,7 @@ namespace miner {
 
     }
 
-    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag, DeviceAlgoSettings settings) {
+    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag, Device::AlgoSettings settings) {
         cl_int err = 0;
 
         PerGpuSubTask state;

@@ -24,7 +24,7 @@ namespace miner {
             temp_target,
             temp_hysteresis;
 
-            std::string api_port;
+            uint16_t api_port;
 
             std::string opencl_kernel_dir;
             std::string start_profile;

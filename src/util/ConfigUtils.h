@@ -3,17 +3,10 @@
 
 #include <src/application/Config.h>
 #include <src/compute/DeviceId.h>
+#include <src/application/Device.h>
 #include <vector>
 
 namespace miner {
-
-    using DeviceAlgoSettings = Config::DeviceProfile::AlgoSettings;
-
-    struct DeviceAlgoInfo {
-        DeviceAlgoSettings settings;
-        DeviceId id;
-        size_t deviceIndex = std::numeric_limits<size_t>::max();
-    };
 
     namespace configUtils {
 
@@ -25,7 +18,7 @@ namespace miner {
 
         Config::Profile::Mapping getMappingForDevice(Config::Profile &prof, size_t deviceIndex);
 
-        std::vector<DeviceAlgoInfo> getAllDeviceAlgoInfosForAlgoImplName(const std::string &implName, const Config &config, Config::Profile &prof, const std::vector<DeviceId> &allDevIds);
+        std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName, const Config &config, Config::Profile &prof, std::vector<optional<Device>> &devicesInUse, const std::vector<DeviceId> &allIds);
 
     }
 }

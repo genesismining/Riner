@@ -4,7 +4,7 @@
 
 namespace miner {
 
-    ApiServer::ApiServer(uint64_t port)
+    ApiServer::ApiServer(uint16_t port)
             : jrpc(std::make_unique<JrpcServer>(port)) {
 
         //json exceptions will get caught by the caller of these functions
@@ -18,7 +18,15 @@ namespace miner {
 
         }, "a", "b");
 
-        jrpc->registerFunc("stats", [&] () -> JrpcReturn {
+        jrpc->registerFunc("getPoolStats", [] () -> JrpcReturn {
+            return 0;
+        });
+
+        jrpc->registerFunc("getGpuStats", [] () -> JrpcReturn {
+            return 0;
+        });
+
+        jrpc->registerFunc("stats", [] () -> JrpcReturn {
             return JrpcError::invalid_params;
         });
 

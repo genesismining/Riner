@@ -11,11 +11,14 @@ namespace miner {
 
     //TODO: write some nice documentation about StatisticNode because theres a lot of stuff going on
     template<class T>
-    class StatisticNode {
+    class StatisticNode : public JsonSerializable {
+
+        static_assert(std::is_base_of<JsonSerializable, T>::value, "T must implement JsonSerializable interface");
 
         struct Node {
             shared_ptr<LockGuarded<T>> _content;
             LockGuarded<std::list<weak_ptr<Node>>> _listeners;
+            std::string _name = "unnamed";
 
             void addListener(shared_ptr<Node> &listener) {
                 _listeners.lock()->emplace_back(make_weak(listener));
@@ -73,6 +76,15 @@ namespace miner {
         shared_ptr<Node> _node = make_shared<Node>(); //always valid, never nullptr
 
     public:
+
+        nl::json toJson() const override {
+            MI_EXPECTS(_node);
+
+            LOG(WARNING) << "StatisticNode toJson() not implemented yet";
+            return _node->_content->lock()->toJson();
+        }
+
+
 
         inline void addListener(StatisticNode<T> &listener) {
             MI_EXPECTS(_node);

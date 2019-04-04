@@ -12,7 +12,7 @@ namespace miner {
 
     struct AlgoConstructionArgs {
         ComputeModule &compute;
-        std::vector<DeviceAlgoInfo> assignedDevices;
+        std::vector<std::reference_wrapper<Device>> assignedDevices;
         WorkProvider &workProvider;
     };
 

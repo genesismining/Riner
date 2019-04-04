@@ -1,4 +1,5 @@
 
+#include <src/common/Json.h>
 #include "StatisticNode.h"
 
 #include "Average.h"
@@ -8,9 +9,9 @@ namespace miner {
     namespace {
         void example() {
 
-            struct PoolRecords {
+            struct PoolStats : public JsonSerializable {
 
-                struct Record {
+                struct Entry {
                     void addRecord(double val, clock::time_point t = clock::now()) {
                         mean    .addRecord(val, t);
                         interval.addRecord(val, t);
@@ -22,19 +23,31 @@ namespace miner {
                     Mean interval;
                     ExpAverage avg30s;
                     ExpAverage avg5m;
+
+                    nl::json toJson() const {
+                        return {{"TODO", "implement PoolStats::Entry::toJson"}};
+                    };
                 };
 
-                Record accepted;
-                Record rejected;
-                Record duplicate;
+                Entry accepted;
+                Entry rejected;
+                Entry duplicate;
+
+                nl::json toJson() const override {
+                    return {
+                            {"accepted", accepted.toJson()},
+                            {"rejected", rejected.toJson()},
+                            {"duplicate", duplicate.toJson()},
+                    };
+                };
             };
 
-            StatisticsNode<PoolRecords> rec;
+            StatisticNode<PoolStats> rec;
 
-            StatisticsNode<PoolRecords> ch0;
-            StatisticsNode<PoolRecords> ch1;
+            StatisticNode<PoolStats> ch0;
+            StatisticNode<PoolStats> ch1;
 
-            StatisticNode<PoolRecords> ch00;
+            StatisticNode<PoolStats> ch00;
 
             rec.addListener(ch0);
             rec.addListener(ch1);
@@ -44,7 +57,7 @@ namespace miner {
             bool isDuplicate = false;
             int diff = +1;
 
-            rec.lockedForEach([isAccepted, isDuplicate, diff](PoolRecords &p) {
+            rec.lockedForEach([isAccepted, isDuplicate, diff] (PoolStats &p) {
                 auto t = clock::now();
 
                 if (isAccepted) {
@@ -57,7 +70,7 @@ namespace miner {
                 p.rejected.addRecord(diff, t);
             });
 
-            PoolRecords recs = rec.getValue();
+            PoolStats recs = rec.getValue();
         }
     }
 };

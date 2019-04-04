@@ -16,6 +16,7 @@ add_executable(Miner
         src/application/Config.cpp src/application/Config.h
         src/application/Types.cpp src/application/Types.h
         src/application/ApiServer.cpp src/application/ApiServer.h
+        src/application/Device.cpp src/application/Device.h
         src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
@@ -26,6 +27,7 @@ add_executable(Miner
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
+        src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h

@@ -139,7 +139,16 @@ namespace miner {
                 gs.temp_cutoff = gs.temp_overheat = gs.temp_target; //TODO: come up with something better here
             }
 
-            gs.api_port = std::to_string(valueOr<uint32_t>(jo, "api_port", 4028));
+            uint16_t apiPortDefault = 4028;
+            auto apiPort_i64 = valueOr<int64_t>(jo, "api_port", apiPortDefault);
+            if (apiPort_i64 >= 0 && apiPort_i64 < std::numeric_limits<decltype(gs.api_port)>::max()) {
+                gs.api_port = apiPort_i64;
+            }
+            else {
+                LOG(INFO) << "specified api port (" << apiPort_i64 << ") is outside of the valid range, using default port " << apiPortDefault << " instead";
+                gs.api_port = apiPortDefault;
+            }
+
             gs.opencl_kernel_dir = jo.at("opencl_kernel_dir");
             gs.start_profile = jo.at("start_profile");
 

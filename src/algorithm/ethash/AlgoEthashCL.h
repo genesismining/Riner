@@ -36,7 +36,7 @@ namespace miner {
 
             //Statistics &statistics;
 
-            DeviceAlgoSettings settings;
+            Device::AlgoSettings settings;
 
             constexpr static size_t bufferCount = 0x100;
             std::vector<uint32_t> outputBuffer = std::vector<uint32_t>(bufferCount, 0); //this is where clOutputBuffer gets read into
@@ -48,10 +48,10 @@ namespace miner {
         std::vector<std::future<void>> gpuTasks; //one task per gpu
 
         //gets called once for each gpu
-        void gpuTask(cl::Device clDevice, DeviceAlgoSettings deviceSettings);
+        void gpuTask(cl::Device clDevice, Device::AlgoSettings deviceSettings);
 
         //gets called numGpuSubTasks times from each gpuTask
-        void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, DeviceAlgoSettings deviceSettings);
+        void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device::AlgoSettings deviceSettings);
 
         //gets called by gpuSubTask for each non-empty result vector
         void submitShareTask(std::shared_ptr<const Work<kEthash>> work, std::vector<uint32_t> resultNonces);

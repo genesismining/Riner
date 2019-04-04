@@ -41,24 +41,37 @@ namespace miner {namespace configUtils {
         return result;
     }
 
-    std::vector<DeviceAlgoInfo> getAllDeviceAlgoInfosForAlgoImplName(const std::string &implName,
-            const Config &config, Config::Profile &prof, const std::vector<DeviceId> &deviceIds) {
-
-        std::vector<DeviceAlgoInfo> result;
+    std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName,
+            const Config &config, Config::Profile &prof, std::vector<optional<Device>> &devicesInUse, const std::vector<DeviceId> &deviceIds) {
+        std::vector<std::reference_wrapper<Device>> result;
 
         for (size_t i = 0; i < deviceIds.size(); ++i) {
             auto mapping = getMappingForDevice(prof, i);
             auto &deviceId = deviceIds[i];
 
             if (mapping.algoImplName == implName) {
+                //this device is supposed to be used by this algoImpl
+
+                if (devicesInUse[i]) {
+                    LOG(WARNING) << "device #" << i << " (" << gsl::to_string(deviceId.getName()) << ") cannot be used for '" << implName << "' because it is already used by another active algorithm";
+                    continue;
+                }
+
+                auto &deviceToInit = devicesInUse[i];
 
                 auto &devProf = config.getDeviceProfile(mapping.deviceProfileName).value();
 
                 if (auto algoSettings = devProf.getAlgoSettings(implName)) {
-                    result.emplace_back(DeviceAlgoInfo{algoSettings.value(), deviceId, i});
+
+                    //initialize the device inside the devicesInUse list, and put it
+                    //into the assignedDevices list of this algoImpl
+
+                    deviceToInit.emplace(Device{deviceId, algoSettings.value(), i});
+                    result.emplace_back(deviceToInit.value());
                 }
                 else {
                     LOG(WARNING) << "no algorithm settings for '" << implName << "' in deviceProfile '" << devProf.name << "'";
+                    continue;
                 }
             }
         }

@@ -32,6 +32,9 @@ namespace miner {
             return;
         }
 
+        auto port = config.getGlobalSettings().api_port;
+        apiServer = make_unique<ApiServer>(port);
+
         auto maybeProf = config.getStartProfile();
         if (!maybeProf) {
             LOG(WARNING) << "no start profile configured";
@@ -41,14 +44,18 @@ namespace miner {
 
         compute = std::make_unique<ComputeModule>(config);
 
+        //init devicesInUse
+        devicesInUse.resize(compute->getAllDeviceIds().size());
+
         launchProfile(config, prof);
     }
 
     void Application::launchProfile(const Config &config, Config::Profile &prof) {
+        //TODO: this function is basically the constructor of a not yet existent "Profile" class
         using namespace configUtils;
 
         //clear old state
-        algorithms.clear(); //clear algos before pools!
+        algorithms.clear(); //algos call into pools => clear algos before pools!
 
         for (auto &ptr : poolSwitchers)
             ptr.reset();
@@ -99,19 +106,13 @@ namespace miner {
 
             MI_ENSURES(poolSwitchers[algoType]);
 
-            auto deviceInfos = getAllDeviceAlgoInfosForAlgoImplName(implName, config, prof, compute->getAllDeviceIds());
+            auto assignedDeviceRefs = prepareAssignedDevicesForAlgoImplName(implName, config, prof, devicesInUse, allIds);
 
-            std::string logText = "launching algorithm '" + implName + "' with devices: ";
-            for (auto &devInfo : deviceInfos) {
-                logText += "#" + std::to_string(devInfo.deviceIndex) + " " + gsl::to_string(devInfo.id.getName());
-                if (&devInfo != &deviceInfos.back())
-                    logText += ", ";
-            }
-            LOG(INFO) << logText;
+            logLaunchInfo(implName, assignedDeviceRefs);
 
             AlgoConstructionArgs args {
                 *compute,
-                deviceInfos,
+                assignedDeviceRefs,
                 *poolSwitchers[algoType]
             };
 
@@ -119,6 +120,16 @@ namespace miner {
 
             algorithms.emplace_back(std::move(algo));
         }
+    }
+
+    void Application::logLaunchInfo(const std::string &implName, std::vector<std::reference_wrapper<Device>> &assignedDevices) const {
+        std::string logText = "launching algorithm '" + implName + "' with devices: ";
+        for (auto &d : assignedDevices) {
+            logText += "#" + std::to_string(d.get().deviceIndex) + " " + gsl::to_string(d.get().id.getName());
+            if (&d != &assignedDevices.back())
+                logText += ", ";
+        }
+        LOG(INFO) << logText;
     }
 
 }
