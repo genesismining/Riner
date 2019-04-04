@@ -35,7 +35,7 @@ namespace miner {
         compute = std::make_unique<ComputeModule>(config);
 
         //init devicesInUse
-        devicesInUse.resize(compute->getAllDeviceIds().size());
+        devicesInUse.lock()->resize(compute->getAllDeviceIds().size());
 
         auto port = config.getGlobalSettings().api_port;
         apiServer = make_unique<ApiServer>(port, devicesInUse);
@@ -106,9 +106,15 @@ namespace miner {
 
             MI_ENSURES(poolSwitchers[algoType]);
 
-            auto assignedDeviceRefs = prepareAssignedDevicesForAlgoImplName(implName, config, prof, devicesInUse, allIds);
-            logLaunchInfo(implName, assignedDeviceRefs);
+            decltype(AlgoConstructionArgs::assignedDevices) assignedDeviceRefs;
 
+            {
+                auto devicesInUseLocked = devicesInUse.lock();
+                assignedDeviceRefs = prepareAssignedDevicesForAlgoImplName(implName, config, prof, *devicesInUseLocked,
+                                                                           allIds);
+            }
+
+            logLaunchInfo(implName, assignedDeviceRefs);
 
             AlgoConstructionArgs args {
                 *compute,

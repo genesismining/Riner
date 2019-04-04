@@ -4,7 +4,7 @@
 
 namespace miner {
 
-    ApiServer::ApiServer(uint16_t port, const std::vector<optional<Device>> &devicesInUse)
+    ApiServer::ApiServer(uint16_t port, const LockGuarded<std::vector<optional<Device>>> &devicesInUse)
             : devicesInUse(devicesInUse)
             , jrpc(std::make_unique<JrpcServer>(port)) {
 
@@ -31,7 +31,9 @@ namespace miner {
 
             nl::json result;
 
-            for (const optional<Device> &deviceInUse : devicesInUse) {
+            auto devicesInUseLocked = devicesInUse.lock();
+
+            for (const optional<Device> &deviceInUse : *devicesInUseLocked) {
 
                 nl::json j;
 
