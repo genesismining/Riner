@@ -25,7 +25,7 @@ namespace miner {
         void launch();
 
         void asyncWrite(std::string request, bool reenterCoroutine = false);
-        void asyncWrite(nl::json request, bool reenterCoroutine = false);
+        void asyncWrite(const nl::json& request, bool reenterCoroutine = false);
 
         void asyncRead();
 

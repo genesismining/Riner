@@ -55,6 +55,8 @@ namespace miner {
 
         void removeOutdatedPendingRpcs();
 
+        void asyncWriteJson(const nl::json &);
+
         void onJsonEvent(nl::json responseJson, const asio::error_code &, asio::coroutine &);
 
         struct PendingRpc {

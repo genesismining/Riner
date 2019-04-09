@@ -52,7 +52,7 @@ namespace miner {
         tcpLines->launch();
     }
 
-    void TcpJsonProtocolUtil::asyncWrite(nl::json request, bool reenterCoroutine) {
+    void TcpJsonProtocolUtil::asyncWrite(const nl::json &request, bool reenterCoroutine) {
         asyncWrite(request.dump() + '\n', reenterCoroutine);
     }
 
