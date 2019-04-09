@@ -24,6 +24,7 @@ add_executable(Miner
         src/algorithm/ethash/DagCache.cpp src/algorithm/ethash/DagCache.h
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
+        src/algorithm/dummy/AlgoDummy.cpp src/algorithm/dummy/AlgoDummy.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
@@ -42,6 +43,7 @@ add_executable(Miner
         src/pool/WorkEthash.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
+        src/pool/PoolDummy.cpp src/pool/PoolDummy.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.h

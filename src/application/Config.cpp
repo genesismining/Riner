@@ -17,6 +17,9 @@ namespace miner {
     }
 
     Config::Profile::Mapping parseProfileMapping(const nl::json &j) {
+        if (j.size() != 2) {
+            LOG(ERROR) << "profile mapping must be [DeviceProfile, AlgoImplName]";
+        }
         return {j.at(0), j.at(1)};
     }
 

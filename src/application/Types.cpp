@@ -6,12 +6,14 @@
 #include <src/algorithm/ethash/AlgoEthashCL.h>
 #include <src/pool/PoolFactory.h>
 #include <src/pool/PoolEthash.h>
+#include <src/algorithm/dummy/AlgoDummy.h>
 
 namespace miner {
 
     void registerAlgoTypes(AlgoFactory &f) {
 
         f.registerType<AlgoEthashCL>("AlgoEthashCL", kEthash);
+        f.registerType<AlgoDummy>("AlgoDummy", kEthash);
         //add your new algorithm type here
 
     }
