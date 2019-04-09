@@ -52,10 +52,11 @@ namespace miner {
         auto socketPtr = std::make_unique<tcp::socket>(ioService);
         tcp::socket &socket = *socketPtr; //keep a ref before moving it to conn
 
-        auto conn = std::make_shared<TcpLineConnection>(std::move(socketPtr));
+        auto conn = std::make_shared<TcpLineConnection>(std::move(socketPtr), onEvent);
 
         acceptor.async_accept(socket, [this, conn] (const asio::error_code &error) {
             if (!error) {
+                LOG(INFO) << "Connected!";
                 conn->start(conn);
             }
             listen(); //TODO: check if this is an infinite recursion, verify whether asio calls this handler with an error if the ioservice is about to be destroyed
@@ -67,9 +68,14 @@ namespace miner {
     }
 
     void TcpLineConnection::listen(std::shared_ptr<TcpLineConnection> sharedThis) {
-
+        LOG(INFO) << "Listening...";
         asio::async_read_until(*socket, request, '\n', [this, sharedThis = std::move(sharedThis)]
         (const asio::error_code &error, size_t numBytes) {
+
+            if (error == asio::error::eof) {
+                LOG(INFO) << "TcpLineServer connection closed from client side";
+                return;
+            }
 
             std::string line = "asio error occured"; //write something the api user will notice in case they forget to check the asio::error
 
@@ -80,6 +86,7 @@ namespace miner {
 
             MI_EXPECTS(line.size() == strlen(line.c_str()));
 
+            MI_EXPECTS(onEvent);
             (*onEvent)(line, *sharedThis);
 
             sharedThis->start(sharedThis);
@@ -89,13 +96,16 @@ namespace miner {
 
     void TcpLineConnection::asyncWrite(std::string response) {
         asio::async_write(*socket, asio::buffer(response), [response] (const asio::error_code &error, size_t numBytes) {
-            LOG(INFO) << "async write error #" << error <<
-            " in TcpLineConnection while trying to send '" << response << "'";
+            if (error) {
+                LOG(INFO) << "async write error #" << error <<
+                          " in TcpLineConnection while trying to send '" << response << "'";
+            }
         });
     }
 
-    TcpLineConnection::TcpLineConnection(unique_ptr<tcp::socket> socket)
-    : socket(std::move(socket)) {
+    TcpLineConnection::TcpLineConnection(unique_ptr<tcp::socket> socket, std::shared_ptr<OnEventFunc> onEventFunc)
+    : socket(std::move(socket))
+    , onEvent(std::move(onEventFunc)) {
     }
 
 }

@@ -19,6 +19,17 @@ namespace miner {
     , data(data) {
     }
 
+    nl::json JrpcError::getJson() {
+        nl::json j = {
+                {"message", message},
+                {"code", code},
+        };
+        if (data) {
+            j["data"] = data.value();
+        }
+        return j;
+    }
+
     JrpcBuilder::JrpcBuilder(cstring_span version) {
         json["jsonrpc"] = gsl::to_string(version);
     }

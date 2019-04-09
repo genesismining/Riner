@@ -19,6 +19,10 @@ namespace miner {
         return nullopt;
     }
 
+    void JrpcServer::launch() {
+        tcpLines->launch();
+    }
+
     void JrpcServer::onEvent(const std::string &line, TcpLineConnection &conn) const {
 
         std::string version;
@@ -84,7 +88,7 @@ namespace miner {
         try {
             auto j = nl::json::parse(line);
 
-            outVersion = j.at("version");
+            outVersion = j.at("jsonrpc");
             outId = j.at("id");
             outMethodName = j.at("method");
             outArgs = j.at("params");
@@ -108,7 +112,7 @@ namespace miner {
     }
 
     JrpcReturn::JrpcReturn(JrpcError error)
-    : value(std::move(error))
+    : value(error.getJson())
     , key("error") {
     }
 

@@ -47,6 +47,8 @@ namespace miner {
             addFunctionWrapper(method, func, &Func::operator(), std::move(argNames)...);
         }
 
+        void launch();
+
     private:
         std::vector<JrpcFunction> funcs;
         unique_ptr<TcpLineServer> tcpLines;

@@ -2,6 +2,7 @@
 #pragma once
 
 #include <asio.hpp>
+#include <src/util/Logging.h>
 #include <lib/asio/asio/include/asio/ip/tcp.hpp>
 #include <src/common/Pointers.h>
 
@@ -25,7 +26,7 @@ namespace miner {
         void listen(std::shared_ptr<TcpLineConnection> sharedThis);
     public:
 
-        explicit TcpLineConnection(unique_ptr<tcp::socket> socket);
+        explicit TcpLineConnection(unique_ptr<tcp::socket> socket, std::shared_ptr<OnEventFunc> onEventFunc);
 
         void asyncWrite(std::string response);
     };

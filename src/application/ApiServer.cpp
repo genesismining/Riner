@@ -7,8 +7,9 @@ namespace miner {
     ApiServer::ApiServer(uint16_t port, const LockGuarded<std::vector<optional<Device>>> &devicesInUse)
             : devicesInUse(devicesInUse)
             , jrpc(std::make_unique<JrpcServer>(port)) {
-
+        LOG(INFO) << "started api server on port " << port;
         registerFunctions();
+        jrpc->launch();
     }
 
     void ApiServer::registerFunctions() {
