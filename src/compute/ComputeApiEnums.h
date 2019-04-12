@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace miner {
 
     enum CompApi {
@@ -18,5 +20,8 @@ namespace miner {
 
         kVendorEnumCount
     };
+
+
+    std::string stringFromVendorEnum(VendorEnum e);
 
 }

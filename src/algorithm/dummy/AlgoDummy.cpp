@@ -43,7 +43,6 @@ namespace miner {
     }
 
     void AlgoDummy::DeviceThread::run() {
-        return;
         sleep_for(milliseconds(200 * device.deviceIndex));
 
         while (!algo._shutdown) {
