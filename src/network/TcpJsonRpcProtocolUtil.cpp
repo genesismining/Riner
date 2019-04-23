@@ -115,7 +115,7 @@ namespace miner {
         assignIdIfNecessary(rpc);
 
         int tries = 0;
-        auto retryFunc = [this, rpc = std::move(rpc), tries] () mutable {
+        auto retryFunc = [this, rpc = std::move(rpc), tries, triesLimit] () mutable {
             MI_EXPECTS(rpc.getId());
             auto id = rpc.getId().value();
 
@@ -125,7 +125,7 @@ namespace miner {
 
             bool stillPending = pendingRpcs.count(id);
 
-            if (tries >= 5 || !stillPending) {
+            if (tries >= triesLimit || !stillPending) {
                 pendingRpcs.erase(id); //remove if it wasn't already removed
                 return true; //don't retry
             }
