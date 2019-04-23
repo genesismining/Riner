@@ -67,7 +67,9 @@ namespace miner {
         void addFunctionWrapper(const std::string &method, Func func,
                                 Ret(Cls::* funcCallOperator)(Args...) const, ArgNames ... argNames) {
 
-            static_assert(sizeof...(Args) == sizeof...(ArgNames), "amount of args of function doesn't match amount of argNames, provide a name string for every argument!");
+            static_assert(std::is_same<Ret, JrpcReturn>::value, "the function you registered does not return a JrpcReturn");
+
+            static_assert(sizeof...(Args) == sizeof...(ArgNames), "amount of args of function doesn't match amount of argNames, provide a name string for every argument! Don't provide more strings than arguments!");
 
             //create a wrapper that converts the Ret(Args...) function to a JsonResponse(const nl::json &) function
             registerJrpcFunc({method, [this, func = std::move(func), argNames...] (const nl::json &argsJson) {
