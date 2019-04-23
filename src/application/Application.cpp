@@ -38,7 +38,7 @@ namespace miner {
         devicesInUse.lock()->resize(compute->getAllDeviceIds().size());
 
         auto port = config.getGlobalSettings().api_port;
-        apiServer = make_unique<ApiServer>(port, devicesInUse);
+        apiServer = make_unique<ApiServer>(port, devicesInUse, poolSwitchers);
 
         auto maybeProf = config.getStartProfile();
         if (!maybeProf) {
@@ -79,8 +79,10 @@ namespace miner {
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
 
+                auto poolRecords = make_unique<PoolRecords>();
+
                 PoolConstructionArgs args {
-                    p.host, p.port, p.username, p.password
+                    p.host, p.port, p.username, p.password, *poolRecords
                 };
 
                 auto poolImplName = poolFactory.getImplNameForAlgoTypeAndProtocol(algoType, p.protocol);
@@ -95,7 +97,7 @@ namespace miner {
 
                 LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host << " on port " << p.port;
 
-                poolSwitcher->push(std::move(pool));
+                poolSwitcher->push(std::move(pool), std::move(poolRecords), args);
             }
 
             if (poolSwitcher->poolCount() == 0) {

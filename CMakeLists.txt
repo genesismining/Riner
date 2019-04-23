@@ -29,6 +29,7 @@ add_executable(Miner
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
         src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
+        src/statistics/PoolRecords.cpp src/statistics/PoolRecords.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h

@@ -3,6 +3,7 @@
 
 #include "PoolSwitcher.h"
 #include <src/common/Assert.h>
+#include <src/algorithm/Algorithm.h>
 
 namespace miner {
 
@@ -43,9 +44,9 @@ namespace miner {
         auto now = clock::now();
 
         for (size_t i = 0; i < pools.size(); ++i) {
-            auto &pool = pools[i];
+            PoolData &poolData = pools[i];
 
-            auto lastKnownAliveTime = pool->getLastKnownAliveTime();
+            auto lastKnownAliveTime = poolData.pool->getLastKnownAliveTime();
 
             if (i <= activePoolIndex) {
                 bool dead = now - lastKnownAliveTime > durUntilDeclaredDead;
@@ -61,7 +62,7 @@ namespace miner {
                     if (activePoolIndex != i) {
                         activePoolIndex = i;
 
-                        auto name = gsl::to_string(pool->getName());
+                        auto name = gsl::to_string(poolData.pool->getName());
                         LOG(INFO) << "Pool #" << i << " (" << name << ") chosen as new active pool";
                     }
                 }
@@ -76,9 +77,9 @@ namespace miner {
     optional_ref<WorkProvider> PoolSwitcher::activePool() {
         if (activePoolIndex >= pools.size())
             return nullopt;
-        auto &pool = pools[activePoolIndex];
-        MI_EXPECTS(pool != nullptr);
-        return type_safe::opt_ref(*pool);
+        auto &poolData = pools[activePoolIndex];
+        MI_EXPECTS(poolData.pool != nullptr);
+        return type_safe::opt_ref(*poolData.pool);
     }
 
     optional<unique_ptr<WorkBase>> PoolSwitcher::tryGetWork() {
@@ -138,6 +139,27 @@ namespace miner {
     size_t PoolSwitcher::poolCount() const {
         std::lock_guard<std::mutex> lock(mut);
         return pools.size();
+    }
+
+    PoolSwitcher::ApiInfo PoolSwitcher::gatherApiInfo() const {
+        ApiInfo info;
+        info.totalRecords = _totalRecords.read();
+        {
+            std::lock_guard<std::mutex> lock(mut);
+            info.pools.reserve(pools.size());
+
+            size_t i = 0;
+            for (auto &poolData : pools) {
+                MI_EXPECTS(poolData.records);
+                MI_EXPECTS(poolData.pool);
+
+                const PoolConstructionArgs &a = poolData.args;
+                info.pools.push_back({a.host, a.port, a.username, a.password,
+                        poolData.records->read()});
+                ++i;
+            }
+        }
+        return info;
     }
 
 }

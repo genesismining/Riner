@@ -3,6 +3,8 @@
 #include <cstdint>
 #include "Average.h"
 
+#include <src/statistics/StatisticNode.h>
+
 namespace miner {
 
     class DeviceRecords {
@@ -21,12 +23,17 @@ namespace miner {
             ExpAverage avg5m  {minutes(5)};
         };
 
-        Entry _traversedNonces;
-        Entry _failedShareVerifications;
-
     public:
-        const Entry &getTraversedNonces() const;
-        const Entry &getFailedShareVerifications() const;
+        struct Data {
+            Entry traversedNonces;
+            Entry failedShareVerifications;
+        };
+
+        DeviceRecords() = default;
+        DeviceRecords(DeviceRecords &&) = default;
+        explicit DeviceRecords(DeviceRecords &parentListening); //this is not a copy constructor, its just a constructor that uses the parent to initialize
+
+        Data read() const;
 
         //call this whenever your algo finished traversing a bunch of nonces
         //this is what the hashrate will get derived from
@@ -38,7 +45,8 @@ namespace miner {
 
         uint64_t getVerificationDifficulty() const;
 
-        void merge(const DeviceRecords &);
+    private:
+        StatisticNode<Data> _node;
     };
 
 }

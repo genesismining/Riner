@@ -6,27 +6,27 @@
 namespace miner {
 
     void DeviceRecords::reportAmtTraversedNonces(uint64_t inAmt) {
-        _traversedNonces.addRecord(inAmt);
+        _node.lockedForEach([inAmt] (Data &data) {
+            data.traversedNonces.addRecord(inAmt);
+        });
     }
 
     void DeviceRecords::reportFailedShareVerification() {
-        _failedShareVerifications.addRecord(1);
+        _node.lockedForEach([] (Data &data) {
+            data.failedShareVerifications.addRecord(1);
+        });
     }
 
     uint64_t DeviceRecords::getVerificationDifficulty() const {
-        return 1;
+        return 0;
     }
 
-    void DeviceRecords::merge(const DeviceRecords &) {
-
+    DeviceRecords::Data DeviceRecords::read() const {
+        return _node.getValue();
     }
 
-    const DeviceRecords::Entry &DeviceRecords::getTraversedNonces() const {
-        return _traversedNonces;
-    }
-
-    const DeviceRecords::Entry &DeviceRecords::getFailedShareVerifications() const {
-        return _failedShareVerifications;
+    DeviceRecords::DeviceRecords(DeviceRecords &parent) {
+        parent._node.addListener(_node);
     }
 
 }

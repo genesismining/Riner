@@ -6,7 +6,7 @@
 namespace miner {
 
     class ExpAverage {
-        const seconds decay_exp;
+        seconds decay_exp;
         double rate{0};
         double weight_rate{0};
         clock::time_point last_update{clock::now()};

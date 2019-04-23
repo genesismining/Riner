@@ -6,17 +6,20 @@
 #include <src/network/JrpcServer.h>
 #include <src/util/LockUtils.h>
 #include "Device.h"
+#include <deque>
 
 namespace miner {
+    class PoolSwitcher;
 
     class ApiServer {
-        const LockGuarded<std::vector<optional<Device>>> &devicesInUse;
+        const LockGuarded<std::deque<optional<Device>>> &devicesInUse;
+        const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers;
 
         unique_ptr<JrpcServer> jrpc;
 
         void registerFunctions();
     public:
-        explicit ApiServer(uint16_t port, const LockGuarded<std::vector<optional<Device>>> &devicesInUse);
+        explicit ApiServer(uint16_t port, const LockGuarded<std::deque<optional<Device>>> &devicesInUse, const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers);
         ~ApiServer();
     };
 

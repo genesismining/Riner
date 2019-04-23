@@ -2,11 +2,14 @@
 #include "ApiServer.h"
 #include <numeric>
 #include <src/common/Assert.h>
+#include <src/pool/PoolSwitcher.h>
 
 namespace miner {
 
-    ApiServer::ApiServer(uint16_t port, const LockGuarded<std::vector<optional<Device>>> &devicesInUse)
+    ApiServer::ApiServer(uint16_t port, const LockGuarded<std::deque<optional<Device>>> &devicesInUse,
+            const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers)
             : devicesInUse(devicesInUse)
+            , poolSwitchers(poolSwitchers)
             , jrpc(std::make_unique<JrpcServer>(port)) {
         LOG(INFO) << "started api server on port " << port;
         registerFunctions();
@@ -24,19 +27,6 @@ namespace miner {
             return a / b;
 
         }, "a", "b");
-
-        jrpc->registerFunc("multiply", [] (float a, float b) -> JrpcReturn {
-
-            if (b == 0)
-                return {JrpcError::invalid_params, "division by zero"};
-
-            return a / b;
-
-        }, "a", "b");
-
-        jrpc->registerFunc("getPoolStats", [] () -> JrpcReturn {
-            return 0;
-        });
 
         jrpc->registerFunc("getGpuStats", [&] () -> JrpcReturn {
 
@@ -63,7 +53,8 @@ namespace miner {
                             {"device name", gsl::to_string(d.id.getName())}
                     };
 
-                    auto &tn = d.records.getTraversedNonces();
+                    auto data = d.records.read();
+                    auto &tn = data.traversedNonces;
                     auto tnPair = tn.interval.getAndReset();
 
                     j["traversed nonces"] = {
@@ -76,7 +67,7 @@ namespace miner {
                             {{"kind", "average"}, {"average", tnPair.second}, {"interval", "since last call"}},
                     };
 
-                    auto &fsv = d.records.getFailedShareVerifications();
+                    auto &fsv = data.failedShareVerifications;
 
                     j["failed share verifications"] = {
                             {{"kind", "exp average"}, {"exp average", fsv.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", fsv.avg30s.getDecayExp().count()}},
@@ -89,7 +80,7 @@ namespace miner {
 
                 } else {
                     j = {
-                            {"index", "i"},
+                            {"index", i},
                             {"does run algorithm", false},
                     };
                 }
@@ -98,6 +89,34 @@ namespace miner {
                 ++i;
             }
 
+            return result;
+        });
+
+        jrpc->registerFunc("getPoolStats", [&] () -> JrpcReturn {
+
+            nl::json result;
+
+            for (auto algoIdx = 0; algoIdx < AlgoEnum::kAlgoTypeCount; ++algoIdx) {
+                std::string algoTypeStr = stringFromAlgoEnum((AlgoEnum)algoIdx);
+
+                nl::json algoj;
+
+                if (auto &poolSwitcher = poolSwitchers.at(algoIdx)) {
+
+                    auto info = poolSwitcher->gatherApiInfo();
+
+                    for (auto &poolInfo : info.pools) {
+
+                        nl::json poolj = {
+                                {"ip", poolInfo.host + ":" + poolInfo.port},
+                        };
+
+                        algoj.push_back(poolj);
+                    }
+                }
+
+                result[algoTypeStr] = algoj;
+            }
             return result;
         });
 

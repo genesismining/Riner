@@ -3,6 +3,7 @@
 #include "ConfigUtils.h"
 #include "FileUtils.h"
 #include <set>
+#include <deque>
 
 namespace miner {namespace configUtils {
 
@@ -42,11 +43,11 @@ namespace miner {namespace configUtils {
     }
 
     std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName,
-            const Config &config, Config::Profile &prof, std::vector<optional<Device>> &devicesInUse, const std::vector<DeviceId> &deviceIds) {
+            const Config &config, Config::Profile &prof, std::deque<optional<Device>> &devicesInUse, const std::vector<DeviceId> &deviceIds) {
         std::vector<std::reference_wrapper<Device>> result;
 
         for (size_t i = 0; i < deviceIds.size(); ++i) {
-            auto mapping = getMappingForDevice(prof, i);
+            auto mapping = getMappingForDevice(prof, i); //e.g. ["DeviceProfile", "AlgoEthashCL"]
             auto &deviceId = deviceIds[i];
 
             if (mapping.algoImplName == implName) {
@@ -57,7 +58,7 @@ namespace miner {namespace configUtils {
                     continue;
                 }
 
-                auto &deviceToInit = devicesInUse[i];
+                optional<Device> &deviceToInit = devicesInUse[i];
 
                 auto &devProf = config.getDeviceProfile(mapping.deviceProfileName).value();
 

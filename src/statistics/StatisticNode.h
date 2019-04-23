@@ -10,15 +10,18 @@
 namespace miner {
 
     //TODO: write some nice documentation about StatisticNode because theres a lot of stuff going on
+    //TODO: should this node use Ctor/Dtor to call AddListener/RemoveListener instead of relying on weak_ptrs that clean up on iteration?
     template<class T>
-    class StatisticNode : public JsonSerializable {
-
-        static_assert(std::is_base_of<JsonSerializable, T>::value, "T must implement JsonSerializable interface");
+    class StatisticNode {
 
         struct Node {
             shared_ptr<LockGuarded<T>> _content;
             LockGuarded<std::list<weak_ptr<Node>>> _listeners;
             std::string _name = "unnamed";
+
+            Node()
+            : _content(make_shared<LockGuarded<T>>()) {
+            }
 
             void addListener(shared_ptr<Node> &listener) {
                 _listeners.lock()->emplace_back(make_weak(listener));
@@ -42,6 +45,7 @@ namespace miner {
             std::function<void(T &)> &&lockedForEach(std::function<void(T &)> &&func) {
 
                 { // content lock scope
+                    MI_EXPECTS(_content);
                     auto content = _content->lock();
                     func(*content);
                 } // unlock content
@@ -77,14 +81,12 @@ namespace miner {
 
     public:
 
-        nl::json toJson() const override {
-            MI_EXPECTS(_node);
+        StatisticNode(const StatisticNode &) = delete;
+        StatisticNode &operator=(const StatisticNode &) = delete;
 
-            LOG(WARNING) << "StatisticNode toJson() not implemented yet";
-            return _node->_content->lock()->toJson();
-        }
-
-
+        StatisticNode() = default;
+        StatisticNode(StatisticNode &&) noexcept = default;
+        StatisticNode &operator=(StatisticNode &&) noexcept = default;
 
         inline void addListener(StatisticNode<T> &listener) {
             MI_EXPECTS(_node);
@@ -97,14 +99,14 @@ namespace miner {
         }
 
         //use this function to modify the T instance of this node and all child nodes by the same func.
-        //!!! DEADLOCK possible! this function holds a lock while the func callback is processed! be careful!
+        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
         void lockedForEach(std::function<void(T &)> &&func) {
             MI_EXPECTS(_node);
             _node->lockedForEach(std::move(func));
         }
 
         //use this function in case you want to read the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
-        //!!! DEADLOCK possible! this function holds a lock while the func callback is processed! be careful!
+        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
         template<class Func>
         void lockedRead(Func &&func) {
             MI_EXPECTS(_node);
@@ -114,7 +116,8 @@ namespace miner {
 
         //get a copy of the T instance of this node
         T getValue() const {
-            T copy = *_node->_content->lock();
+            auto locked = _node->_content->lock();
+            T copy = *locked;
             return copy;
         }
 

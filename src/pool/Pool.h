@@ -12,6 +12,7 @@
 namespace miner {
     class WorkResultBase;
     class WorkBase;
+    class PoolRecords;
     template<AlgoEnum A> class WorkResult;
     template<AlgoEnum A> class Work;
 
@@ -22,6 +23,7 @@ namespace miner {
         std::string port;
         std::string username;
         std::string password;
+        PoolRecords &poolRecords;
     };
 
     class StillAliveTrackable {//WorkProviders extend this class to offer timestamp information of last incoming message to a PoolSwitcher
