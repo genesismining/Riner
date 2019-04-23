@@ -59,6 +59,10 @@ namespace miner {
             }
 
         }
+        else {
+            std::string errStr = "Parse Error: An error occurred on the server while parsing the JSON text";
+            jreturn = JrpcError{JrpcError::parse_error, errStr};
+        }
 
         if (jreturn) {
             auto key = jreturn.value().getKey();
