@@ -38,7 +38,7 @@ public:
         prepare();
     }
 
-    DELETE_COPY_AND_ASSIGNMENT(CuckatooSolver);
+    DELETE_COPY(CuckatooSolver);
 
     std::vector<Cycle> solve(const SiphashKeys& keys, AbortFn abortFn);
 

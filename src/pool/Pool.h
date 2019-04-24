@@ -31,7 +31,7 @@ namespace miner {
         StillAliveTrackable() = default;
         virtual ~StillAliveTrackable() = default;
 
-        DELETE_COPY_AND_ASSIGNMENT(StillAliveTrackable);
+        DELETE_COPY(StillAliveTrackable);
 
         clock::time_point getLastKnownAliveTime();
         void setLastKnownAliveTime(clock::time_point time);

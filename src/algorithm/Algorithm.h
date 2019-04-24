@@ -20,7 +20,7 @@ namespace miner {
     class AlgoBase {
     public:
         AlgoBase() {}
-        DELETE_COPY_AND_ASSIGNMENT(AlgoBase);
+        DELETE_COPY_AND_MOVE(AlgoBase);
 
         virtual ~AlgoBase() = default;
     };
