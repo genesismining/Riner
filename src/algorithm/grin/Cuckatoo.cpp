@@ -362,7 +362,7 @@ uint32_t CuckatooSolver::getNode(const SiphashKeys& keys, uint32_t edge, uint32_
 }
 
 std::string CuckatooSolver::getDeviceName() {
-    return gsl::to_string(opts_.deviceAlgoInfo.id.getName());
+    return gsl::to_string(opts_.deviceInfo.id.getName());
 }
 
 } /* namespace miner */

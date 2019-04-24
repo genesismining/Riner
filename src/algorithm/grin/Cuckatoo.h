@@ -19,11 +19,11 @@ public:
     typedef std::function<bool()> AbortFn;
 
     struct Options {
+        Device &deviceInfo;
         uint32_t n = 0;
         uint32_t cycleLength = 42;
         cl::Context context;
         cl::Device device;
-        DeviceAlgoInfo deviceAlgoInfo;
         CLProgramLoader* programLoader = nullptr;
     };
 

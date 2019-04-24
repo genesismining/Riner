@@ -14,12 +14,9 @@ add_library(LibMiner
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
         src/application/Types.cpp src/application/Types.h
-
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
-
         src/application/LoggingMain.cpp
-
         src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
@@ -27,21 +24,18 @@ add_library(LibMiner
         src/algorithm/ethash/DagCache.cpp src/algorithm/ethash/DagCache.h
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
-
         src/algorithm/dummy/AlgoDummy.cpp src/algorithm/dummy/AlgoDummy.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
         src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
         src/statistics/PoolRecords.cpp src/statistics/PoolRecords.h
-
         src/algorithm/grin/siphash.h
         src/algorithm/grin/Graph.cpp src/algorithm/grin/Graph.h
         src/algorithm/grin/AlgoCuckatoo31Cl.cpp src/algorithm/grin/AlgoCuckatoo31Cl.h
         src/algorithm/grin/Cuckatoo.cpp src/algorithm/grin/Cuckatoo.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/crypto/blake2b-ref.cpp src/crypto/blake2.h src/crypto/blake2-impl.h
-
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
@@ -56,11 +50,8 @@ add_library(LibMiner
         src/pool/WorkEthash.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
-
         src/pool/PoolDummy.cpp src/pool/PoolDummy.h
-
         src/pool/PoolGrin.cpp src/pool/PoolGrin.h
-
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.cpp src/compute/ComputeApiEnums.h
@@ -91,7 +82,6 @@ add_library(LibMiner
         src/util/DynamicBuffer.cpp src/util/DynamicBuffer.h
         src/util/sph/sph_keccak.h
         src/util/sph/sph_types.h
-
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         )
 
