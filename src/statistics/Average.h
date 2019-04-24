@@ -2,6 +2,7 @@
 
 #include <src/common/Chrono.h>
 #include <cmath>
+#include <utility>
 
 namespace miner {
 
