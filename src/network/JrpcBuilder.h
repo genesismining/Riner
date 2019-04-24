@@ -61,7 +61,9 @@ namespace miner {
             cstring_span version = "2.0";
         };
 
-        JrpcBuilder(): JrpcBuilder(Options()) {}
+        JrpcBuilder(): JrpcBuilder(Options()) {
+        }
+
         explicit JrpcBuilder(Options options): options_(std::move(options)) {
             json["jsonrpc"] = gsl::to_string(options.version);
         }

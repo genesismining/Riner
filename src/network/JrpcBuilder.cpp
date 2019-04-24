@@ -30,10 +30,6 @@ namespace miner {
         return j;
     }
 
-    JrpcBuilder::JrpcBuilder(cstring_span version) {
-        json["jsonrpc"] = gsl::to_string(version);
-    }
-
     JrpcBuilder &JrpcBuilder::method(cstring_span name) {
         json["method"] = gsl::to_string(name);
         return *this;
