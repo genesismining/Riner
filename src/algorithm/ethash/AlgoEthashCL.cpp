@@ -43,7 +43,7 @@ namespace miner {
 
         std::string compilerOptions = "-D WORKSIZE=" + std::to_string(settings.work_size);
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", compilerOptions);
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethhash/ethash.cl", compilerOptions);
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;

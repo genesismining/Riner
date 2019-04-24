@@ -98,34 +98,34 @@ namespace miner {
     }
 
     void PoolSwitcher::submitWork(unique_ptr<WorkResultBase> result) {
-        if (auto protoData = result->getProtocolData().lock()) {
-            auto resultPoolUid = protoData->getPoolUid();
-
-            auto activePoolUid = std::numeric_limits<decltype(resultPoolUid)>::max();
-            bool sameUid = true;
-
-            {
-                std::lock_guard<std::mutex> lock(mut);
-
-                if (auto pool = activePool()) {
-
-                    activePoolUid = pool.value().getPoolUid();
-
-                    sameUid = activePoolUid == resultPoolUid;
-                    if (sameUid) {
-                        return pool.value().submitWork(std::move(result));
-                    }
-                }
-            } //unlock
-
-            if (sameUid)
-                LOG(INFO) << "solution could not be submitted, since there is no active pool";
-            else
-                LOG(INFO) << "solution belongs to another pool (uid " << resultPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
-        }
-        else {//protoData has expired
+        std::shared_ptr<WorkProtocolData> data = result->getProtocolData().lock();
+        if (!data) {
             LOG(INFO) << "work result cannot be submitted because it has expired";
+            return;
         }
+        
+        auto resultPoolUid = data->getPoolUid();
+        auto activePoolUid = std::numeric_limits<decltype(resultPoolUid)>::max();
+        bool sameUid = true;
+
+        {
+            std::lock_guard<std::mutex> lock(mut);
+
+            if (auto pool = activePool()) {
+
+                activePoolUid = pool.value().getPoolUid();
+
+                sameUid = activePoolUid == resultPoolUid;
+                if (sameUid) {
+                    return pool.value().submitWork(std::move(result));
+                }
+            }
+        } //unlock
+
+        if (sameUid)
+            LOG(INFO) << "solution could not be submitted, since there is no active pool";
+        else
+            LOG(INFO) << "solution belongs to another pool (uid " << resultPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
     }
 
     uint64_t PoolSwitcher::getPoolUid() const {

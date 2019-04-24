@@ -7,8 +7,6 @@
 #include <condition_variable>
 #include <src/util/Logging.h>
 
-INITIALIZE_EASYLOGGINGPP
-
 namespace miner {
 
     //this function is used to get a config path until we have a proper argc argv parser

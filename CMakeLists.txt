@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.9)
 project(Miner)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -10,13 +10,16 @@ find_package(OpenCL REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 link_directories(${OpenCL_LIBRARY})
 
-add_executable(Miner
-        src/application/Main.cpp
+add_library(LibMiner
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
         src/application/Types.cpp src/application/Types.h
+
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
+
+        src/application/LoggingMain.cpp
+
         src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
@@ -24,12 +27,21 @@ add_executable(Miner
         src/algorithm/ethash/DagCache.cpp src/algorithm/ethash/DagCache.h
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
+
         src/algorithm/dummy/AlgoDummy.cpp src/algorithm/dummy/AlgoDummy.h
         src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
         src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
         src/statistics/PoolRecords.cpp src/statistics/PoolRecords.h
+
+        src/algorithm/grin/siphash.h
+        src/algorithm/grin/Graph.cpp src/algorithm/grin/Graph.h
+        src/algorithm/grin/AlgoCuckatoo31Cl.cpp src/algorithm/grin/AlgoCuckatoo31Cl.h
+        src/algorithm/grin/Cuckatoo.cpp src/algorithm/grin/Cuckatoo.h
+        src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
+        src/crypto/blake2b-ref.cpp src/crypto/blake2.h src/crypto/blake2-impl.h
+
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
         src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
@@ -44,7 +56,11 @@ add_executable(Miner
         src/pool/WorkEthash.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
+
         src/pool/PoolDummy.cpp src/pool/PoolDummy.h
+
+        src/pool/PoolGrin.cpp src/pool/PoolGrin.h
+
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.cpp src/compute/ComputeApiEnums.h
@@ -63,8 +79,10 @@ add_executable(Miner
         src/common/Assert.h
         src/common/PlatformDefines.h
         src/util/Bytes.h
+        src/util/Copy.h
         src/util/Logging.h
         src/util/ConfigUtils.cpp src/util/ConfigUtils.h
+        src/util/Random.h
         src/util/StringUtils.cpp src/util/StringUtils.h
         src/util/OptionalAccess.h
         src/util/LockUtils.cpp src/util/LockUtils.h
@@ -77,6 +95,11 @@ add_executable(Miner
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         )
 
+target_include_directories (LibMiner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(Miner src/application/Main.cpp)
+target_link_libraries(Miner LibMiner)
+
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add subdirectories
@@ -85,15 +108,15 @@ add_subdirectory("lib/json")
 add_subdirectory("lib/type_safe")
 add_subdirectory("lib/easyloggingpp")
 
-target_compile_definitions(Miner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
-target_compile_definitions(Miner PUBLIC CL_HPP_TARGET_OPENCL_VERSION=120)
-target_compile_definitions(Miner PUBLIC ASIO_STANDALONE) #tell asio to not include boost headers
-target_compile_definitions(Miner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
+target_compile_definitions(LibMiner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
+target_compile_definitions(LibMiner PUBLIC CL_HPP_TARGET_OPENCL_VERSION=120)
+target_compile_definitions(LibMiner PUBLIC ASIO_STANDALONE) #tell asio to not include boost headers
+target_compile_definitions(LibMiner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
 
-target_compile_definitions(Miner PUBLIC ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
-#target_compile_definitions(Miner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
+target_compile_definitions(LibMiner PUBLIC ELPP_THREAD_SAFE) #tell easylogging++ to be threadsafe
+#target_compile_definitions(LibMiner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
 
-#target_compile_definitions(Miner PUBLIC GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
+#target_compile_definitions(LibMiner PUBLIC GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
 
 include_directories(
         lib/asio/asio/include
@@ -112,3 +135,20 @@ target_link_libraries (Miner -static-libgcc -static-libstdc++)
 #Threads
 find_package(Threads REQUIRED)
 target_link_libraries (Miner Threads::Threads)
+
+#Google Tests
+include(GoogleTest)
+find_package(GTest REQUIRED)
+ 
+add_executable(tests 
+    src/algorithm/grin/CuckatooTest.cpp    
+    src/algorithm/grin/GraphTest.cpp
+    src/network/JrpcBuilderTest.cpp
+    src/pool/WorkTest.cpp
+)
+target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
+target_link_libraries(tests LibMiner)
+target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
+ 
+gtest_add_tests(TARGET tests)
+add_test(NAME monolithic COMMAND tests)

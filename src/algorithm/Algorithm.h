@@ -2,13 +2,14 @@
 
 #pragma once
 
-#include <vector>
+#include <src/compute/ComputeModule.h>
+#include <src/util/Copy.h>
 #include <src/util/ConfigUtils.h>
+#include <src/pool/Pool.h>
+
+#include <vector>
 
 namespace miner {
-    class ComputeModule;
-    class WorkProvider;
-    class DeviceId;
 
     struct AlgoConstructionArgs {
         ComputeModule &compute;
@@ -18,6 +19,9 @@ namespace miner {
 
     class AlgoBase {
     public:
+        AlgoBase() {}
+        DELETE_COPY_AND_ASSIGNMENT(AlgoBase);
+
         virtual ~AlgoBase() = default;
     };
 

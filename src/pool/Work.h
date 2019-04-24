@@ -6,8 +6,6 @@
 #include <src/common/Optional.h>
 
 namespace miner {
-    class WorkBase;
-
     class WorkProtocolData {
         uint64_t poolUid = 0; //used to determine whether a WorkResult is
         // returned to the same pool that created the work to begin with.
@@ -28,12 +26,11 @@ namespace miner {
         std::weak_ptr<WorkProtocolData> getProtocolData() const;
 
         template<class T>
-        optional<std::shared_ptr<T>> tryGetProtocolDataAs() const {
-            optional<std::shared_ptr<T>> opt;
+        std::shared_ptr<T> tryGetProtocolDataAs() const {
             if (auto pdata = protocolData.lock()) {
-                opt = std::move(std::static_pointer_cast<T>(pdata));
+                return std::static_pointer_cast<T>(pdata);
             }
-            return opt;
+            return nullptr;
         }
 
         virtual AlgoEnum getAlgoEnum() const = 0;
@@ -67,6 +64,9 @@ namespace miner {
 
     template<> class Work<kEthash>;
     template<> class WorkResult<kEthash>;
+
+    template<> class Work<kCuckatoo31>;
+    template<> class WorkResult<kCuckatoo31>;
 
     //template<> class Work<kEquihash>;
     //template<> class WorkResult<kEquihash>;

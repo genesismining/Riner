@@ -74,8 +74,15 @@ namespace miner {
         return nullopt;
     }
 
-    JrpcBuilder &JrpcBuilder::id(IdType val) {
+    JrpcBuilder &JrpcBuilder::setId(IdType val) {
         json["id"] = val;
+        return *this;
+    }
+
+    JrpcBuilder &JrpcBuilder::setId(optional<IdType> val) {
+        if (val) {
+            setId(val.value());
+        }
         return *this;
     }
 
@@ -87,17 +94,11 @@ namespace miner {
         responseFunc(response);
     }
 
-    JrpcBuilder &JrpcBuilder::id(optional<int> val) {
-        if (val)
-            json["id"] = val.value();
-        return *this;
-    }
-
     JrpcResponse::JrpcResponse(const nl::json &j)
     : json(j) {
     }
 
-    JrpcResponse::JrpcResponse(optional<int> id, const JrpcError &inErr, cstring_span version) {
+    JrpcResponse::JrpcResponse(optional<IdType> id, const JrpcError &inErr, cstring_span version) {
         json["jsonrpc"] = gsl::to_string(version);
 
         std::string idStr = id ? std::to_string(id.value()) : "null";
@@ -116,7 +117,7 @@ namespace miner {
         return json;
     }
 
-    optional<int> JrpcResponse::id() const {
+    optional<JrpcResponse::IdType> JrpcResponse::id() const {
         if (json.count("id")) {
             auto & jid = json.at("id");
             if (jid.is_number())
