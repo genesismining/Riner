@@ -23,7 +23,8 @@ namespace miner {
 
     std::string toLower(const std::string &inStr) {
         std::string str = inStr;
-        std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+        std::transform(str.begin(), str.end(), str.begin(),
+                       [] (char c) { return static_cast<char>(std::tolower(c)); });
         return str;
     }
 
