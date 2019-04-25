@@ -106,7 +106,7 @@ namespace miner {
             }
         }
 
-        optional<T> popWithTimeout(std::chrono::duration<float> timeoutDur) {
+        optional<T> popWithTimeout(std::chrono::steady_clock::duration timeoutDur) {
             size_t currentSize = 0;
             bool hasMaster = false;
             optional<T> result;
