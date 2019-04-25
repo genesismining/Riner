@@ -21,16 +21,13 @@ namespace miner {
             ExpAverage avg5m  {minutes(5)};
         };
 
+    public:
+
         struct Data {
             Entry acceptedShares;
             Entry rejectedShares;
             Entry duplicateShares;
         };
-
-        StatisticNode<Data> _node;
-
-    public:
-        using Data = Data;
 
         PoolRecords() {};
         PoolRecords(PoolRecords &&) = delete;
@@ -39,6 +36,10 @@ namespace miner {
         void reportShare(bool isAccepted, bool isDuplicate);
 
         Data read() const;
+
+    private:
+
+        StatisticNode<Data> _node;
 
     };
 
