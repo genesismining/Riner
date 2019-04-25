@@ -94,7 +94,7 @@ namespace miner {
             DIR *hwmonDir = opendir(path);
             struct dirent *hwmonDirent;
             while (hwmonDir != nullptr && (hwmonDirent = readdir(hwmonDir)) != nullptr) {
-                if (hwmonDirent->d_type == DT_DIR && strcmp("hwmon", hwmonDirent->d_name) == 0) {
+                if (hwmonDirent->d_type == DT_DIR && !strncmp("hwmon", hwmonDirent->d_name, 5)) {
                     api->hwmonPath = api->pciePath + "hwmon/" + hwmonDirent->d_name + "/";
                     break;
                 }
