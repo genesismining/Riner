@@ -13,7 +13,8 @@ namespace miner {
 
     static optional<int> getCurrentDpmFreq(std::fstream &file) {
         optional<int> freq = nullopt;
-        if (file.good()) {
+        if (file.is_open()) {
+            file.clear();
             file.seekg(0);
             std::string table(std::istreambuf_iterator<char>(file), {});
             auto end_pos = table.find('*');
@@ -33,7 +34,8 @@ namespace miner {
 
     static optional<int> getIntFromFile(std::ifstream &file) {
         optional<int> value = nullopt;
-        if (file.good()) {
+        if (file.is_open()) {
+            file.clear();
             file.seekg(0);
             int tmp;
             file >> tmp;
