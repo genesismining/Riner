@@ -62,6 +62,8 @@ add_executable(Miner
         src/common/JsonForward.h
         src/common/Assert.h
         src/common/PlatformDefines.h
+        src/gpu_api/GpuApi.cpp src/gpu_api/GpuApi.h
+        src/gpu_api/AmdSysfsApi.cpp src/gpu_api/AmdSysfsApi.h
         src/util/Bytes.h
         src/util/Logging.h
         src/util/ConfigUtils.cpp src/util/ConfigUtils.h
