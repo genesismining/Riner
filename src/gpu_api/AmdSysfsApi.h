@@ -17,6 +17,7 @@ namespace miner {
         optional<int> getTemperature() override;
         //optional<int> getFanPercent() override;
         optional<int> getFanRpm() override;
+        optional<int> getPower() override;
 
     private:
         AmdSysfsApi() = default;

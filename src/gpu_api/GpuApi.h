@@ -26,6 +26,7 @@ namespace miner {
         virtual optional<int> getTemperature();
         virtual optional<int> getFanPercent();
         virtual optional<int> getFanRpm();
+        virtual optional<int> getPower();
 
         virtual bool setEngineClock(int freq);
         virtual bool setMemoryClock(int freq);

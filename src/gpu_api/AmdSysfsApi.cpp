@@ -32,12 +32,13 @@ namespace miner {
         return freq;
     }
 
-    static optional<int> getIntFromFile(std::ifstream &file) {
-        optional<int> value = nullopt;
+    template<typename T = int>
+    static optional<T> getIntFromFile(std::ifstream &file) {
+        optional<T> value = nullopt;
         if (file.is_open()) {
             file.clear();
             file.seekg(0);
-            int tmp;
+            T tmp;
             file >> tmp;
             if (!file.fail())
                 value = tmp;
@@ -46,17 +47,23 @@ namespace miner {
     }
 
     optional<int> AmdSysfsApi::getEngineClock() {
-        optional<int> freq = getIntFromFile(engineFreq);
-        if (!freq)
-            freq = getCurrentDpmFreq(sclk);
-        return freq;
+        optional<int> freqMhz;
+        optional<uint32_t> freqHz = getIntFromFile<uint32_t>(engineFreq);
+        if (freqHz)
+            freqMhz = (freqHz.value() + 500000U) / 1000000U;
+        else
+            freqMhz = getCurrentDpmFreq(sclk);
+        return freqMhz;
     }
 
     optional<int> AmdSysfsApi::getMemoryClock() {
-        optional<int> freq = getIntFromFile(memoryFreq);
-        if (!freq)
-            freq = getCurrentDpmFreq(mclk);
-        return freq;
+        optional<int> freqMhz;
+        optional<uint32_t> freqHz = getIntFromFile<uint32_t>(memoryFreq);
+        if (freqHz)
+            freqMhz = (freqHz.value() + 500000U) / 1000000U;
+        else
+            freqMhz = getCurrentDpmFreq(mclk);
+        return freqMhz;
     }
 
     optional<int> AmdSysfsApi::getVoltage() {
@@ -64,11 +71,21 @@ namespace miner {
     }
 
     optional<int> AmdSysfsApi::getTemperature() {
-        return getIntFromFile(temp);
+        auto t = getIntFromFile(temp);
+        if (t)
+            t = (t.value() + 500) / 1000;
+        return t;
     }
 
     optional<int> AmdSysfsApi::getFanRpm() {
         return getIntFromFile(fanRpm);
+    }
+
+    optional<int> AmdSysfsApi::getPower() {
+        auto t = getIntFromFile(power);
+        if (t)
+            t = (t.value() + 500000) / 1000000;
+        return t;
     }
 
     AmdSysfsApi::~AmdSysfsApi() {
@@ -112,7 +129,7 @@ namespace miner {
             if (name != "amdgpu")
                 return nullptr;
             api->fanRpm.open(api->hwmonPath + "fan1_input");
-            api->temp.open(api->hwmonPath + "temp1+input");
+            api->temp.open(api->hwmonPath + "temp1_input");
             api->power.open(api->hwmonPath + "power1_average");
             api->voltage.open(api->hwmonPath + "in0_input");
             api->engineFreq.open(api->hwmonPath + "freq1_input");

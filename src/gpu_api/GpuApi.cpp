@@ -24,6 +24,9 @@ namespace miner {
     optional<int> GpuApi::getFanRpm() {
         return nullopt;
     }
+    optional<int> GpuApi::getPower() {
+        return nullopt;
+    }
 
     bool GpuApi::setEngineClock(int freq) {
         return false;
