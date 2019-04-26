@@ -26,6 +26,7 @@ namespace miner {
         static std::unique_ptr<GpuApi> tryMake(const DeviceId &id);
 
     protected:
+        bool readOnly = false;
         int numSclkStates = 0;
         int numMclkStates = 0;
 

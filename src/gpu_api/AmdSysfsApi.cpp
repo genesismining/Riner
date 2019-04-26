@@ -136,9 +136,21 @@ namespace miner {
             api->memoryFreq.open(api->hwmonPath + "freq2_input");
 
             api->sclk.open(api->pciePath + "pp_dpm_sclk");
+            if (!api->sclk.is_open()) {
+                api->sclk.open(api->pciePath + "pp_dpm_sclk", std::fstream::in); // read only
+                api->readOnly |= api->sclk.is_open();
+            }
             api->mclk.open(api->pciePath + "pp_dpm_mclk");
+            if (!api->mclk.is_open()) {
+                api->mclk.open(api->pciePath + "pp_dpm_mclk", std::fstream::in); // read only
+                api->readOnly |= api->mclk.is_open();
+            }
             api->voltageTable.open(api->pciePath + "pp_od_clk_voltage");
             api->fanPwm.open(api->hwmonPath + "pwm1");
+            if (!api->fanPwm.is_open()) {
+                api->fanPwm.open(api->hwmonPath + "pwm1", std::fstream::in); // read only
+                api->readOnly |= api->fanPwm.is_open();
+            }
             api->powerCap.open(api->hwmonPath + "power1_cap");
 
             std::string line;
