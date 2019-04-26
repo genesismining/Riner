@@ -1,6 +1,7 @@
 #pragma once
 
 #include <src/gpu_api/GpuApi.h>
+#include <climits>
 #include <fstream>
 
 namespace miner {
@@ -27,8 +28,18 @@ namespace miner {
 
     protected:
         bool readOnly = false;
-        int numSclkStates = 0;
-        int numMclkStates = 0;
+
+        struct table_entry {
+            int freq;
+            optional<int> vddc;
+        };
+
+        std::vector<table_entry> sclkTable;
+        std::vector<table_entry> mclkTable;
+
+        std::pair<int, int> sclkRange {0, INT_MAX};
+        std::pair<int, int> mclkRange {0, INT_MAX};
+        std::pair<int, int> vddcRange {0, INT_MAX};
 
         std::string pciePath;
         std::string hwmonPath;
@@ -36,7 +47,7 @@ namespace miner {
         std::fstream mclk;
         std::fstream fanPwm;
         std::fstream powerCap;
-        std::fstream voltageTable;
+        std::fstream vddcTable;
 
         std::ifstream fanRpm;
         std::ifstream temp;
