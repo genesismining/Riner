@@ -27,11 +27,13 @@ namespace miner {
         virtual optional<int> getFanPercent();
         virtual optional<int> getFanRpm();
         virtual optional<int> getPower();
+        virtual optional<int> getTdp();
 
         virtual bool setEngineClock(int freq);
         virtual bool setMemoryClock(int freq);
         virtual bool setVoltage(int voltage);
         virtual bool setFanPercent(int percent);
+        virtual bool setTdp(int tdp);
 
         static std::unique_ptr<GpuApi> tryCreate(const DeviceId &id);
 

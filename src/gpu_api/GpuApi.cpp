@@ -27,6 +27,9 @@ namespace miner {
     optional<int> GpuApi::getPower() {
         return nullopt;
     }
+    optional<int> GpuApi::getTdp() {
+        return nullopt;
+    }
 
     bool GpuApi::setEngineClock(int freq) {
         return false;
@@ -44,8 +47,12 @@ namespace miner {
         return false;
     }
 
+    bool GpuApi::setTdp(int tdp) {
+        return false;
+    }
+
     std::unique_ptr<GpuApi> GpuApi::tryCreate(const DeviceId &id) {
-        for (auto api : apis) {
+        for (const auto &api : apis) {
             LOG(INFO) << "try to create API instance";
             if (auto instance = api(id))
                 return instance;
