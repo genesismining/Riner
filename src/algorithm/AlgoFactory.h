@@ -6,7 +6,7 @@
 #include <src/common/WorkCommon.h>
 #include <src/compute/DeviceId.h>
 #include <string>
-#include <vector>
+#include <list>
 #include <functional>
 #include <src/common/Optional.h>
 
@@ -20,7 +20,7 @@ namespace miner {
             std::function<unique_ptr<AlgoBase>(AlgoConstructionArgs)> makeFunc;
         };
 
-        std::vector<Entry> entries;
+        std::list<Entry> entries;
 
         optional_ref<Entry> entryWithName(const std::string &implName);
 

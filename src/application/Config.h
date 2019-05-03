@@ -59,7 +59,7 @@ namespace miner {
                         raw_intensity;
             };
 
-            std::vector<AlgoSettings> algoSettings;
+            std::list<AlgoSettings> algoSettings;
 
             optional_ref<const AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
         };
