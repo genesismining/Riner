@@ -8,12 +8,29 @@
 
 namespace miner {
 
+    template<typename T>
+    static inline void optionalValue(T &ret, const nl::json &j, const char *key) {
+        const auto &it = j.find(key);
+        if (it == j.end())
+            ret = nullopt;
+        else
+            ret = *it;
+    }
+
+    template<typename T>
+    static inline optional<T> optionalValue(const nl::json &j, const char *key) {
+        optional<T> ret;
+        optionalValue(ret, j, key);
+        return ret;
+    }
+
     //returns json.at(key) or defaultVal
     template<class T>
-    static T valueOr(const nl::json &j, const char *key, const T &defaultVal) {
-        if (!j.count(key))
+    static inline T valueOr(const nl::json &j, const char *key, const T &defaultVal) {
+        const auto &it = j.find(key);
+        if (it == j.end())
             return defaultVal;
-        return j.at(key);
+        return *it;
     }
 
     Config::Profile::Mapping parseProfileMapping(const nl::json &j) {
@@ -73,19 +90,20 @@ namespace miner {
                 auto &jo = pair.second;
 
                 algs.algoImplName = pair.first;
+                auto &gpuSettings = algs.gpuSettings;
 
-                algs.core_clock_mhz_min = jo.at("core_clock_mhz_min");
-                algs.core_clock_mhz_max = jo.at("core_clock_mhz_max");
+                optionalValue(gpuSettings.core_clock_mhz_min, jo, "core_clock_mhz_min");
+                optionalValue(gpuSettings.core_clock_mhz_max, jo, "core_clock_mhz_max");
 
-                if (algs.core_clock_mhz_min > algs.core_clock_mhz_max) {
+                if (gpuSettings.core_clock_mhz_min.value_or(0) > gpuSettings.core_clock_mhz_max.value_or(UINT32_MAX)) {
                     LOG(WARNING) << "core_clock_mhz_min is supposed to be smaller than core_clock_mhz_max";
-                    algs.core_clock_mhz_max = algs.core_clock_mhz_min;
+                    gpuSettings.core_clock_mhz_max = gpuSettings.core_clock_mhz_min;
                 }
 
-                algs.memclock = jo.at("memclock");
-                algs.powertune = jo.at("powertune");
+                optionalValue(gpuSettings.memclock, jo, "memclock");
+                optionalValue(gpuSettings.powertune, jo, "powertune");
 
-                algs.num_threads = jo.at("num_threads");
+                algs.num_threads = valueOr(jo, "num_threads", uint32_t(1));
                 algs.work_size = jo.at("work_size");
                 algs.raw_intensity = jo.at("raw_intensity");
 

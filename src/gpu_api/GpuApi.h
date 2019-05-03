@@ -4,18 +4,20 @@
 #include <list>
 #include <memory>
 #include <src/compute/DeviceId.h>
+#include <src/application/Config.h>
 
 namespace miner {
 
     class GpuApi {
 
-    private:
-        static std::list<std::function<std::unique_ptr<GpuApi>(const DeviceId &)>> apis;
-
-    protected:
-        GpuApi() = default;
-
     public:
+        using GpuSettings = Config::DeviceProfile::GpuSettings;
+
+        struct CtorArgs {
+            DeviceId id;
+            GpuSettings settings;
+        };
+
         virtual ~GpuApi() = default;
         GpuApi(const GpuApi &) = delete;
         GpuApi &operator=(const GpuApi &) = delete;
@@ -35,7 +37,12 @@ namespace miner {
         virtual bool setFanPercent(int percent);
         virtual bool setTdp(int tdp);
 
-        static std::unique_ptr<GpuApi> tryCreate(const DeviceId &id);
+        /**
+         * factory to instantiate a derived GpuApi class. If no API is available, then nullptr is returned
+         * internally DerivedClass::tryMake is called for each DerivedClass registered with
+         * GpuApi::Registry<DerivedClass>() while DerivedClass::tryMake returns nullptr
+         */
+        static std::unique_ptr<GpuApi> tryCreate(const CtorArgs &args);
 
         template<typename D>
         struct Registry {
@@ -44,8 +51,15 @@ namespace miner {
             }
 
             Registry(const Registry &) = delete;
-            Registry& operator=(const Registry&) = delete;
+            Registry& operator=(const Registry &) = delete;
         };
+
+    protected:
+        GpuApi() = default; // only factory function of derived class shall instantiate the class
+
+    private:
+        static std::list<std::function<std::unique_ptr<GpuApi>(const CtorArgs &)>> apis;
+
     };
 
 }

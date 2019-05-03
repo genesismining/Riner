@@ -40,19 +40,23 @@ namespace miner {
         struct DeviceProfile {
             std::string name;
 
+            struct GpuSettings {
+                optional<uint32_t>
+                        core_clock_mhz_min, //engine_min
+                        core_clock_mhz_max, //engine_max
+                        memclock,
+                        powertune;
+            };
+
             struct AlgoSettings {
                 std::string algoImplName; //e.g. "AlgoEthashCL"
 
-                uint32_t
-                core_clock_mhz_min, //engine_min
-                core_clock_mhz_max, //engine_max
-                memclock,
-                powertune;
+                GpuSettings gpuSettings;
 
                 uint32_t
-                num_threads,
-                work_size,
-                raw_intensity;
+                        num_threads,
+                        work_size,
+                        raw_intensity;
             };
 
             std::vector<AlgoSettings> algoSettings;

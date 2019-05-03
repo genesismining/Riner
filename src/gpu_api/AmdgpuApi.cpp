@@ -230,10 +230,10 @@ namespace miner {
         setPowerstateRange(mclk, 0);
     }
 
-    std::unique_ptr<GpuApi> AmdgpuApi::tryMake(const DeviceId &id) {
+    std::unique_ptr<GpuApi> AmdgpuApi::tryMake(const CtorArgs &args) {
 #ifdef __linux__
         auto api = std::unique_ptr<AmdgpuApi>(new AmdgpuApi());
-        if (auto optPciId = id.getIfPcieIndex()) {
+        if (auto optPciId = args.id.getIfPcieIndex()) {
             char path[128]{0};
             const auto &pciId = optPciId.value();
             std::snprintf(path, sizeof(path),
@@ -376,8 +376,6 @@ namespace miner {
             api->tdp = api->getTdp();
 
             LOG(INFO) << "device " << api->pciePath.data() << " has sysfs API";
-            api->setTdp(100);
-            LOG(INFO) << "new TDP: " << api->getTdp().value_or(-1);
             return api;
         }
 #endif

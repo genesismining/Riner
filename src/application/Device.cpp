@@ -7,7 +7,7 @@ namespace miner {
     : id(_id)
     , settings(_settings)
     , deviceIndex(_deviceIndex)
-    , api(GpuApi::tryCreate(_id)) {
+    , api(GpuApi::tryCreate(GpuApi::CtorArgs{_id})) {
     }
 
 }

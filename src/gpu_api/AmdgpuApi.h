@@ -30,12 +30,15 @@ namespace miner {
 
     private:
 
-        AmdgpuApi() = default;
-
         friend class GpuApi;
-        static std::unique_ptr<GpuApi> tryMake(const DeviceId &id);
+        /**
+         * tries to instantiate AmdgpuApi and if the API is not available, then nullptr is returned
+         */
+        static std::unique_ptr<GpuApi> tryMake(const CtorArgs &id);
 
     protected:
+
+        AmdgpuApi() = default;
 
         struct table_entry {
             int freq;
