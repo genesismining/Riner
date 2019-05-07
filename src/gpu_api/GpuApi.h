@@ -10,6 +10,11 @@ namespace miner {
 
     class GpuApi {
 
+        static auto &getApis() {
+            static std::list<std::function<std::unique_ptr<GpuApi>(const CtorArgs &)>> apis;
+            return apis;
+        }
+
     public:
         using GpuSettings = Config::DeviceProfile::GpuSettings;
 
@@ -47,7 +52,7 @@ namespace miner {
         template<typename D>
         struct Registry {
             explicit Registry() noexcept {
-                GpuApi::apis.push_back(&D::tryMake);
+                getApis().push_back(&D::tryMake);
             }
 
             Registry(const Registry &) = delete;
@@ -56,9 +61,6 @@ namespace miner {
 
     protected:
         GpuApi() = default; // only factory function of derived class shall instantiate the class
-
-    private:
-        static std::list<std::function<std::unique_ptr<GpuApi>(const CtorArgs &)>> apis;
 
     };
 

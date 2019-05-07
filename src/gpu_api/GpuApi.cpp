@@ -3,8 +3,6 @@
 
 namespace miner {
 
-    std::list<std::function<std::unique_ptr<GpuApi>(const GpuApi::CtorArgs &)>> GpuApi::apis{};
-
     optional<int> GpuApi::getEngineClock() {
         return nullopt;
     }
@@ -52,7 +50,7 @@ namespace miner {
     }
 
     std::unique_ptr<GpuApi> GpuApi::tryCreate(const CtorArgs &args) {
-        for (const auto &api : apis) {
+        for (const auto &api : getApis()) {
             LOG(INFO) << "try to create API instance";
             if (auto instance = api(args))
                 return instance;
