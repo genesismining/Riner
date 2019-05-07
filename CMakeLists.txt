@@ -42,6 +42,11 @@ add_library(LibMiner
         src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
         src/network/JrpcServer.cpp src/network/JrpcServer.h
         src/network/TcpLineServer.cpp src/network/TcpLineServer.h
+        src/network/IOTypeLayer.h
+        src/network/JsonIO.cpp src/network/JsonIO.h
+        src/network/LineIO.cpp src/network/LineIO.h
+        src/network/BaseIO.cpp src/network/BaseIO.h
+        src/network/JsonRpcIO.cpp src/network/JsonRpcIO.h
         src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
@@ -72,6 +77,7 @@ add_library(LibMiner
         src/util/Bytes.h
         src/util/Copy.h
         src/util/Logging.h
+        src/util/TemplateUtils.h
         src/util/ConfigUtils.cpp src/util/ConfigUtils.h
         src/util/Random.h
         src/util/StringUtils.cpp src/util/StringUtils.h
