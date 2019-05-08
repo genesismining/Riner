@@ -15,6 +15,8 @@
 
 namespace miner {
 
+    static Pool::Registry<PoolEthashStratum> registry {"PoolEthashStratum", kEthash, kStratumTcp};
+
     void PoolEthashStratum::restart() {
 
         acceptMiningNotify = false;

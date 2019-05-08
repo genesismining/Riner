@@ -26,7 +26,7 @@ namespace miner {
         std::string jobId;
     };
 
-    class PoolEthashStratum : public WorkProvider {
+    class PoolEthashStratum : public Pool {
     public:
         explicit PoolEthashStratum(PoolConstructionArgs);
         ~PoolEthashStratum() override;

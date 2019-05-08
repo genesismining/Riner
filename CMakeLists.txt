@@ -14,10 +14,9 @@ add_executable(Miner
         src/application/Main.cpp
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
-        src/application/Types.cpp src/application/Types.h
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
-        src/algorithm/Algorithm.h
+        src/algorithm/Algorithm.cpp src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
@@ -25,7 +24,6 @@ add_executable(Miner
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/algorithm/dummy/AlgoDummy.cpp src/algorithm/dummy/AlgoDummy.h
-        src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
         src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
@@ -36,7 +34,6 @@ add_executable(Miner
         src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
         src/network/JrpcServer.cpp src/network/JrpcServer.h
         src/network/TcpLineServer.cpp src/network/TcpLineServer.h
-        src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h

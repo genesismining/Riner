@@ -12,6 +12,8 @@ namespace miner {
     using namespace std::chrono;
     using namespace std::this_thread;
 
+    static Algorithm::Registry<AlgoDummy> registry {"AlgoDummy", kEthash};
+
     AlgoDummy::AlgoDummy(AlgoConstructionArgs argsMoved)
     : _args(std::move(argsMoved)) {
 

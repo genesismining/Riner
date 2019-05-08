@@ -3,8 +3,8 @@
 #include <iostream>
 #include <src/common/Optional.h>
 #include <src/common/StringSpan.h>
-#include <src/algorithm/AlgoFactory.h>
-#include <src/pool/PoolFactory.h>
+#include <src/algorithm/Algorithm.h>
+#include <src/pool/Pool.h>
 #include <src/common/WorkCommon.h>
 #include <src/compute/ComputeModule.h>
 #include <src/pool/PoolSwitcher.h>
@@ -18,9 +18,6 @@ namespace miner {
 
         Config config; //referenced by other subsystem, and thus must outlive them
 
-        AlgoFactory algoFactory;
-        PoolFactory poolFactory;
-
         unique_ptr<ComputeModule> compute; //lazy init, depends on config
 
         //This below is implicitly assuming that the same Gpu cannot be used by 2 AlgoImpls simultaneoulsy since they share the AlgoSettings. If this ever changes this vector must be something else
@@ -29,7 +26,7 @@ namespace miner {
         //this array is accessed with the AlgoEnum and may contain nullptr
         std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> poolSwitchers;
 
-        std::list<unique_ptr<AlgoBase>> algorithms;
+        std::list<unique_ptr<Algorithm>> algorithms;
 
         unique_ptr<ApiServer> apiServer; //lazy init, uses devicesInUse
 
