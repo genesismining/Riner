@@ -6,6 +6,8 @@
 #include <src/util/OptionalAccess.h>
 #include <src/util/StringUtils.h>
 
+#define PARSE_OPTIONAL(settings, json, memberName) optionalValue(settings.memberName, json, #memberName)
+
 namespace miner {
 
     template<typename T>
@@ -92,16 +94,19 @@ namespace miner {
                 algs.algoImplName = pair.first;
                 auto &gpuSettings = algs.gpuSettings;
 
-                optionalValue(gpuSettings.core_clock_mhz_min, jo, "core_clock_mhz_min");
-                optionalValue(gpuSettings.core_clock_mhz_max, jo, "core_clock_mhz_max");
+                PARSE_OPTIONAL(gpuSettings, jo, core_clock_MHz_min);
+                PARSE_OPTIONAL(gpuSettings, jo, core_clock_MHz_max);
+                PARSE_OPTIONAL(gpuSettings, jo, core_clock_MHz);
 
-                if (gpuSettings.core_clock_mhz_min.value_or(0) > gpuSettings.core_clock_mhz_max.value_or(UINT32_MAX)) {
+                if (gpuSettings.core_clock_MHz_min.value_or(0) > gpuSettings.core_clock_MHz_max.value_or(UINT32_MAX)) {
                     LOG(WARNING) << "core_clock_mhz_min is supposed to be smaller than core_clock_mhz_max";
-                    gpuSettings.core_clock_mhz_max = gpuSettings.core_clock_mhz_min;
+                    gpuSettings.core_clock_MHz_max = gpuSettings.core_clock_MHz_min;
                 }
 
-                optionalValue(gpuSettings.memclock, jo, "memclock");
-                optionalValue(gpuSettings.powertune, jo, "powertune");
+                PARSE_OPTIONAL(gpuSettings, jo, memory_clock_MHz);
+                PARSE_OPTIONAL(gpuSettings, jo, power_limit_W);
+                PARSE_OPTIONAL(gpuSettings, jo, core_voltage_mV);
+                PARSE_OPTIONAL(gpuSettings, jo, core_voltage_offset_mV);
 
                 algs.num_threads = valueOr(jo, "num_threads", uint32_t(1));
                 algs.work_size = jo.at("work_size");
@@ -150,10 +155,10 @@ namespace miner {
             auto &jo = j.at("global_settings");
             auto &gs = globalSettings;
 
-            gs.temp_cutoff = jo.at("temp_cutoff");
-            gs.temp_overheat = jo.at("temp_overheat");
-            gs.temp_target = jo.at("temp_target");
-            gs.temp_hysteresis = valueOr<uint32_t>(jo, "temp_hysteresis", 2);
+            PARSE_OPTIONAL(gs, jo, temp_cutoff);
+            PARSE_OPTIONAL(gs, jo, temp_overheat);
+            PARSE_OPTIONAL(gs, jo, temp_target);
+            gs.temp_hysteresis = valueOr<uint32_t>(jo, "temp_hysteresis", 3);
 
             if (!(gs.temp_target <= gs.temp_overheat && gs.temp_overheat <= gs.temp_cutoff)) {
                 LOG(WARNING) << "temperature parameters don't satisfy 'temp_target <= temp_overheat <= temp_cutoff'";
@@ -170,7 +175,8 @@ namespace miner {
                 gs.api_port = apiPortDefault;
             }
 
-            gs.opencl_kernel_dir = jo.at("opencl_kernel_dir");
+            std::string default_opencl_kernel_dir("./kernel");
+            gs.opencl_kernel_dir = valueOr(jo, "opencl_kernel_dir", default_opencl_kernel_dir);
             gs.start_profile = jo.at("start_profile");
 
             if (!getProfile(gs.start_profile)) {

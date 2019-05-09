@@ -52,8 +52,18 @@ namespace miner {
     std::unique_ptr<GpuApi> GpuApi::tryCreate(const CtorArgs &args) {
         for (const auto &api : getApis()) {
             LOG(INFO) << "try to create API instance";
-            if (auto instance = api(args))
+            if (auto instance = api(args)) {
+                const auto &settings = args.settings;
+                if (settings.power_limit_W)
+                    instance->setTdp(settings.power_limit_W.value());
+                if (settings.core_voltage_mV)
+                    instance->setVoltage(settings.core_voltage_mV.value());
+                if (settings.memory_clock_MHz)
+                    instance->setMemoryClock(settings.memory_clock_MHz.value());
+                if (settings.core_clock_MHz || settings.core_clock_MHz_min)
+                    instance->setEngineClock(settings.core_clock_MHz.value_or(settings.core_clock_MHz_min.value_or(0)));
                 return instance;
+            }
         }
         return std::unique_ptr<GpuApi>();
     }
