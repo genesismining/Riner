@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 project(Miner)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
 
 #OpenCL
@@ -34,7 +34,6 @@ add_library(LibMiner
         src/algorithm/grin/Graph.cpp src/algorithm/grin/Graph.h
         src/algorithm/grin/AlgoCuckatoo31Cl.cpp src/algorithm/grin/AlgoCuckatoo31Cl.h
         src/algorithm/grin/Cuckatoo.cpp src/algorithm/grin/Cuckatoo.h
-        src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/crypto/blake2b-ref.cpp src/crypto/blake2.h src/crypto/blake2-impl.h
         src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
         src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
@@ -118,9 +117,19 @@ include_directories(
         lib/easyloggingpp/src
 )
 
+if(APPLE)
+    include_directories(usr/local/include)
+    link_directories(/usr/local/lib)
+
+    #asio string_view fix on MacOS
+    target_compile_definitions(LibMiner PUBLIC ASIO_DISABLE_STD_EXPERIMENTAL_STRING_VIEW)
+endif()
+
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})
+if(NOT APPLE)
 target_link_libraries (Miner -static-libgcc -static-libstdc++)
+endif()
 
 #Threads
 find_package(Threads REQUIRED)
