@@ -85,7 +85,7 @@ namespace miner {
                 maxState = state + 1;
                 newFreq = settings.freqTarget.value();
             }
-            ss << "s " << state << " " << newFreq;
+            ss << settings.type << ' ' << state << " " << newFreq;
             if (entry.vddc.has_value()) {
                 int voltage = std::min(entry.vddc.value(), vddcTarget.value_or(INT_MAX));
                 if (entry.measuredVddc.has_value() && entry.measuredVddc.value() < voltage)
@@ -96,6 +96,8 @@ namespace miner {
         }
         if (commit)
             ss << 'c';
+        else
+            ss.unget();
         bool success = writeToFile(vddcTable, ss.str());
         setPowerstateRange(settings, 0, maxState);
         return success;

@@ -47,6 +47,7 @@ namespace miner {
         };
 
         struct frequency_settings {
+            char type;
             std::vector<table_entry> table;
             std::pair<int, int> range {0, INT_MAX};
             optional<int> freqTarget;
@@ -55,14 +56,14 @@ namespace miner {
         };
 
         static bool setPowerstateRange(frequency_settings &settings, int begin, int end = INT_MAX);
-        bool applyPowerplaySettings(frequency_settings &settings, bool commit = false);
+        bool applyPowerplaySettings(frequency_settings &settings, bool commit = true);
         bool setPowerProfile(const std::string &mode);
         bool setFanProfile(int profile);
 
         bool readOnly = false;
 
-        frequency_settings sclk;
-        frequency_settings mclk;
+        frequency_settings sclk {'s'};
+        frequency_settings mclk {'m'};
 
         optional<int> vddcTarget;
         std::pair<int, int> vddcRange;
