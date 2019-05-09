@@ -72,12 +72,13 @@ namespace miner {
     }
 
     bool AmdgpuApi::applyPowerplaySettings(AmdgpuApi::frequency_settings &settings, bool commit) {
-        std::stringstream ss;
         bool isSet = !settings.freqTarget.has_value();
         int maxState = settings.table.size();
         if (readOnly || maxState == 0)
             return false;
+        bool success = true;
         for (int state = 0; state < maxState; state++) {
+            std::stringstream ss;
             const auto &entry = settings.table[state];
             int newFreq = entry.freq;
             if (!isSet && (newFreq >= settings.freqTarget.value() || state == maxState - 1)) {
@@ -92,13 +93,10 @@ namespace miner {
                     voltage = entry.vddc.value();
                 ss << " " << voltage;
             }
-            ss << std::endl;
+            success &= writeToFile(vddcTable, ss.str());
         }
         if (commit)
-            ss << 'c';
-        else
-            ss.unget();
-        bool success = writeToFile(vddcTable, ss.str());
+            success &= writeToFile(vddcTable, "c");
         setPowerstateRange(settings, 0, maxState);
         return success;
     }
@@ -226,7 +224,8 @@ namespace miner {
         setFanProfile(2); // switch to automatic fan
         if (tdp)
             setTdp(tdp.value());
-        writeToFile(vddcTable, "r\nc"); // reset PowerplayTable
+        writeToFile(vddcTable, "r");
+        writeToFile(vddcTable, "c"); // reset PowerplayTable
         setPowerProfile("auto");
         setPowerstateRange(sclk, 0);
         setPowerstateRange(mclk, 0);
