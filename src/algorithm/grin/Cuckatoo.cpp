@@ -245,7 +245,10 @@ void CuckatooSolver::prepare() {
     // TODO proper error handling
 
     std::string options = "-DBUCKET_BIT_SHIFT=" + std::to_string(bucketBitShift);
-    program_ = opts_.programLoader->loadProgram(opts_.context, files, options).value();
+    MI_EXPECTS(opts_.programLoader);
+    auto programOr = opts_.programLoader->loadProgram(opts_.context, files, options);
+    MI_EXPECTS(programOr);
+    program_ = programOr.value();
 
     bufferActiveEdges_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);
     bufferActiveNodes_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);

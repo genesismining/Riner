@@ -118,7 +118,7 @@ include_directories(
 )
 
 if(APPLE)
-    include_directories(usr/local/include)
+    include_directories(/usr/local/include)
     link_directories(/usr/local/lib)
 
     #asio string_view fix on MacOS
@@ -128,7 +128,7 @@ endif()
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})
 if(NOT APPLE)
-target_link_libraries (Miner -static-libgcc -static-libstdc++)
+    target_link_libraries (Miner -static-libgcc -static-libstdc++)
 endif()
 
 #Threads
@@ -147,7 +147,7 @@ add_executable(tests
 )
 target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)
-target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
+target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
  
 gtest_add_tests(TARGET tests)
 add_test(NAME monolithic COMMAND tests)

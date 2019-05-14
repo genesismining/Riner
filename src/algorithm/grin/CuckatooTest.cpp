@@ -7,6 +7,7 @@
 #include <src/util/HexString.h>
 #include <src/util/Logging.h>
 #include <src/util/StringUtils.h>
+#include <src/util/FileUtils.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -32,9 +33,11 @@ TEST(Siphash, GenerateUV) {
 }
 
 class CuckatooSolverTest: public testing::Test {
+    constexpr static const char *testKernelDir = "src/algorithm/";
 public:
+
     CuckatooSolverTest() :
-            programLoader("src/algorithm/", "") {
+            programLoader(testKernelDir, "") {
         workProtocolData = std::make_shared<WorkProtocolData>(33);
         header = std::make_unique<CuckooHeader>(workProtocolData);
     }
@@ -44,20 +47,35 @@ protected:
         cl_int err;
         device = cl::Device::getDefault(&err);
         if (!kEnableOpenClTests || err) {
+            LOG(WARNING)<< "Failed to obtain a OpenCL device";
             return nullptr;
         }
 
-        optional<DeviceId> deviceInfo = obtainDeviceIdFromOpenCLDevice(device);
-        EXPECT_TRUE(deviceInfo.has_value());
-        LOG(INFO)<< "Running on device " << gsl::to_string(deviceInfo.value().getName());
-        vendor = deviceInfo.value().getVendor();
+        optional<DeviceId> deviceId = obtainDeviceIdFromOpenCLDevice(device);
+        EXPECT_TRUE(deviceId.has_value());
+        LOG(INFO)<< "Running on device " << gsl::to_string(deviceId.value().getName());
+        vendor = deviceId.value().getVendor();
         context = cl::Context(device);
 
-        CuckatooSolver::Options options;
+        Device::AlgoSettings algoSettings;
+        Device algoDevice = {deviceId.value(), algoSettings}; //deviceId, algoSettings.value(), i
+
+        CuckatooSolver::Options options {algoDevice};
         options.programLoader = &programLoader;
         options.n = n;
         options.context = context;
         options.device = device;
+
+        std::vector<std::string> files = {"grin/siphash.h", "grin/cuckatoo.cl"};
+        std::string fileDir = testKernelDir;
+        for (auto &fileName : files) {
+            auto path = fileDir + fileName;
+            if (!file::readFileIntoString(path)) {
+                LOG(WARNING)<< "Failed to load one of the required kernel files";
+                return nullptr;
+            }
+        }
+
         return std::make_unique<CuckatooSolver>(std::move(options));
     }
 
@@ -94,7 +112,7 @@ TEST_F(CuckatooSolverTest, Solve29) {
 TEST_F(CuckatooSolverTest, Solve31) {
     std::unique_ptr<CuckatooSolver> solver = createSolver(31);
     if (solver == nullptr) {
-        LOG(WARNING)<< "Failed to obtain a OpenCL device. Skipping test";
+        LOG(WARNING)<< "Failed to create CuckatooSolver. Skipping test";
         return;
     }
 

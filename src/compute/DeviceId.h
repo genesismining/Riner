@@ -37,6 +37,10 @@ namespace miner {
 
     public:
         DeviceId(VendorEnum vendor, const decltype(id) &id, cstring_span name);
+        DeviceId(DeviceId &&)                 = default;
+        DeviceId &operator=(DeviceId &&)      = default;
+        DeviceId(const DeviceId &)            = default;
+        DeviceId &operator=(const DeviceId &) = default;
 
         VendorEnum getVendor() const;
         cstring_span getName() const;

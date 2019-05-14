@@ -2,6 +2,7 @@
 
 #include <src/compute/DeviceId.h>
 #include <src/statistics/DeviceRecords.h>
+#include <src/util/Copy.h>
 #include "Config.h"
 
 namespace miner {
@@ -9,10 +10,10 @@ namespace miner {
     struct Device {//device interface for usage by Algorithms
         using AlgoSettings = Config::DeviceProfile::AlgoSettings;
 
-        Device(const Device &)            = delete;
-        Device &operator=(const Device &) = delete;
         Device(Device &&)                 = default;
         Device &operator=(Device &&)      = default;
+
+        DELETE_COPY(Device);
 
         const DeviceId id;
         const AlgoSettings settings;
