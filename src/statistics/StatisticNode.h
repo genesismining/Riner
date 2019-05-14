@@ -17,7 +17,6 @@ namespace miner {
         struct Node {
             shared_ptr<LockGuarded<T>> _content;
             LockGuarded<std::list<weak_ptr<Node>>> _listeners;
-            std::string _name = "unnamed";
 
             Node()
             : _content(make_shared<LockGuarded<T>>()) {
