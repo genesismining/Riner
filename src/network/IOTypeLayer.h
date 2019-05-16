@@ -4,7 +4,10 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <src/common/Chrono.h>
+#include <src/common/Pointers.h>
+#include <src/util/Logging.h>
 #include <src/util/TemplateUtils.h>
 
 namespace miner {
@@ -15,8 +18,18 @@ namespace miner {
     };
 
     class IOConnection;
+    using CxnHandle = weak_ptr<IOConnection>; //Conntection Handle
 
-    template<class T> using IOOnReceiveValueFunc = std::function<void(const T &, IOConnection &)>;
+    template<class T> using IOOnReceiveValueFunc = std::function<void(CxnHandle, const T &)>;
+    using IOOnConnectedFunc = std::function<void(CxnHandle)>;
+
+    template<class T>
+    void ioOnReceiveValueNoop(CxnHandle, const T &) {} //default argument for IOOnReceiveValueFunc<T>
+    void ioOnConnectedNoop(CxnHandle) {} //default argument for IOOnConnectedFunc
+
+    struct IOConversionError : public std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
 
     // IOTypeLayer
     // used as a base class for network io abstractions that convert to/from certain types
@@ -67,10 +80,8 @@ namespace miner {
         //takes callback that is called whenever an incoming message was
         //successfully converted to a T (e.g. if no exceptions were thrown) and
         //also passes an IOConnection that can be used within that callback to send responses
-        IOTypeLayer(IOMode mode, OnReceiveValueFunc &&onRecv)
-        : _layerBelow(mode, [this, onRecv = std::move(onRecv)] (const LayerBelowT &lbt, IOConnection &conn) {
-            onRecv(processIncoming(lbt), conn);
-        }) {
+        IOTypeLayer(IOMode mode)
+        : _layerBelow(mode) {
         }
 
         virtual T convertIncoming(LayerBelowT) = 0; //e.g. json(string);
@@ -81,27 +92,59 @@ namespace miner {
         //let the user define a function that gets called with a mutable T &,
         //and gets called whenever a new object is received.
         void setIncomingModifier(ModifierFunc &&func) {
-            _incomingModifier(std::move(func));
+            _incomingModifier = std::move(func);
         }
 
         //let the user define a function that gets called with a mutable T &,
         //and gets called whenever a new object is sent.
         void setOutgoingModifier(ModifierFunc &&func) {
-            _outgoingModifier(std::move(func));
+            _outgoingModifier = std::move(func);
         }
 
-        void asyncRead(IOConnection &conn) {
-            _layerBelow.asyncRead(conn);
+        void asyncRead(CxnHandle cxn) {
+            _layerBelow.asyncRead(cxn);
         }
 
-        void asyncWrite(T t, IOConnection &conn) {
+        void setOnReceive(OnReceiveValueFunc &&onRecv) {
+            _layerBelow.setOnReceive([this, onRecv = std::move(onRecv)] (CxnHandle cxn, const LayerBelowT &lbt) {
+                try {
+                    onRecv(processIncoming(onRecv));
+                }
+                catch(const IOConversionError &e) {
+                    LOG(WARNING) << "IO conversion failed on receive in IOTypeLayer for "
+                    << typeid(value_type).name() << ": " << e.what();
+                }
+            });
+        };
+
+        void asyncWrite(CxnHandle cxn, T t) {
             //forward this call to the layer below, but process t so it is compatible with that layer
-            _layerBelow.asyncWrite(processOutgoing(std::move(t)), conn);
+            try {
+                _layerBelow.asyncWrite(cxn, processOutgoing(std::move(t)));
+            }
+            catch(const IOConversionError &e) {
+                LOG(WARNING) << "IO conversion failed on asyncWrite in IOTypeLayer for "
+                             << typeid(value_type).name() << ": " << e.what();
+            }
         }
 
-        void asyncWriteRetryEvery(T t, milliseconds retryInterval, IOConnection &conn, std::function<bool()> &&pred) {
+        void asyncWriteRetryEvery(T t, milliseconds retryInterval, CxnHandle cxn, std::function<bool()> &&pred) {
             //forward this call to the layer below, but process t so it is compatible with that layer
-            _layerBelow.asyncRetryEvery(processOutgoing(std::move(t)), retryInterval, conn, std::move(pred));
+            try {
+                _layerBelow.asyncRetryEvery(processOutgoing(std::move(t)), retryInterval, cxn, std::move(pred));
+            }
+            catch(const IOConversionError &e) {
+                LOG(WARNING) << "IO conversion failed on asyncWriteRetryEvery in IOTypeLayer for "
+                             << typeid(value_type).name() << ": " << e.what();
+            }
+        }
+
+        void launchClient(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop) {
+            _layerBelow.launchClient(std::move(host), port, std::move(onCxn));
+        }
+
+        void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop) {
+            _layerBelow.launchServer(port, std::move(onCxn));
         }
 
     private:

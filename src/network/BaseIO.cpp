@@ -41,7 +41,7 @@ namespace miner {
                     return;
                 }
 
-                std::string line = "asio error occured"; //write something the user will notice in case they forget to check the asio::error
+                std::string line = "asio error occured";
 
                 if (!error && numBytes != 0) {
                     std::istream stream(&incoming);
@@ -51,7 +51,8 @@ namespace miner {
                 MI_EXPECTS(line.size() == strlen(line.c_str()));
 
                 MI_EXPECTS(onRecv);
-                onRecv(line, *this);
+                onRecv(sharedThis //becomes weak_ptr<IOConnection> aka CxnHandle
+                        , line);
 
                 listen(sharedThis);
             });
@@ -75,20 +76,24 @@ namespace miner {
         }
     }
 
-    BaseIO::BaseIO(IOMode mode, BaseIO::OnReceiveValueFunc &&onRecv)
-    : _mode(mode), _onRecv(std::move(onRecv)) {
+    BaseIO::BaseIO(IOMode mode)
+    : _mode(mode) {
     }
 
-    void BaseIO::asyncWrite(value_type outgoing, IOConnection &conn) {
-        conn.asyncWrite(std::move(outgoing));
+    void BaseIO::asyncWrite(CxnHandle handle, value_type outgoing) {
+        if (auto cxn = handle.lock()) {
+            cxn->asyncWrite(std::move(outgoing));
+        }
     }
 
-    void BaseIO::launchServer(uint16_t port) {
+    void BaseIO::launchServer(uint16_t port, IOOnConnectedFunc &&onConnect) {
         MI_EXPECTS(_thread == nullptr); //don't call launch twice on the same object!
         if (_thread) {
             LOG(ERROR) << "BaseIO::launchServer called after ioService thread was already started by another call. Ignoring this call.";
             return;
         }
+
+        _onConnect = std::move(onConnect);
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
@@ -112,16 +117,22 @@ namespace miner {
         });
 
         auto conn = make_shared<Connection<TcpSocket>>(_onRecv, _ioService);
-        _acceptor = make_unique<tcp::acceptor>(_ioService);
-
+        _acceptor = make_unique<tcp::acceptor>(_ioService, tcp::endpoint{tcp::v4(), port});
         conn->accept(conn, *_acceptor);
     }
 
-    void BaseIO::launchClient(std::string host, uint16_t port) {
+    void BaseIO::launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&onConnect) {
+        MI_EXPECTS(_thread == nullptr); //don't call launch twice on the same object!
         if (_thread) {
             LOG(ERROR) << "BaseIO::launchClient called after ioService thread was already started by another call. Ignoring this call.";
             return;
         }
+
+        _onConnect = std::move(onConnect);
+    }
+
+    void BaseIO::setOnReceive(OnReceiveValueFunc &&onRecv) {
+        _onRecv = onRecv;
     }
 
 }

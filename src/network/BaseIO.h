@@ -27,16 +27,18 @@ namespace miner {
         using value_type = std::string;
         using OnReceiveValueFunc = IOOnReceiveValueFunc<value_type>;
 
-        BaseIO(IOMode mode, OnReceiveValueFunc &&onRecv);
+        BaseIO(IOMode mode);
         ~BaseIO();
 
         DELETE_COPY_AND_MOVE(BaseIO); //because Connection<T> is referencing BaseIO::_onRecv
 
         //launch as server or client, once launched cannot be changed for an instance
-        void launchServer(uint16_t listenOnPort);
-        void launchClient(std::string host, uint16_t port);
+        void launchServer(uint16_t listenOnPort, IOOnConnectedFunc &&);
+        void launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&);
 
-        void asyncWrite(value_type outgoing, IOConnection &);
+        void asyncWrite(CxnHandle, value_type outgoing);
+
+        void setOnReceive(OnReceiveValueFunc &&);
 
         template<class Fn>
         void postAsync(Fn &&func) {
@@ -50,7 +52,8 @@ namespace miner {
 
         asio::io_service _ioService;
         unique_ptr<tcp::acceptor> _acceptor;
-        OnReceiveValueFunc _onRecv; //referenced by instances of Connection<T>;
+        IOOnConnectedFunc _onConnect = ioOnConnectedNoop;
+        OnReceiveValueFunc _onRecv = ioOnReceiveValueNoop<value_type>; //_onRecv referenced by instances of Connection<T>;
         std::atomic_bool _shutdown {false};
         unique_ptr<std::thread> _thread;
 
