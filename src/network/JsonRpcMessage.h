@@ -57,7 +57,9 @@ namespace miner { namespace jrpc {
 
         Message() = default;
         explicit Message(nl::json); //throws on parser failure
+        explicit Message(const Response &, nl::json id = {});//make an error message from the error part (id is not being set)
         nl::json toJson() const;
+
     };
 
     using MessageBatch = std::vector<Message>;

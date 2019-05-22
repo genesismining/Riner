@@ -47,6 +47,9 @@ add_library(LibMiner
         src/network/LineIO.cpp src/network/LineIO.h
         src/network/BaseIO.cpp src/network/BaseIO.h
         src/network/JsonRpcIO.cpp src/network/JsonRpcIO.h
+        src/network/JsonRpcMessage.cpp src/network/JsonRpcMessage.h
+        src/network/JsonRpcBuilder.cpp src/network/JsonRpcBuilder.h
+        src/network/JsonRpcInvoke.h
         src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h

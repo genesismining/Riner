@@ -93,6 +93,12 @@ namespace miner { namespace jrpc {
             return j;
         }
 
+        Message::Message(const Response &response, nl::json id)
+        : var(response), id(std::move(id)) {
+        }
+
+
+
         bool Message::isResponse() const {
             return var.has_value<Response>({});
         }
