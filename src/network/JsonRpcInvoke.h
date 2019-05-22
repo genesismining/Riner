@@ -45,7 +45,7 @@ namespace miner { namespace jrpc {
                     Ret &&result = func(extractSingleArg<Args>(paramsJson, argNames)...);
                     nl::json resultJson{std::move(result)}; //convert returned value to function
 
-                    return Message{Response{std::move(resultJson)}};
+                    return Message{Response{std::move(resultJson)}, request.id};
                 }
                 catch (const jrpc::Error &error) {
                     //if a jrpc::Error is thrown from within the function, wrap it into a message and return it
