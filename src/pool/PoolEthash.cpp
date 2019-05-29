@@ -12,8 +12,49 @@
 #include <functional>
 
 #include <asio.hpp>
+#include <src/common/Chrono.h>
 
 namespace miner {
+
+    void PoolEthashStratum::onConnected(CxnHandle cxn) {
+        acceptMiningNotify = false;
+
+        jrpc::Message subscribe = jrpc::RequestBuilder{}
+            .id(io.nextId++)
+            .method("mining.subscribe")
+            .param("sgminer")
+            .param("5.5.17-gm")
+            .done();
+
+        io.callAsync(cxn, subscribe, [&] (CxnHandle cxn, jrpc::Message response) {
+            //return if its not {"result": true} message
+            if (!response.resultAs<bool>().value_or(false))
+                return;
+
+            jrpc::Message authorize = jrpc::RequestBuilder{}
+                .id(io.nextId++)
+                .method("mining.authorize")
+                .param(args.username)
+                .param(args.password)
+                .done();
+
+            io.callAsync(cxn, authorize, [&] (CxnHandle cxn, jrpc::Message response) {
+                acceptMiningNotify = true;
+                _cxn = cxn; //store connection for submit
+            });
+        });
+
+        io.addMethod("mining.notify", [&] (nl::json params) {
+            if (acceptMiningNotify)
+                onMiningNotify(params);
+        });
+
+        io.setIncomingModifier([&] (jrpc::Message &) {
+            //called everytime a jrpc::Message is incoming
+            onStillAlive(); //update still alive timer
+        });
+
+    }
 
     void PoolEthashStratum::restart() {
 
@@ -96,6 +137,49 @@ namespace miner {
 
         //build and send submitMessage on the tcp thread
 
+        io.postAsync([this, result = std::move(result)] {
+
+            auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>();
+            if (!protoData) {
+                LOG(INFO) << "work result cannot be submitted because it has expired";
+                return; //work has expired
+            }
+
+            uint32_t shareId = io.nextId++;
+
+            jrpc::Message submit = jrpc::RequestBuilder{}
+                .id(shareId)
+                .method("mining.submit")
+                .param(args.username)
+                .param(protoData->jobId)
+                .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
+                .param("0x" + HexString(result->proofOfWorkHash).str())
+                .param("0x" + HexString(result->mixHash).str())
+                .done();
+
+            auto onResponse = [] (CxnHandle cxn, jrpc::Message response) {
+                bool accepted = response.resultAs<bool>().value_or(false);
+
+                std::string acceptedStr = accepted ? "accepted" : "rejected";
+                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
+            };
+
+            //this handler gets called if there was no response after the last try
+            auto onNeverResponded = [shareId] () {
+                LOG(INFO) << "share with id " << shareId << " got discarded after pool did not respond multiple times";
+            };
+
+            io.callAsyncRetryNTimes(_cxn, submit, 5, seconds(5), onResponse, onNeverResponded);
+
+        });
+    }
+/*
+    void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
+
+        auto result = static_unique_ptr_cast<WorkResult<kEthash>>(std::move(resultBase));
+
+        //build and send submitMessage on the tcp thread
+
         jrpc.postAsync([this, result = std::move(result)] {
 
             std::shared_ptr<EthashStratumProtocolData> protoData =
@@ -130,7 +214,7 @@ namespace miner {
             });
         });
     }
-
+*/
     PoolEthashStratum::PoolEthashStratum(PoolConstructionArgs args)
     : args(args)
     , jrpc(args.host, args.port) {
@@ -152,6 +236,11 @@ namespace miner {
         };
 
         workQueue = std::make_unique<WorkQueueType>(refillThreshold, refillFunc);
+
+        //launchClient establishes a single connection to the given host + port
+        io.launchClient(args.host, args.port, [this] (auto cxn) {
+            onConnect(cxn);
+        });
 
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
         jrpc.setOnRestart([this] {

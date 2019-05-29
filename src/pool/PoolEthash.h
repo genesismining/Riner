@@ -13,6 +13,7 @@
 #include <future>
 #include <list>
 #include <atomic>
+#include <src/network/JsonRpcUtil.h>
 
 namespace miner {
     template<class T>
@@ -53,6 +54,10 @@ namespace miner {
 
         void restart();
         TcpJsonRpcProtocolUtil jrpc;
+
+        void onConnected(CxnHandle);
+        jrpc::JsonRpcUtil io {IOMode::Tcp};
+        CxnHandle _cxn; //modified only on IO thread
 
         bool acceptMiningNotify = false;
 
