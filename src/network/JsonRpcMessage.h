@@ -48,18 +48,33 @@ namespace miner { namespace jrpc {
     };
 
     struct Message {
-        constexpr static auto jsonrpc = "2.0"; //always the same
+        //constexpr static auto jsonrpc = "2.0"; //always the same
         variant<Request, Response> var = Request{};
         nl::json id; //ideally Null, String or Number, empty when notification
 
+        Message() = default;
+        explicit Message(nl::json); //throws on parser failure
+        explicit Message(const Response &, nl::json id = {});//convenience constructor for making a response message
+        nl::json toJson() const;
+
+        bool isNotification() const;
         bool isRequest () const;
         bool isResponse() const;
 
-        Message() = default;
-        explicit Message(nl::json); //throws on parser failure
-        explicit Message(const Response &, nl::json id = {});//make an error message from the error part (id is not being set)
-        nl::json toJson() const;
+        optional_ref<Error> getIfError();
+        optional_ref<nl::json> getIfResult();
+        optional_ref<Request> getIfRequest();
 
+        template<class T>
+        optional<T> resultAs() {
+            if (optional_ref<nl::json> result = getIfResult()) {
+                try {
+                    return result.value().get<T>();
+                }
+                catch (const nl::json::exception &e) {}
+            }
+            return nullopt;
+        }
     };
 
     using MessageBatch = std::vector<Message>;

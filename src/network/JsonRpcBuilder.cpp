@@ -48,7 +48,7 @@ namespace miner { namespace jrpc {
         }
 
         Message RequestBuilder::done() {
-            return _msg;
+            return std::move(_msg);
         }
 
     }}

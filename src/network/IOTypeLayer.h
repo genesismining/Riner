@@ -8,6 +8,7 @@
 #include <src/common/Chrono.h>
 #include <src/common/Pointers.h>
 #include <src/util/Logging.h>
+#include <src/common/Assert.h>
 #include <src/util/TemplateUtils.h>
 
 namespace miner {
@@ -18,14 +19,14 @@ namespace miner {
     };
 
     class IOConnection;
-    using CxnHandle = weak_ptr<IOConnection>; //Conntection Handle
+    using CxnHandle = weak_ptr<IOConnection>; //Conntection Handle that is safe to be stored by the user and reused. If the corresponding connection no longer exists, the weak_ptr catches that behavior safely
 
     template<class T> using IOOnReceiveValueFunc = std::function<void(CxnHandle, const T &)>;
     using IOOnConnectedFunc = std::function<void(CxnHandle)>;
 
     template<class T>
-    void ioOnReceiveValueNoop(CxnHandle, const T &) {} //default argument for IOOnReceiveValueFunc<T>
-    void ioOnConnectedNoop(CxnHandle) {} //default argument for IOOnConnectedFunc
+    inline void ioOnReceiveValueNoop(CxnHandle, const T &) {} //default argument for IOOnReceiveValueFunc<T>
+    inline void ioOnConnectedNoop(CxnHandle) {} //default argument for IOOnConnectedFunc
 
     struct IOConversionError : public std::runtime_error {
         using std::runtime_error::runtime_error;
@@ -92,23 +93,26 @@ namespace miner {
         //let the user define a function that gets called with a mutable T &,
         //and gets called whenever a new object is received.
         void setIncomingModifier(ModifierFunc &&func) {
+            checkNotLaunchedOrOnIOThread();
             _incomingModifier = std::move(func);
         }
 
         //let the user define a function that gets called with a mutable T &,
         //and gets called whenever a new object is sent.
         void setOutgoingModifier(ModifierFunc &&func) {
+            checkNotLaunchedOrOnIOThread();
             _outgoingModifier = std::move(func);
         }
 
-        void asyncRead(CxnHandle cxn) {
-            _layerBelow.asyncRead(cxn);
+        void readAsync(CxnHandle cxn) {
+            _layerBelow.readAsync(cxn);
         }
 
         void setOnReceive(OnReceiveValueFunc &&onRecv) {
-            _layerBelow.setOnReceive([this, onRecv = std::move(onRecv)] (CxnHandle cxn, const LayerBelowT &lbt) {
+            checkNotLaunchedOrOnIOThread();
+            _layerBelow.setOnReceive([this, onRecv = std::move(onRecv)] (CxnHandle cxn, LayerBelowT lbt) {
                 try {
-                    onRecv(processIncoming(onRecv));
+                    onRecv(cxn, processIncoming(std::move(lbt)));
                 }
                 catch(const IOConversionError &e) {
                     LOG(WARNING) << "IO conversion failed on receive in IOTypeLayer for "
@@ -117,10 +121,10 @@ namespace miner {
             });
         };
 
-        void asyncWrite(CxnHandle cxn, T t) {
+        void writeAsync(CxnHandle cxn, T t) {
             //forward this call to the layer below, but process t so it is compatible with that layer
             try {
-                _layerBelow.asyncWrite(cxn, processOutgoing(std::move(t)));
+                _layerBelow.writeAsync(cxn, processOutgoing(std::move(t)));
             }
             catch(const IOConversionError &e) {
                 LOG(WARNING) << "IO conversion failed on asyncWrite in IOTypeLayer for "
@@ -128,15 +132,17 @@ namespace miner {
             }
         }
 
-        void asyncWriteRetryEvery(T t, milliseconds retryInterval, CxnHandle cxn, std::function<bool()> &&pred) {
-            //forward this call to the layer below, but process t so it is compatible with that layer
-            try {
-                _layerBelow.asyncRetryEvery(processOutgoing(std::move(t)), retryInterval, cxn, std::move(pred));
-            }
-            catch(const IOConversionError &e) {
-                LOG(WARNING) << "IO conversion failed on asyncWriteRetryEvery in IOTypeLayer for "
-                             << typeid(value_type).name() << ": " << e.what();
-            }
+        template<class Func>
+        void postAsync(Func &&func) {
+            _layerBelow.postAsync(std::forward<Func>(func));
+        }
+
+        //asynchronously call pred every retryInterval milliseconds until it returns true for the first time
+        //first call happens right away
+        //just like postAsync(...) this function is just a utility to make use of asio's thread pool and does
+        //not actually write anything to a connection
+        void retryAsyncEvery(milliseconds retryInterval, std::function<bool()> &&pred) {
+            _layerBelow.retryAsyncEvery(retryInterval, std::move(pred));
         }
 
         void launchClient(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop) {
@@ -145,6 +151,14 @@ namespace miner {
 
         void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop) {
             _layerBelow.launchServer(port, std::move(onCxn));
+        }
+
+        bool hasLaunched() {
+            return layerBelow().hasLaunched();
+        }
+
+        bool isIoThread() {
+            return layerBelow().isIoThread();
         }
 
     private:
@@ -157,13 +171,17 @@ namespace miner {
             return t;
         }
 
-        LayerBelowT processOutgoing(T lbt) {
+        LayerBelowT processOutgoing(T t) {
             //apply all necessary changes to the incoming T so that it can be
             //interpreted by the layer below
-            auto t = convertOutgoing(std::move(lbt));
             if (_outgoingModifier) //user may have defined a custom modifier func
                 _outgoingModifier(t);
-            return t;
+            auto lbt = convertOutgoing(std::move(t));
+            return lbt;
+        }
+
+        void checkNotLaunchedOrOnIOThread() {
+            MI_EXPECTS(!hasLaunched() || isIoThread()); //mutating functions may only be called before calling launch, or from the IO Thread
         }
 
         ModifierFunc _incomingModifier;

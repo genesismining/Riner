@@ -9,6 +9,8 @@
 #include <src/common/Pointers.h>
 #include <src/network/IOTypeLayer.h>
 #include <src/util/Copy.h>
+#include <src/util/LockUtils.h>
+#include <list>
 
 namespace miner {
 
@@ -27,7 +29,7 @@ namespace miner {
         using value_type = std::string;
         using OnReceiveValueFunc = IOOnReceiveValueFunc<value_type>;
 
-        BaseIO(IOMode mode);
+        explicit BaseIO(IOMode mode);
         ~BaseIO();
 
         DELETE_COPY_AND_MOVE(BaseIO); //because Connection<T> is referencing BaseIO::_onRecv
@@ -36,19 +38,40 @@ namespace miner {
         void launchServer(uint16_t listenOnPort, IOOnConnectedFunc &&);
         void launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&);
 
-        void asyncWrite(CxnHandle, value_type outgoing);
+        void writeAsync(CxnHandle, value_type outgoing);
 
         void setOnReceive(OnReceiveValueFunc &&);
+
+        bool hasLaunched() const;
+
+        bool isIoThread() const;
 
         template<class Fn>
         void postAsync(Fn &&func) {
             asio::post(_ioService, std::forward<Fn>(func));
         }
 
+        void retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred);
+
     private:
         IOMode _mode;
 
         using tcp = asio::ip::tcp;
+
+        decltype(std::this_thread::get_id()) _ioThreadId;
+        void setIoThread();
+
+        struct AsyncRetry;
+        LockGuarded<std::list<shared_ptr<AsyncRetry>>> _activeRetries;
+
+        using WaitHandler = std::function<void(const asio::error_code &)>;
+
+        struct AsyncRetry {
+            asio::steady_timer timer;
+            std::function<bool()> pred;
+            WaitHandler waitHandler;
+            std::list<std::shared_ptr<AsyncRetry>>::iterator it;
+        };
 
         asio::io_service _ioService;
         unique_ptr<tcp::acceptor> _acceptor;

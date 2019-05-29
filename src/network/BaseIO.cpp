@@ -4,11 +4,15 @@
 #include <src/common/Assert.h>
 #include "BaseIO.h"
 
+//#include <asio/ssl.hpp>
+
 namespace miner {
 
     using asio::ip::tcp;
+    using TcpSocket = tcp::socket;
 
-    using TcpSocket = asio::ip::tcp::socket;
+    //namespace ssl = asio::ssl;
+    //using TcpSslSocket = ssl::stream<tcp::socket>;
 
     template<class SocketT = TcpSocket>
     struct Connection : public IOConnection {
@@ -29,7 +33,7 @@ namespace miner {
             });
         }
 
-        void listen(std::shared_ptr<Connection> sharedThis) {
+        void listen(shared_ptr<Connection> sharedThis) {
 
             LOG(INFO) << "Listening...";
 
@@ -80,7 +84,7 @@ namespace miner {
     : _mode(mode) {
     }
 
-    void BaseIO::asyncWrite(CxnHandle handle, value_type outgoing) {
+    void BaseIO::writeAsync(CxnHandle handle, value_type outgoing) {
         if (auto cxn = handle.lock()) {
             cxn->asyncWrite(std::move(outgoing));
         }
@@ -97,6 +101,7 @@ namespace miner {
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
+
             try {
                 while(true) {
                     _ioService.run();
@@ -131,8 +136,67 @@ namespace miner {
         _onConnect = std::move(onConnect);
     }
 
+    void BaseIO::retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred) {
+
+        auto shared = std::shared_ptr<AsyncRetry>(new AsyncRetry {
+                {_ioService, interval}, std::move(pred), {}, {}
+        });
+
+        auto weak = make_weak(shared);
+
+        {//push AsyncRetry object to _activeRetries
+            auto list = _activeRetries.lock();
+            list->push_front(shared);
+            shared->it = list->begin();
+        }
+
+        //define function that re-submits asio::steady_timer with this function
+        shared->waitHandler = [this, weak, interval] (const asio::error_code &error) {
+
+            if (error && error != asio::error::operation_aborted) {
+                LOG(INFO) << "wait handler error " << error;
+                return;
+            }
+
+            if (auto shared = weak.lock()) {
+
+                //resubmit this wait handler if predicate is false, otherwise clean up AsyncRetry state
+                if (shared->pred()) {
+                    _activeRetries.lock()->erase(shared->it); //'shared' now has the last ref
+
+                    //'shared' is the last reference to this function, do not let this
+                    //function continue in a destroyed state
+                    return;
+                }
+                else {
+                    shared->timer = asio::steady_timer{_ioService, interval};
+                    shared->timer.async_wait(shared->waitHandler);
+                }
+
+            }
+
+        };
+
+        //initiate the periodic waitHandler calls with empty error_code
+        postAsync([shared] {
+            shared->waitHandler(asio::error_code());
+        });
+    }
+
     void BaseIO::setOnReceive(OnReceiveValueFunc &&onRecv) {
         _onRecv = onRecv;
+    }
+
+    bool BaseIO::hasLaunched() const {
+        return (bool)_thread;
+    }
+
+    void BaseIO::setIoThread() {
+        _ioThreadId = std::this_thread::get_id();
+    }
+
+    bool BaseIO::isIoThread() const {
+        return std::this_thread::get_id() == _ioThreadId;
     }
 
 }

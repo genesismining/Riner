@@ -50,6 +50,9 @@ add_library(LibMiner
         src/network/JsonRpcMessage.cpp src/network/JsonRpcMessage.h
         src/network/JsonRpcBuilder.cpp src/network/JsonRpcBuilder.h
         src/network/JsonRpcInvoke.h
+        src/network/JsonRpcMethod.cpp src/network/JsonRpcMethod.h
+        src/network/JsonRpcHandlerMap.cpp src/network/JsonRpcHandlerMap.h
+        src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
         src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
@@ -144,6 +147,7 @@ add_executable(tests
     src/algorithm/grin/GraphTest.cpp
     src/network/JrpcBuilderTest.cpp
     src/pool/WorkTest.cpp
+    src/network/JrpcTest.cpp
 )
 target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)

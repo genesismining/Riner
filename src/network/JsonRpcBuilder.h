@@ -6,9 +6,10 @@
 namespace miner { namespace jrpc {
 
     class RequestBuilder { //builder pattern util for making a jrpc request
-        Message _msg;
-        Request &msgRequest();
 
+        Message _msg;
+
+        Request &msgRequest();
         bool paramsIsArray();
         bool hasNoParams();
 

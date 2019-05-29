@@ -68,7 +68,7 @@ namespace miner { namespace jrpc {
         nl::json Message::toJson() const {
             nl::json j;
             j.at("id") = id;
-            j.at("jsonrpc") = jsonrpc;
+            j.at("jsonrpc") = "2.0";
 
             var.map([&] (Request &req) {
                 j.at("method") = req.method;
@@ -97,7 +97,9 @@ namespace miner { namespace jrpc {
         : var(response), id(std::move(id)) {
         }
 
-
+        bool Message::isNotification() const {
+            return isRequest() && id.empty();
+        }
 
         bool Message::isResponse() const {
             return var.has_value<Response>({});
@@ -106,4 +108,36 @@ namespace miner { namespace jrpc {
         bool Message::isRequest() const {
             return var.has_value<Request>({});
         }
+
+        optional_ref<Error> Message::getIfError() {
+            optional_ref<Error> result;
+            var.map([&] (Response &r) {
+                r.var.map([&] (Error &err) {
+                    result = type_safe::opt_ref(err);
+                });
+            });
+            return nullopt;
+        }
+
+        optional_ref<nl::json>
+        Message::getIfResult() {
+            optional_ref<nl::json> result;
+            var.map([&] (Response &r) {
+                r.var.map([&] (nl::json &res) {
+                    result = type_safe::opt_ref(res);
+                });
+            });
+            return nullopt;
+        }
+
+        optional_ref<Request> Message::getIfRequest() {
+            optional_ref<Request> result;
+            var.map([&] (Response &r) {
+                r.var.map([&] (Request &req) {
+                    result = type_safe::opt_ref(req);
+                });
+            });
+            return nullopt;
+        }
+
     }}
