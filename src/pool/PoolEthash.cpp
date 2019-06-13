@@ -17,6 +17,7 @@
 namespace miner {
 
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
+        LOG(DEBUG) << "onConnected";
         acceptMiningNotify = false;
 
         jrpc::Message subscribe = jrpc::RequestBuilder{}
@@ -27,8 +28,10 @@ namespace miner {
             .done();
 
         io.callAsync(cxn, subscribe, [&] (CxnHandle cxn, jrpc::Message response) {
+            //this handler gets invoked when a jrpc response with the same id as 'subscribe' is received
+
             //return if its not {"result": true} message
-            if (!response.resultAs<bool>().value_or(false))
+            if (!response.isResultTrue())
                 return;
 
             jrpc::Message authorize = jrpc::RequestBuilder{}
@@ -158,9 +161,7 @@ namespace miner {
                 .done();
 
             auto onResponse = [] (CxnHandle cxn, jrpc::Message response) {
-                bool accepted = response.resultAs<bool>().value_or(false);
-
-                std::string acceptedStr = accepted ? "accepted" : "rejected";
+                std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
                 LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
             };
 
@@ -173,6 +174,7 @@ namespace miner {
 
         });
     }
+
 /*
     void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
 
@@ -237,15 +239,15 @@ namespace miner {
 
         workQueue = std::make_unique<WorkQueueType>(refillThreshold, refillFunc);
 
-        //launchClient establishes a single connection to the given host + port
-        io.launchClient(args.host, args.port, [this] (auto cxn) {
-            onConnect(cxn);
+
+        io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
+            onConnected(cxn);
         });
 
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
-        jrpc.setOnRestart([this] {
-            restart();
-        });
+        //jrpc.setOnRestart([this] {
+        //    restart();
+        //});
     }
 
     PoolEthashStratum::~PoolEthashStratum() {

@@ -140,4 +140,8 @@ namespace miner { namespace jrpc {
             return nullopt;
         }
 
+        bool Message::isResultTrue() {
+            return resultAs<bool>().value_or(false);
+        }
+
     }}

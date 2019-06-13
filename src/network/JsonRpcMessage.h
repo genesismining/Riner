@@ -75,6 +75,9 @@ namespace miner { namespace jrpc {
             }
             return nullopt;
         }
+
+        //returns whether this message is a Response with a "result" = true entry
+        bool isResultTrue(); //this is needed so often that it deserves its own convenience function
     };
 
     using MessageBatch = std::vector<Message>;

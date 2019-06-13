@@ -7,13 +7,13 @@
 
 namespace miner {
 
-    TcpJsonRpcProtocolUtil::TcpJsonRpcProtocolUtil(cstring_span host, cstring_span port) {
+    TcpJsonRpcProtocolUtil::TcpJsonRpcProtocolUtil(cstring_span host, uint16_t port) {
         tcpJson = std::make_unique<TcpJsonProtocolUtil>(host, port, [this]
                 (auto responseJson, auto &error, auto &coro) {
             onJsonEvent(std::move(responseJson), error, coro);
         });
 
-        tcpJson->launch();
+        //tcpJson->launch(); //TODO: this call is a bad idea in the constructor and goes against the whole purpose of separating launch()
     }
 
     void TcpJsonRpcProtocolUtil::removeOutdatedPendingRpcs() {

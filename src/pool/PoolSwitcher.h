@@ -50,7 +50,7 @@ namespace miner {
             PoolRecords::Data totalRecords;
             struct Pool {
                 std::string host;
-                std::string port;
+                uint16_t port;
                 std::string username;
                 std::string password;
                 PoolRecords::Data records;

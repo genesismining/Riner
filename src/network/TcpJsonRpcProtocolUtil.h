@@ -16,7 +16,7 @@ namespace miner {
         using OnReceiveFunc = std::function<void(const JrpcResponse &j)>;
         using JsonModifierFunc = std::function<void(nl::json &)>;
 
-        explicit TcpJsonRpcProtocolUtil(cstring_span host, cstring_span port);
+        explicit TcpJsonRpcProtocolUtil(cstring_span host, uint16_t port);
 
         void setOnRestart(std::function<void()> &&);
 

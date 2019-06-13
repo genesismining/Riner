@@ -19,14 +19,16 @@ namespace miner {
     };
 
     class IOConnection;
-    using CxnHandle = weak_ptr<IOConnection>; //Conntection Handle that is safe to be stored by the user and reused. If the corresponding connection no longer exists, the weak_ptr catches that behavior safely
+    using CxnHandle = weak_ptr<IOConnection>; //Conntection Handle that is safe to be stored by the user and reused. If the corresponding connection no longer exists, the weak_ptr catches that behavior safely. a connection is dropped when no operation is happening on it (e.g. listen)
 
     template<class T> using IOOnReceiveValueFunc = std::function<void(CxnHandle, const T &)>;
     using IOOnConnectedFunc = std::function<void(CxnHandle)>;
+    using IOOnDisconnectedFunc = std::function<void()>;
 
     template<class T>
     inline void ioOnReceiveValueNoop(CxnHandle, const T &) {} //default argument for IOOnReceiveValueFunc<T>
     inline void ioOnConnectedNoop(CxnHandle) {} //default argument for IOOnConnectedFunc
+    inline void ioOnDisconnectedNoop() {};
 
     struct IOConversionError : public std::runtime_error {
         using std::runtime_error::runtime_error;
@@ -90,15 +92,13 @@ namespace miner {
 
         virtual ~IOTypeLayer() = default;
 
-        //let the user define a function that gets called with a mutable T &,
-        //and gets called whenever a new object is received.
+        //let the user define a function that modifies an incoming T before it is further processed
         void setIncomingModifier(ModifierFunc &&func) {
             checkNotLaunchedOrOnIOThread();
             _incomingModifier = std::move(func);
         }
 
-        //let the user define a function that gets called with a mutable T &,
-        //and gets called whenever a new object is sent.
+        //let the user define a function that modifies an outgoing T before it is sent
         void setOutgoingModifier(ModifierFunc &&func) {
             checkNotLaunchedOrOnIOThread();
             _outgoingModifier = std::move(func);
@@ -145,11 +145,15 @@ namespace miner {
             _layerBelow.retryAsyncEvery(retryInterval, std::move(pred));
         }
 
-        void launchClient(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop) {
-            _layerBelow.launchClient(std::move(host), port, std::move(onCxn));
+        void launchClient(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
+            _layerBelow.launchClient(std::move(host), port, std::move(onCxn), std::move(onDc));
         }
 
-        void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop) {
+        void launchClientAutoReconnect(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
+            _layerBelow.launchClientAutoReconnect(std::move(host), port, std::move(onCxn), std::move(onDc));
+        }
+
+        void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
             _layerBelow.launchServer(port, std::move(onCxn));
         }
 

@@ -15,13 +15,14 @@ namespace miner { namespace jrpc {
             using Base = JsonRpcIO;
 
             std::deque<Method> _methods;
-            HandlerMap _pending;
+            HandlerMap _pending; //Note: it would make more sense to have one HandlerMap per connection (map<CxnHandle, HandlerMap>), but at this point thats not necessary yet.
 
             bool hasMethod(const char *name) const;
 
         public:
             //expose the following functions from JsonRpcIO
             using Base::launchClient;
+            using Base::launchClientAutoReconnect;
             using Base::launchServer;
             using Base::setIncomingModifier;
             using Base::setOutgoingModifier;
