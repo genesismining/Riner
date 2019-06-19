@@ -27,14 +27,12 @@ namespace miner {
             .param("5.5.17-gm")
             .done();
 
-        LOG(INFO) << "call async subscribe";
         io.callAsync(cxn, subscribe, [&] (CxnHandle cxn, jrpc::Message response) {
             //this handler gets invoked when a jrpc response with the same id as 'subscribe' is received
-            LOG(INFO) << "call async subscribe handler";
 
-            //return if its not {"result": true} message
+            //return if it's not a {"result": true} message
             if (!response.isResultTrue()) {
-                LOG(INFO) << "mining subscribe is not result true";
+                LOG(INFO) << "mining subscribe is not result true, instead it is " << response.str();
                 return;
             }
 
@@ -45,7 +43,6 @@ namespace miner {
                 .param(args.password)
                 .done();
 
-            LOG(INFO) << "call async authorize";
             io.callAsync(cxn, authorize, [&] (CxnHandle cxn, jrpc::Message response) {
                 LOG(INFO) << "call async authorize handler";
                 acceptMiningNotify = true;
@@ -54,15 +51,26 @@ namespace miner {
         });
 
         io.addMethod("mining.notify", [&] (nl::json params) {
-            if (acceptMiningNotify)
-                onMiningNotify(params);
+            if (acceptMiningNotify) {
+                if (params.is_array() && params.size() >= 4)
+                    onMiningNotify(params);
+                else
+                    throw jrpc::Error{jrpc::invalid_params, "expected at least 4 params"};
+            }
         });
 
-        io.setIncomingModifier([&] (jrpc::Message &) {
-            //called everytime a jrpc::Message is incoming
+        io.setIncomingModifier([&] (jrpc::Message &msg) {
+            //called everytime a jrpc::Message is incoming, so that it can be modified
             onStillAlive(); //update still alive timer
+
+            //incoming mining.notify should be a notification (which means id = {}) but some pools
+            //send it with a regular id. The io object will treat it like a notification once we
+            //remove the id.
+            if (msg.hasMethodName("mining.notify"))
+                msg.id = {};
         });
 
+        io.readAsync(cxn); //start listening for incoming responses and rpcs from this cxn
     }
 
     void PoolEthashStratum::restart() {
@@ -113,11 +121,7 @@ namespace miner {
         jrpc.call(*subscribe);
     }
 
-    void PoolEthashStratum::onMiningNotify(const nl::json &j) {
-        if (!j.count("params") && j.at("params").size() < 5)
-            return;
-        auto jparams = j.at("params");
-
+    void PoolEthashStratum::onMiningNotify(const nl::json &jparams) {
         bool cleanFlag = jparams.at(4);
         cleanFlag = true;
         if (cleanFlag)

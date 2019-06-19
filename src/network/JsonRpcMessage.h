@@ -8,6 +8,7 @@
 #include <src/common/Variant.h>
 #include <src/common/Optional.h>
 #include <src/common/Pointers.h>
+#include <src/util/Logging.h>
 
 namespace miner { namespace jrpc {
 
@@ -78,6 +79,10 @@ namespace miner { namespace jrpc {
 
         //returns whether this message is a Response with a "result" = true entry
         bool isResultTrue(); //this is needed so often that it deserves its own convenience function
+
+        bool hasMethodName(const char *name) const;
+
+        std::string str() const;
     };
 
     using MessageBatch = std::vector<Message>;

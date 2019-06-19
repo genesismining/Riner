@@ -129,7 +129,7 @@ namespace miner { namespace jrpc {
                     result = type_safe::opt_ref(res);
                 });
             });
-            return nullopt;
+            return result;
         }
 
         optional_ref<Request> Message::getIfRequest() {
@@ -142,6 +142,18 @@ namespace miner { namespace jrpc {
 
         bool Message::isResultTrue() {
             return resultAs<bool>().value_or(false);
+        }
+
+        bool Message::hasMethodName(const char *name) const {
+            bool result = false;
+            visit<Request>(var, [&] (const Request &req) {
+                result = req.method == name;
+            });
+            return result;
+        }
+
+        std::string Message::str() const {
+            return toJson().dump();
         }
 
     }}
