@@ -3,7 +3,7 @@
 
 #include "JsonRpcUtil.h"
 
-namespace miner { namespace jrpc{
+namespace miner { namespace jrpc {
 
         JsonRpcUtil::JsonRpcUtil(IOMode mode) : Base(mode) {
 
@@ -32,13 +32,14 @@ namespace miner { namespace jrpc{
                         }
                     }
                 }
+                readAsync(cxn); //continue listening in an endless loop
             });
+
         }
 
         void JsonRpcUtil::callAsync(CxnHandle cxn, Message request, ResponseHandler &&handler) {
             MI_EXPECTS(request.isRequest());
             _pending.addForId(request.id, std::move(handler));
-            readAsync(cxn); //queue read for response
             writeAsync(cxn, std::move(request)); //send rpc call
         }
 

@@ -29,6 +29,7 @@ namespace miner { namespace jrpc {
             using Base::setOnReceive;
             using Base::retryAsyncEvery;
             using Base::postAsync;
+            using Base::readAsync;
             //don't expose writeAsync, use callAsync instead
 
             JsonRpcIO &io() {//if you really want access you can have it
