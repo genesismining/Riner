@@ -3,6 +3,8 @@
 
 #include "JsonRpcMessage.h"
 #include <src/util/Logging.h>
+#include <src/common/Assert.h>
+#include <type_safe/visitor.hpp>
 
 namespace miner { namespace jrpc {
 
@@ -67,25 +69,25 @@ namespace miner { namespace jrpc {
 
         nl::json Message::toJson() const {
             nl::json j;
-            j.at("id") = id;
-            j.at("jsonrpc") = "2.0";
+            j["id"] = id;
+            j["jsonrpc"] = "2.0";
 
-            var.map([&] (Request &req) {
-                j.at("method") = req.method;
-                j.at("params") = req.params;
-            })
-            .map([&] (Response &res) {
+            visit<Request>(var, [&] (const Request &req) {
+                j["method"] = req.method;
+                j["params"] = req.params;
+            });
+            visit<Response>(var, [&] (const Response &res) {
 
-                res.var.map([&] (Error &error) {
-                    j.at("error") = {};
+                visit<Error>(res.var, [&] (const Error &error) {
+                    j["error"] = {};
                     auto &je = j.at("error");
 
-                    je.at("code") = error.code;
-                    je.at("data") = error.data;
-                    je.at("message") = error.message;
-                })
-                .map([&] (nl::json &result) {
-                    j.at("result") = result;
+                    je["code"] = error.code;
+                    je["data"] = error.data;
+                    je["message"] = error.message;
+                });
+                visit<nl::json>(res.var, [&] (const nl::json &result) {
+                    j["result"] = result;
                 });
 
             });
@@ -111,8 +113,8 @@ namespace miner { namespace jrpc {
 
         optional_ref<Error> Message::getIfError() {
             optional_ref<Error> result;
-            var.map([&] (Response &r) {
-                r.var.map([&] (Error &err) {
+            visit<Response>(var, [&] (auto &r) {
+                visit<Error>(r.var, [&] (Error &err) {
                     result = type_safe::opt_ref(err);
                 });
             });
@@ -122,8 +124,8 @@ namespace miner { namespace jrpc {
         optional_ref<nl::json>
         Message::getIfResult() {
             optional_ref<nl::json> result;
-            var.map([&] (Response &r) {
-                r.var.map([&] (nl::json &res) {
+            visit<Response>(var, [&] (auto &r) {
+                visit<nl::json>(r.var, [&] (auto &res) {
                     result = type_safe::opt_ref(res);
                 });
             });
@@ -132,10 +134,8 @@ namespace miner { namespace jrpc {
 
         optional_ref<Request> Message::getIfRequest() {
             optional_ref<Request> result;
-            var.map([&] (Response &r) {
-                r.var.map([&] (Request &req) {
-                    result = type_safe::opt_ref(req);
-                });
+            visit<Request>(var, [&] (auto &req) {
+                result = type_safe::opt_ref(req);
             });
             return nullopt;
         }

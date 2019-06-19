@@ -27,12 +27,16 @@ namespace miner {
             .param("5.5.17-gm")
             .done();
 
+        LOG(INFO) << "call async subscribe";
         io.callAsync(cxn, subscribe, [&] (CxnHandle cxn, jrpc::Message response) {
             //this handler gets invoked when a jrpc response with the same id as 'subscribe' is received
+            LOG(INFO) << "call async subscribe handler";
 
             //return if its not {"result": true} message
-            if (!response.isResultTrue())
+            if (!response.isResultTrue()) {
+                LOG(INFO) << "mining subscribe is not result true";
                 return;
+            }
 
             jrpc::Message authorize = jrpc::RequestBuilder{}
                 .id(io.nextId++)
@@ -41,7 +45,9 @@ namespace miner {
                 .param(args.password)
                 .done();
 
+            LOG(INFO) << "call async authorize";
             io.callAsync(cxn, authorize, [&] (CxnHandle cxn, jrpc::Message response) {
+                LOG(INFO) << "call async authorize handler";
                 acceptMiningNotify = true;
                 _cxn = cxn; //store connection for submit
             });

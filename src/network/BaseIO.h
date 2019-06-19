@@ -40,6 +40,7 @@ namespace miner {
         void launchClientAutoReconnect(std::string host, uint16_t port, IOOnConnectedFunc &&, IOOnDisconnectedFunc && = ioOnDisconnectedNoop);
 
         void writeAsync(CxnHandle, value_type outgoing);
+        void readAsync(CxnHandle);
 
         void setOnReceive(OnReceiveValueFunc &&);
 

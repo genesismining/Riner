@@ -38,7 +38,8 @@ namespace miner { namespace jrpc{
         void JsonRpcUtil::callAsync(CxnHandle cxn, Message request, ResponseHandler &&handler) {
             MI_EXPECTS(request.isRequest());
             _pending.addForId(request.id, std::move(handler));
-            writeAsync(std::move(cxn), std::move(request));
+            readAsync(cxn); //queue read for response
+            writeAsync(cxn, std::move(request)); //send rpc call
         }
 
         bool JsonRpcUtil::hasMethod(const char *name) const {

@@ -26,11 +26,16 @@ namespace miner {
         };
 
         ~Connection() override {
+            LOG(DEBUG) << "closing connection since no read/write operations are queued on it";
+            MI_EXPECTS(_onDisconnected);
             _onDisconnected();
         }
 
         void asyncWrite(std::string outgoing) override {
-            asio::async_write(_socket, asio::buffer(outgoing), [outgoing] (const asio::error_code &error, size_t numBytes) {
+            //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
+            //the refcount of this connection is kept above zero, and thus the connection is kept alive.
+            //as soon as no async read or write on a connection is queued, the connection will close itself
+            asio::async_write(_socket, asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
                 if (error) {
                     LOG(INFO) << "async write error #" << error <<
                               " in TcpLineConnection while trying to send '" << outgoing << "'";
@@ -39,6 +44,9 @@ namespace miner {
         }
 
         void asyncRead() override {
+            //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
+            //the refcount of this connection is kept above zero, and thus the connection is kept alive.
+            //as soon as no async read or write on a connection is queued, the connection will close itself
             asio::async_read_until(_socket, _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
@@ -88,6 +96,15 @@ namespace miner {
         }
     }
 
+    void BaseIO::readAsync(CxnHandle handle) {
+        if (auto cxn = handle.lock()) {
+            cxn->asyncRead();
+        }
+        else {
+            LOG(INFO) << "called readAsync on connection that was closed";
+        }
+    }
+
     void BaseIO::startIoThread() {
         MI_EXPECTS(_thread == nullptr); //don't call launch twice on the same object!
         if (_thread) {
@@ -123,15 +140,15 @@ namespace miner {
     void BaseIO::createCxnWithSocket() {
         auto cxn = make_shared<Connection<TcpSocket>>(_onDisconnected, _onRecv, std::move(_socket));
         _socket = tcp::socket{_ioService}; //prepare socket for next connection
+        MI_EXPECTS(_onConnected);
         _onConnected(cxn); //user is expected to use cxn here with other calls like readAsync(cxn)
     } //cxn refcount decreased and maybe destroyed if cxn was not used in _onConnected(cxn)
 
-    //used by server
+    //functions used by server
     void BaseIO::launchServer(uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
-        MI_EXPECTS(!hasLaunched());
+        MI_EXPECTS(_thread && !hasLaunched());
         _hasLaunched = true;
 
-        //prepare dependencies for async recursive loop of serverListen()
         _onConnected    = std::move(onCxn);
         _onDisconnected = std::move(onDc);
         _acceptor = make_unique<tcp::acceptor>(_ioService, tcp::endpoint{tcp::v4(), port});
@@ -149,15 +166,25 @@ namespace miner {
         });
     }
 
-    //used by client
+    //functions used by client
     void BaseIO::launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
-        MI_EXPECTS(!hasLaunched());
-        //prepare dependencies for endpoint iteration
+        MI_EXPECTS(_thread && !hasLaunched());
+        _hasLaunched = true;
+
         _onConnected    = std::move(onCxn);
-        _onDisconnected = std::move(onDc);
+        _onDisconnected = [&, onDc = std::move(onDc)] () {
+            _hasLaunched = false;
+            onDc();
+        };
+        MI_ENSURES(_onDisconnected);
+        MI_ENSURES(_onConnected);
+
         _resolver = make_unique<tcp::resolver>(_ioService);
+        //socket is already prepared by ctor
 
         tcp::resolver::query query{host, std::to_string(port)};
+
+
 
         _resolver->async_resolve(query, [this] (auto &error, auto it) {
             if (!error) {
@@ -196,7 +223,7 @@ namespace miner {
     }
 
     void BaseIO::launchClientAutoReconnect(std::string host, uint16_t port, IOOnConnectedFunc &&onConnected, IOOnDisconnectedFunc &&onDisconnected) {
-        MI_EXPECTS(hasLaunched());
+        MI_EXPECTS(_thread && !hasLaunched());
         auto failedTriesToConnect = make_shared<int>(0);
 
         _onConnected = [onConnected = std::move(onConnected), failedTriesToConnect] (CxnHandle cxn) {
@@ -213,14 +240,18 @@ namespace miner {
             }
             ++*failedTriesToConnect;
 
-            launchClient(host, port, std::move(_onConnected), std::move(_onDisconnected));
+            auto onCxn = std::move(_onConnected); //create temporaries to move from
+            auto onDc = std::move(_onDisconnected);
+            launchClient(host, port, std::move(onCxn), std::move(onDc));
         };
 
-        _onDisconnected = [connect, onDisconnected = std::move(onDisconnected)] () {
+        _onDisconnected = [&, connect, onDisconnected = std::move(onDisconnected)] () {
             onDisconnected(); //call user defined callback first
             connect(); //then attempt reconnect
         };
 
+        MI_ENSURES(_onDisconnected);
+        MI_ENSURES(_onConnected);
         connect(); //make initial connection
     }
 
