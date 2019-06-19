@@ -26,7 +26,6 @@ namespace miner { namespace jrpc {
             using Base::launchServer;
             using Base::setIncomingModifier;
             using Base::setOutgoingModifier;
-            using Base::setOnReceive;
             using Base::retryAsyncEvery;
             using Base::postAsync;
             using Base::readAsync;
@@ -47,7 +46,7 @@ namespace miner { namespace jrpc {
                 //method overloading not supported, same-name methods are likely added after reconnect
                 _methods.erase(std::remove_if(_methods.begin(), _methods.end(), [name] (const Method &method) {
                     return method.name() == name;
-                }, _methods.end()));
+                }), _methods.end());
 
                 //add new method
                 _methods.emplace_back(name,

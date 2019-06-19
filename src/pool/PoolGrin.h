@@ -8,6 +8,7 @@
 #include <src/pool/WorkEthash.h>
 #include <src/network/TcpJsonProtocolUtil.h>
 #include <src/network/TcpJsonRpcProtocolUtil.h>
+#include <src/network/JsonRpcUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/util/Random.h>
@@ -42,6 +43,7 @@ namespace miner {
         uint64_t getPoolUid() const override;
         void onMiningNotify (const nl::json &jparams);
         void restart();
+        void onConnected(CxnHandle);
 
         const PoolConstructionArgs args_;
         const uint64_t uid;
@@ -51,7 +53,7 @@ namespace miner {
         std::atomic<bool> shutdown {false};
         std::vector<std::shared_ptr<GrinStratumProtocolData>> protocolDatas;
         TcpJsonRpcProtocolUtil jrpc;
-        std::unique_ptr<TcpJsonProtocolUtil> tcp;
+        jrpc::JsonRpcUtil io;
 
         int64_t currentHeight = -1;
     };

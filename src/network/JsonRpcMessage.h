@@ -62,7 +62,7 @@ namespace miner { namespace jrpc {
         bool isRequest () const;
         bool isResponse() const;
 
-        optional_ref<Error> getIfError();
+        optional_ref<Error> getIfError() const;
         optional_ref<nl::json> getIfResult();
         optional_ref<Request> getIfRequest();
 
@@ -79,6 +79,8 @@ namespace miner { namespace jrpc {
 
         //returns whether this message is a Response with a "result" = true entry
         bool isResultTrue(); //this is needed so often that it deserves its own convenience function
+
+        bool isError() const;
 
         bool hasMethodName(const char *name) const;
 

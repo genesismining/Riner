@@ -27,7 +27,7 @@ namespace miner {
             .param("5.5.17-gm")
             .done();
 
-        io.callAsync(cxn, subscribe, [&] (CxnHandle cxn, jrpc::Message response) {
+        io.callAsync(cxn, subscribe, [this] (CxnHandle cxn, jrpc::Message response) {
             //this handler gets invoked when a jrpc response with the same id as 'subscribe' is received
 
             //return if it's not a {"result": true} message
@@ -43,13 +43,13 @@ namespace miner {
                 .param(args.password)
                 .done();
 
-            io.callAsync(cxn, authorize, [&] (CxnHandle cxn, jrpc::Message response) {
+            io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {
                 acceptMiningNotify = true;
                 _cxn = cxn; //store connection for submit
             });
         });
 
-        io.addMethod("mining.notify", [&] (nl::json params) {
+        io.addMethod("mining.notify", [this] (nl::json params) {
             if (acceptMiningNotify) {
                 if (params.is_array() && params.size() >= 4)
                     onMiningNotify(params);

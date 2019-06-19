@@ -111,7 +111,7 @@ namespace miner { namespace jrpc {
             return var.has_value<Request>({});
         }
 
-        optional_ref<Error> Message::getIfError() {
+        optional_ref<Error> Message::getIfError() const {
             optional_ref<Error> result;
             visit<Response>(var, [&] (auto &r) {
                 visit<Error>(r.var, [&] (Error &err) {
@@ -150,6 +150,10 @@ namespace miner { namespace jrpc {
                 result = req.method == name;
             });
             return result;
+        }
+
+        bool Message::isError() const {
+            return getIfError().has_value();
         }
 
         std::string Message::str() const {

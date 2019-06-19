@@ -26,7 +26,7 @@ namespace miner {
         };
 
         ~Connection() override {
-            LOG(DEBUG) << "closing connection since no read/write operations are queued on it";
+            LOG(DEBUG) << "closing connection (likely because no read/write operations are queued on it)";
             MI_EXPECTS(_onDisconnected);
             _onDisconnected();
         }
@@ -84,12 +84,15 @@ namespace miner {
     : _mode(mode)
     , _ioService()
     , _socket(_ioService) {
+        (void)_mode;
+        if (mode == IOMode::TcpSsl)
+            LOG(WARNING) << "IOMode TCP SSL is not supported yet, defaulting to TCP.";
         startIoThread();
     }
 
     void BaseIO::writeAsync(CxnHandle handle, value_type outgoing) {
         if (auto cxn = handle.lock()) {
-            cxn->asyncWrite(std::move(outgoing));
+            cxn->asyncWrite(std::move(outgoing)); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
             LOG(INFO) << "called writeAsync on connection that was closed";
@@ -98,7 +101,7 @@ namespace miner {
 
     void BaseIO::readAsync(CxnHandle handle) {
         if (auto cxn = handle.lock()) {
-            cxn->asyncRead();
+            cxn->asyncRead(); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
             LOG(INFO) << "called readAsync on connection that was closed";
@@ -106,7 +109,7 @@ namespace miner {
     }
 
     void BaseIO::startIoThread() {
-        MI_EXPECTS(_thread == nullptr); //don't call launch twice on the same object!
+        MI_EXPECTS(_thread == nullptr);
         if (_thread) {
             LOG(ERROR) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
             return;
@@ -134,6 +137,7 @@ namespace miner {
 
             _ioThreadId = {}; //reset io thread id
         });
+        MI_ENSURES(_thread);
     }
 
     //used by client and server
@@ -184,8 +188,6 @@ namespace miner {
 
         tcp::resolver::query query{host, std::to_string(port)};
 
-
-
         _resolver->async_resolve(query, [this] (auto &error, auto it) {
             if (!error) {
                 auto endpoint = *it;
@@ -217,7 +219,7 @@ namespace miner {
                 clientIterateEndpoints(error, next);
             });
         } else {
-            LOG(INFO) << "asio async connect: Error #" << error;
+            LOG(INFO) << "asio async connect: Error #" << error << ": " << error.message();
             _onDisconnected();
         }
     }
