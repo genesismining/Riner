@@ -20,9 +20,7 @@ namespace miner { namespace jrpc {
         struct CallFuncAndReturnMessage { //this template exists so that void can be handled differently. in c++14 we don't have "if constexpr"
             template<class Func, class...Args>
             static Message invoke(Func &&func, Args &&... args) {
-                Ret &&result = func(std::forward<Args>(args)...);
-                nl::json resultJson{std::move(result)}; //convert returned value to json
-
+                nl::json resultJson = func(std::forward<Args>(args)...); //convert returned value to json
                 return Message{Response{std::move(resultJson)}};
             }
         };
