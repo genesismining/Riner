@@ -44,7 +44,6 @@ namespace miner {
                 .done();
 
             io.callAsync(cxn, authorize, [&] (CxnHandle cxn, jrpc::Message response) {
-                LOG(INFO) << "call async authorize handler";
                 acceptMiningNotify = true;
                 _cxn = cxn; //store connection for submit
             });

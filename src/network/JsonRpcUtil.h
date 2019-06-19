@@ -43,8 +43,16 @@ namespace miner { namespace jrpc {
             template<class Func, class ... ArgNames>
             void addMethod(const char *name, Func &&func, ArgNames &&... argNames) {
                 MI_EXPECTS(!hasMethod(name)); //method overloading not supported
+
+                //method overloading not supported, same-name methods are likely added after reconnect
+                _methods.erase(std::remove_if(_methods.begin(), _methods.end(), [name] (const Method &method) {
+                    return method.name() == name;
+                }, _methods.end()));
+
+                //add new method
                 _methods.emplace_back(name,
                         wrapFunc(std::forward<Func>(func), std::forward<ArgNames>(argNames)...));
+
             }
 
             void callAsync(CxnHandle, Message request, ResponseHandler &&handler);

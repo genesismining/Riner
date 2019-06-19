@@ -31,7 +31,11 @@ namespace miner { namespace jrpc {
                             LOG(ERROR) << "json error while running jrpc handler for id '" << msg.id << "': " << e.what();
                         }
                     }
+                    else {
+                        LOG(INFO) << "received jrpc response has no corresponding handler";
+                    }
                 }
+
                 readAsync(cxn); //continue listening in an endless loop
             });
 
