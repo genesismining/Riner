@@ -108,7 +108,7 @@ namespace miner {
                     for (auto &poolInfo : info.pools) {
 
                         nl::json poolj = {
-                                {"ip", poolInfo.host + ":" + poolInfo.port},
+                                {"ip", poolInfo.host + ":" + std::to_string(poolInfo.port)},
                         };
 
                         algoj.push_back(poolj);

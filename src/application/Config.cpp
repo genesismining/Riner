@@ -56,7 +56,15 @@ namespace miner {
             }
 
             pool.host = jo.at("host");
-            pool.port = jo.at("port");
+
+            {
+                auto port64 = jo.at("port").get<int64_t>();
+                if (port64 < 0 || port64 > std::numeric_limits<uint16_t>::max()) {
+                    LOG(WARNING) << "port " << port64 << " specified in config is outside of valid range";
+                }
+                pool.port = gsl::narrow_cast<uint16_t>(port64);
+            }
+
             pool.username = jo.at("username");
             pool.password = jo.at("password");
 

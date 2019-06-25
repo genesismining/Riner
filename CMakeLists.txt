@@ -41,6 +41,17 @@ add_library(LibMiner
         src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
         src/network/JrpcServer.cpp src/network/JrpcServer.h
         src/network/TcpLineServer.cpp src/network/TcpLineServer.h
+        src/network/IOTypeLayer.h
+        src/network/JsonIO.cpp src/network/JsonIO.h
+        src/network/LineIO.cpp src/network/LineIO.h
+        src/network/BaseIO.cpp src/network/BaseIO.h
+        src/network/JsonRpcIO.cpp src/network/JsonRpcIO.h
+        src/network/JsonRpcMessage.cpp src/network/JsonRpcMessage.h
+        src/network/JsonRpcBuilder.cpp src/network/JsonRpcBuilder.h
+        src/network/JsonRpcInvoke.h
+        src/network/JsonRpcMethod.cpp src/network/JsonRpcMethod.h
+        src/network/JsonRpcHandlerMap.cpp src/network/JsonRpcHandlerMap.h
+        src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
         src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
@@ -71,6 +82,7 @@ add_library(LibMiner
         src/util/Bytes.h
         src/util/Copy.h
         src/util/Logging.h
+        src/util/TemplateUtils.h
         src/util/ConfigUtils.cpp src/util/ConfigUtils.h
         src/util/Random.h
         src/util/StringUtils.cpp src/util/StringUtils.h
@@ -144,6 +156,7 @@ add_executable(tests
     src/algorithm/grin/GraphTest.cpp
     src/network/JrpcBuilderTest.cpp
     src/pool/WorkTest.cpp
+    src/network/JrpcTest.cpp
 )
 target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)

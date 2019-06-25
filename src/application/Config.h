@@ -34,7 +34,9 @@ namespace miner {
             AlgoEnum type; //e.g. ethash
             ProtoEnum protocol; //e.g. stratum
 
-            std::string host, port, username, password;
+            std::string host;
+            uint16_t port;
+            std::string username, password;
         };
 
         struct DeviceProfile {

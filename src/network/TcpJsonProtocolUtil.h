@@ -14,7 +14,7 @@ namespace miner {
     public:
         using OnEventFunc = std::function<void(nl::json responseJson, const asio::error_code &, asio::coroutine &)>;
 
-        TcpJsonProtocolUtil(cstring_span host, cstring_span port, OnEventFunc &&onEvent);
+        TcpJsonProtocolUtil(cstring_span host, uint16_t port, OnEventFunc &&onEvent);
         ~TcpJsonProtocolUtil();
 
         template<class Fn>

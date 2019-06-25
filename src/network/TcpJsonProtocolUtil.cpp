@@ -5,7 +5,7 @@
 namespace miner {
 
 
-    TcpJsonProtocolUtil::TcpJsonProtocolUtil(cstring_span host, cstring_span port, OnEventFunc &&onEventFunc)
+    TcpJsonProtocolUtil::TcpJsonProtocolUtil(cstring_span host, uint16_t port, OnEventFunc &&onEventFunc)
     : onEvent(std::move(onEventFunc)) {
 
         auto onLineEvent = [this] (std::string line, auto &error, auto &coroutine) {

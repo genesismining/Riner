@@ -12,6 +12,46 @@
 
 namespace miner {
 
+    void PoolGrinStratum::onConnected(CxnHandle cxn) {
+
+        jrpc::Message login = jrpc::RequestBuilder{}
+            .id(io.nextId++)
+            .method("login")
+            .param("agent", "grin-miner")
+            .param("login", args_.username)
+            .param("pass", args_.password)
+            .done();
+
+        io.callAsync(cxn, login, [this] (CxnHandle cxn, jrpc::Message response) {
+            if (response.isError()) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                onConnected(cxn);
+                return;
+            }
+
+            jrpc::Message getjobtemplate = jrpc::RequestBuilder{}
+                .id(io.nextId++)
+                .method("getjobtemplate")
+                .done();
+
+            io.callAsync(cxn, getjobtemplate, [this] (CxnHandle cxn, jrpc::Message response) {
+                if (auto result = response.getIfResult())
+                    onMiningNotify(result.value());
+            });
+
+        });
+
+        io.addMethod("job", [this] (nl::json params) {
+            onMiningNotify(params);
+        });
+
+        io.setIncomingModifier([this] (jrpc::Message &) {
+            onStillAlive();
+        });
+
+        io.readAsync(cxn); //start listening
+    }
+
     void PoolGrinStratum::restart() {
         auto login = std::make_shared<JrpcBuilder>();
         auto getjobtemplate = std::make_shared<JrpcBuilder>();
@@ -133,7 +173,8 @@ namespace miner {
     PoolGrinStratum::PoolGrinStratum(PoolConstructionArgs args)
     : args_(std::move(args))
     , uid(createNewPoolUid())
-    , jrpc(args_.host, args_.port) {
+    , jrpc(args_.host, args_.port)
+    , io(IOMode::Tcp) {
         //initialize workQueue
         auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
 
@@ -151,15 +192,22 @@ namespace miner {
         jrpc.setOnRestart([this] {
             restart();
         });
-        jrpc.setIncomingJsonModifier([] (nl::json &json) {
+
+        io.launchClientAutoReconnect(args_.host, args_.port, [this] (CxnHandle cxn) {
+            onConnected(cxn);
+        });
+
+        io.io().layerBelow().setIncomingModifier([] (nl::json &json) {
             try {
                 json["id"] = std::stoi(json.at("id").get<std::string>());
             } catch(std::invalid_argument&) {
                 json["id"] = 0;
             }
         });
-        jrpc.setOutgoingJsonModifier([] (nl::json &json) {
-            json["id"] = std::to_string(json.at("id").get<JrpcBuilder::IdType>());
+
+        JsonIO &jsonLayer = io.io().layerBelow(); //Json layer is below Jrpc layer
+        jsonLayer.setOutgoingModifier([] (nl::json &json) { //plug in a modifier func to change its id to string right before any json gets send
+            json["id"] = std::to_string(json.at("id").get<jrpc::JsonRpcUtil::IdType>());
         });
     }
 

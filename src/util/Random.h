@@ -11,11 +11,11 @@ public:
     }
 
     Random(unsigned int seed) :
-            Random( { seed }) {
+            Random(std::vector<unsigned int>{seed}) {
     }
 
-    Random(std::initializer_list<unsigned int> il) {
-        std::seed_seq s(il);
+    Random(std::vector<unsigned int> il) {
+        std::seed_seq s(il.begin(), il.end());
         engine_.seed(s);
     }
 
@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    static std::initializer_list<unsigned int> generateRandomSeedSeq() {
+    static std::vector<unsigned int> generateRandomSeedSeq() {
         std::random_device r;
         return {r(), r(), r(), r(), r(), r(), r(), r()};
     }

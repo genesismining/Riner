@@ -19,7 +19,7 @@ namespace miner {
 
         using OnEventFunc = std::function<void(std::string responseLine, const asio::error_code &, asio::coroutine &)>;
 
-        TcpLineProtocolUtil(cstring_span host, cstring_span port, OnEventFunc &&onEvent);
+        TcpLineProtocolUtil(cstring_span host, uint16_t port, OnEventFunc &&onEvent);
         ~TcpLineProtocolUtil();
 
         template<class Fn>
@@ -37,7 +37,7 @@ namespace miner {
 
     private:
         std::string host;
-        std::string port;
+        uint16_t port;
 
         OnEventFunc onEvent;
 

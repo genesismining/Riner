@@ -12,14 +12,14 @@ namespace miner {
     using asio::error_code;
 
     TcpLineProtocolUtil::TcpLineProtocolUtil(cstring_span hostSpan,
-                                             cstring_span portSpan,
+                                             uint16_t port,
                                              OnEventFunc &&onEventFunc)
-            : host(to_string(hostSpan)), port(to_string(portSpan)), onEvent(std::move(onEventFunc)),
+            : host(to_string(hostSpan)), port(port), onEvent(std::move(onEventFunc)),
               resolver(ioService), socket(ioService) {
     }
 
     void TcpLineProtocolUtil::launch() {
-        tcp::resolver::query query(host, port);
+        tcp::resolver::query query(host, std::to_string(port));
 
         //start chain of async calls
         resolver.async_resolve(query, [this](auto &error, auto it) {
@@ -97,7 +97,7 @@ namespace miner {
 
             std::this_thread::sleep_for(std::chrono::seconds(10)); //todo: remove this call?, wait async
 
-            tcp::resolver::query query(host, port);
+            tcp::resolver::query query(host, std::to_string(port));
 
             resolver.async_resolve(query, [this](auto &error, auto it) {
                 handleResolve(error, it);

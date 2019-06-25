@@ -12,8 +12,65 @@
 #include <functional>
 
 #include <asio.hpp>
+#include <src/common/Chrono.h>
 
 namespace miner {
+
+    void PoolEthashStratum::onConnected(CxnHandle cxn) {
+        LOG(DEBUG) << "onConnected";
+        acceptMiningNotify = false;
+
+        jrpc::Message subscribe = jrpc::RequestBuilder{}
+            .id(io.nextId++)
+            .method("mining.subscribe")
+            .param("sgminer")
+            .param("5.5.17-gm")
+            .done();
+
+        io.callAsync(cxn, subscribe, [this] (CxnHandle cxn, jrpc::Message response) {
+            //this handler gets invoked when a jrpc response with the same id as 'subscribe' is received
+
+            //return if it's not a {"result": true} message
+            if (!response.isResultTrue()) {
+                LOG(INFO) << "mining subscribe is not result true, instead it is " << response.str();
+                return;
+            }
+
+            jrpc::Message authorize = jrpc::RequestBuilder{}
+                .id(io.nextId++)
+                .method("mining.authorize")
+                .param(args.username)
+                .param(args.password)
+                .done();
+
+            io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {
+                acceptMiningNotify = true;
+                _cxn = cxn; //store connection for submit
+            });
+        });
+
+        io.addMethod("mining.notify", [this] (nl::json params) {
+            if (acceptMiningNotify) {
+                if (params.is_array() && params.size() >= 4)
+                    onMiningNotify(params);
+                else
+                    throw jrpc::Error{jrpc::invalid_params, "expected at least 4 params"};
+            }
+        });
+
+        io.setIncomingModifier([&] (jrpc::Message &msg) {
+            //called everytime a jrpc::Message is incoming, so that it can be modified
+            onStillAlive(); //update still alive timer
+
+            //incoming mining.notify should be a notification (which means id = {}) but some pools
+            //send it with a regular id. The io object will treat it like a notification once we
+            //remove the id.
+            if (msg.hasMethodName("mining.notify"))
+                msg.id = {};
+        });
+
+        io.readAsync(cxn); //start listening for incoming responses and rpcs from this cxn
+    }
 
     void PoolEthashStratum::restart() {
 
@@ -63,11 +120,7 @@ namespace miner {
         jrpc.call(*subscribe);
     }
 
-    void PoolEthashStratum::onMiningNotify(const nl::json &j) {
-        if (!j.count("params") && j.at("params").size() < 5)
-            return;
-        auto jparams = j.at("params");
-
+    void PoolEthashStratum::onMiningNotify(const nl::json &jparams) {
         bool cleanFlag = jparams.at(4);
         cleanFlag = true;
         if (cleanFlag)
@@ -90,6 +143,48 @@ namespace miner {
         workQueue->setMaster(std::move(work), cleanFlag);
     }
 
+    void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
+
+        auto result = static_unique_ptr_cast<WorkResult<kEthash>>(std::move(resultBase));
+
+        //build and send submitMessage on the tcp thread
+
+        io.postAsync([this, result = std::move(result)] {
+
+            auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>();
+            if (!protoData) {
+                LOG(INFO) << "work result cannot be submitted because it has expired";
+                return; //work has expired
+            }
+
+            uint32_t shareId = io.nextId++;
+
+            jrpc::Message submit = jrpc::RequestBuilder{}
+                .id(shareId)
+                .method("mining.submit")
+                .param(args.username)
+                .param(protoData->jobId)
+                .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
+                .param("0x" + HexString(result->proofOfWorkHash).str())
+                .param("0x" + HexString(result->mixHash).str())
+                .done();
+
+            auto onResponse = [] (CxnHandle cxn, jrpc::Message response) {
+                std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
+                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
+            };
+
+            //this handler gets called if there was no response after the last try
+            auto onNeverResponded = [shareId] () {
+                LOG(INFO) << "share with id " << shareId << " got discarded after pool did not respond multiple times";
+            };
+
+            io.callAsyncRetryNTimes(_cxn, submit, 5, seconds(5), onResponse, onNeverResponded);
+
+        });
+    }
+
+/*
     void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
 
         auto result = static_unique_ptr_cast<WorkResult<kEthash>>(std::move(resultBase));
@@ -130,7 +225,7 @@ namespace miner {
             });
         });
     }
-
+*/
     PoolEthashStratum::PoolEthashStratum(PoolConstructionArgs args)
     : args(args)
     , jrpc(args.host, args.port) {
@@ -153,10 +248,15 @@ namespace miner {
 
         workQueue = std::make_unique<WorkQueueType>(refillThreshold, refillFunc);
 
-        //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
-        jrpc.setOnRestart([this] {
-            restart();
+
+        io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
+            onConnected(cxn);
         });
+
+        //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
+        //jrpc.setOnRestart([this] {
+        //    restart();
+        //});
     }
 
     PoolEthashStratum::~PoolEthashStratum() {

@@ -18,7 +18,7 @@ namespace miner {
         //don't confuse this with Config::Pool. PoolConstructionArgs may be used
         //to pass refs to other subsystems in the future (e.g. io_service)
         std::string host;
-        std::string port;
+        uint16_t port;
         std::string username;
         std::string password;
         PoolRecords &poolRecords;
