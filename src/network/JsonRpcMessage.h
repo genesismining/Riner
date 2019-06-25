@@ -62,7 +62,7 @@ namespace miner { namespace jrpc {
         bool isRequest () const;
         bool isResponse() const;
 
-        optional_ref<Error> getIfError() const;
+        optional_ref<const Error> getIfError() const;
         optional_ref<nl::json> getIfResult();
         optional_ref<Request> getIfRequest();
 

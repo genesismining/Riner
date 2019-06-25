@@ -111,11 +111,11 @@ namespace miner { namespace jrpc {
             return var.has_value<Request>({});
         }
 
-        optional_ref<Error> Message::getIfError() const {
-            optional_ref<Error> result;
+        optional_ref<const Error> Message::getIfError() const {
+            optional_ref<const Error> result;
             visit<Response>(var, [&] (auto &r) {
-                visit<Error>(r.var, [&] (Error &err) {
-                    result = type_safe::opt_ref(err);
+                visit<Error>(r.var, [&] (auto &err) {
+                    result = type_safe::opt_cref(err);
                 });
             });
             return nullopt;

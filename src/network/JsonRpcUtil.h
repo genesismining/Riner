@@ -1,6 +1,8 @@
 //
 //
 
+#pragma once
+
 #include "JsonRpcMethod.h"
 #include "JsonRpcHandlerMap.h"
 #include "JsonRpcInvoke.h"
