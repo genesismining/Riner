@@ -23,8 +23,11 @@ namespace miner {
             .done();
 
         io.callAsync(cxn, login, [this] (CxnHandle cxn, jrpc::Message response) {
-            if (response.isError())
+            if (response.isError()) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                onConnected(cxn);
                 return;
+            }
 
             jrpc::Message getjobtemplate = jrpc::RequestBuilder{}
                 .id(io.nextId++)
@@ -202,8 +205,9 @@ namespace miner {
             }
         });
 
-        io.io().layerBelow().setOutgoingModifier([] (nl::json &json) {
-            json["id"] = std::to_string(json.at("id").get<JrpcBuilder::IdType>());
+        JsonIO &jsonLayer = io.io().layerBelow(); //Json layer is below Jrpc layer
+        jsonLayer.setOutgoingModifier([] (nl::json &json) { //plug in a modifier func to change its id to string right before any json gets send
+            json["id"] = std::to_string(json.at("id").get<jrpc::JsonRpcUtil::IdType>());
         });
     }
 

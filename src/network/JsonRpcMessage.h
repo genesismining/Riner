@@ -63,8 +63,8 @@ namespace miner { namespace jrpc {
         bool isResponse() const;
 
         optional_ref<const Error> getIfError() const;
-        optional_ref<nl::json> getIfResult();
-        optional_ref<Request> getIfRequest();
+        optional_ref<nl::json> getIfResult(); //TODO: make const
+        optional_ref<Request> getIfRequest(); //TODO: make const
 
         template<class T>
         optional<T> resultAs() {
@@ -78,11 +78,12 @@ namespace miner { namespace jrpc {
         }
 
         //returns whether this message is a Response with a "result" = true entry
-        bool isResultTrue(); //this is needed so often that it deserves its own convenience function
+        //this is needed so often that it deserves its own convenience function
+        bool isResultTrue(); //TODO: make const
 
-        bool isError() const;
+        bool isError() const; //returns whether the message is a response that is an error
 
-        bool hasMethodName(const char *name) const;
+        bool hasMethodName(const char *name) const; //returns whether the message is a request and has the same method name as provided
 
         std::string str() const;
     };

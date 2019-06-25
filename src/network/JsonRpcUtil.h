@@ -37,7 +37,8 @@ namespace miner { namespace jrpc {
                 return *this;
             }
 
-            std::atomic<int64_t> nextId = {0}; //expose id counter publicly because its really helpful
+            using IdType = int64_t;
+            std::atomic<IdType> nextId = {0}; //expose id counter publicly because its really helpful
 
             explicit JsonRpcUtil(IOMode mode);
 
