@@ -91,6 +91,7 @@ add_library(LibMiner
         src/util/FileUtils.cpp src/util/FileUtils.h
         src/util/HexString.cpp src/util/HexString.h
         src/util/DynamicBuffer.cpp src/util/DynamicBuffer.h
+        src/util/Barrier.cpp src/util/Barrier.h
         src/util/sph/sph_keccak.h
         src/util/sph/sph_types.h
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory

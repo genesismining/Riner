@@ -137,7 +137,7 @@ namespace miner { namespace jrpc {
             visit<Request>(var, [&] (auto &req) {
                 result = type_safe::opt_ref(req);
             });
-            return nullopt;
+            return result;
         }
 
         bool Message::isResultTrue() {

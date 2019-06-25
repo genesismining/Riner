@@ -154,7 +154,7 @@ namespace miner {
         }
 
         void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
-            _layerBelow.launchServer(port, std::move(onCxn));
+            _layerBelow.launchServer(port, std::move(onCxn), std::move(onDc));
         }
 
         bool hasLaunched() {

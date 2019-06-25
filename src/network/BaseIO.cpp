@@ -75,6 +75,8 @@ namespace miner {
     BaseIO::~BaseIO() {
         _shutdown = true;
 
+        _ioService.stop();
+
         if (_thread && _thread->joinable()) {
             _thread->join();
         }

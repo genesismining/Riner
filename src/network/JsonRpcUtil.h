@@ -57,7 +57,7 @@ namespace miner { namespace jrpc {
 
             }
 
-            void callAsync(CxnHandle, Message request, ResponseHandler &&handler);
+            void callAsync(CxnHandle, Message request, ResponseHandler &&handler = responseHandlerNoop);
 
             void callAsyncRetryNTimes(CxnHandle, Message request, uint32_t maxTries, milliseconds retryInterval, ResponseHandler &&handler, std::function<void()> neverRespondedHandler = [] () {});
         };

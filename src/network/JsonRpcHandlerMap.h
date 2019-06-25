@@ -13,6 +13,7 @@
 namespace miner { namespace jrpc {
 
     using ResponseHandler = std::function<void(CxnHandle, const Message &response)>;
+    void responseHandlerNoop(CxnHandle, const Message &);
 
     //basically behaves like a LockGuarded<std::multimap<Id, HandlerFunction>>
     //used for storing ids of sent jrpcs and their associated handlers

@@ -5,6 +5,8 @@
 
 namespace miner { namespace jrpc {
 
+    void responseHandlerNoop(CxnHandle, const Message &) {}
+
     void HandlerMap::addForId(nl::json id, ResponseHandler &&handler) {
         _mmap.lock()->insert({std::move(id), make_unique<ResponseHandler>(std::move(handler))});
     }
