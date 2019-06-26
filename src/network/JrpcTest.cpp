@@ -55,6 +55,7 @@ namespace miner {
         int clientDisconnected = 0;
 
         Barrier barrier;
+        std::future_status status;
 
         {
             JsonRpcUtil server{IOMode::Tcp};
@@ -82,19 +83,25 @@ namespace miner {
                 clientDisconnected = ++order; //(2 or 3)
             });
 
-            barrier.wait();
+            status = barrier.wait_for(std::chrono::seconds(2));
+
+            EXPECT_NE(status, std::future_status::timeout);
+
+        } //server + client dtors
+
+        if (status != std::future_status::timeout) {
+            //from here on, all the async stuff is done;
+            EXPECT_EQ(order, std::max(serverDisconnected, clientDisconnected));
+
+            //variables contain the order of events starting at 1
+            EXPECT_THAT(serverConnected, AnyOf(1, 2));
+            EXPECT_THAT(clientConnected, AnyOf(1, 2));
+            EXPECT_NE(clientConnected, serverConnected);
+
+            EXPECT_THAT(serverDisconnected, AnyOf(3, 4));
+            EXPECT_THAT(clientDisconnected, AnyOf(3, 4));
+            EXPECT_NE(clientDisconnected, serverDisconnected);
         }
-        //from here on, all the async stuff is done;
-        EXPECT_EQ(order, std::max(serverDisconnected, clientDisconnected));
-
-        //variables contain the order of events starting at 1
-        EXPECT_THAT(serverConnected, AnyOf(1, 2));
-        EXPECT_THAT(clientConnected, AnyOf(1, 2));
-        EXPECT_NE(clientConnected, serverConnected);
-
-        EXPECT_THAT(serverDisconnected, AnyOf(3, 4));
-        EXPECT_THAT(clientDisconnected, AnyOf(3, 4));
-        EXPECT_NE(clientDisconnected, serverDisconnected);
     }
 
 } // miner
