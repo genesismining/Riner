@@ -2,6 +2,7 @@
 #pragma once
 
 #include <mutex>
+#include <src/util/Copy.h>
 
 namespace miner {
 
@@ -34,6 +35,8 @@ namespace miner {
 
     public:
         using value_type = T;
+
+        DELETE_COPY_AND_MOVE(LockGuarded); //delete move, because this->t is referenced by return value of lock()
 
         template<class ... Args>
         LockGuarded(Args &&...args)
