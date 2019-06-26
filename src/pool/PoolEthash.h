@@ -52,14 +52,11 @@ namespace miner {
 
         std::vector<std::shared_ptr<EthashStratumProtocolData>> protocolDatas;
 
-        void restart();
-        TcpJsonRpcProtocolUtil jrpc;
-
         void onConnected(CxnHandle);
         jrpc::JsonRpcUtil io {IOMode::Tcp};
-        CxnHandle _cxn; //modified only on IO thread
 
-        bool acceptMiningNotify = false;
+        CxnHandle _cxn; //modified only on IO thread
+        bool acceptMiningNotify = false; //modified only on IO thread
 
         void onMiningNotify (const nl::json &j);
     };

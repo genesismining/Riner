@@ -72,54 +72,6 @@ namespace miner {
         io.readAsync(cxn); //start listening for incoming responses and rpcs from this cxn
     }
 
-    void PoolEthashStratum::restart() {
-
-        acceptMiningNotify = false;
-
-        auto authorize = std::make_shared<JrpcBuilder>();
-        auto subscribe = std::make_unique<JrpcBuilder>();
-
-        subscribe->method("mining.subscribe")
-            .param("sgminer")
-            .param("5.5.17-gm");
-
-        subscribe->onResponse([this, authorize] (auto &ret) {
-            if (!ret.error() && ret.atEquals("result", true))
-                jrpc.call(*authorize);
-        });
-
-        authorize->method("mining.authorize")
-            .param(args.username)
-            .param(args.password);
-
-        authorize->onResponse([this] (auto &ret) {
-            if (!ret.error())
-                acceptMiningNotify = true;
-        });
-
-        //set handler for receiving incoming messages that are not responses to sent rpcs
-        jrpc.setOnReceiveUnhandled([this] (auto &ret) {
-            if (acceptMiningNotify &&
-                ret.atEquals("method", "mining.notify")) {
-                onMiningNotify(ret.getJson());
-            }
-            else if (ret.getJson().count("method")) {
-                //unsupported method
-                jrpc.respond({ret.id(), {JrpcError::method_not_found, "method not supported"}});
-            }
-            else {
-                LOG(INFO) << "unhandled response: " << ret.getJson().dump();
-            }
-        });
-
-        //set handler that gets called on any received response, before the other handlers are called
-        jrpc.setOnReceive([this] (auto &ret) {
-            onStillAlive(); //set latest still-alive timestamp to now
-        });
-
-        jrpc.call(*subscribe);
-    }
-
     void PoolEthashStratum::onMiningNotify(const nl::json &jparams) {
         bool cleanFlag = jparams.at(4);
         cleanFlag = true;
@@ -184,51 +136,8 @@ namespace miner {
         });
     }
 
-/*
-    void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
-
-        auto result = static_unique_ptr_cast<WorkResult<kEthash>>(std::move(resultBase));
-
-        //build and send submitMessage on the tcp thread
-
-        jrpc.postAsync([this, result = std::move(result)] {
-
-            std::shared_ptr<EthashStratumProtocolData> protoData =
-                    result->tryGetProtocolDataAs<EthashStratumProtocolData>();
-            if (!protoData) {
-                LOG(INFO) << "work result cannot be submitted because it has expired";
-                return; //work has expired
-            }
-
-            auto submit = std::make_shared<JrpcBuilder>();
-
-            submit->method("mining.submit")
-                .param(args.username)
-                .param(protoData->jobId)
-                .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
-                .param("0x" + HexString(result->proofOfWorkHash).str())
-                .param("0x" + HexString(result->mixHash).str());
-
-            submit->onResponse([] (auto &ret) {
-                auto idStr = ret.id() ? std::to_string(ret.id().value()) : "<no id>";
-                bool accepted = ret.atEquals("result", true);
-
-                std::string acceptedStr = accepted ? "accepted" : "rejected";
-                LOG(INFO) << "share with id " << idStr << " got " << acceptedStr;
-            });
-
-            jrpc.callRetryNTimes(*submit, 5, std::chrono::seconds(5), [submit] {
-                //this handler gets called if there was no response after the last try
-                auto idStr = submit->getId() ? std::to_string(submit->getId().value()) : "<no id>";
-
-                LOG(INFO) << "share with id " << idStr << " got discarded after pool did not respond multiple times";
-            });
-        });
-    }
-*/
     PoolEthashStratum::PoolEthashStratum(PoolConstructionArgs args)
-    : args(args)
-    , jrpc(args.host, args.port) {
+    : args(args) {
         //initialize workQueue
         auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
 
@@ -253,10 +162,6 @@ namespace miner {
             onConnected(cxn);
         });
 
-        //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
-        //jrpc.setOnRestart([this] {
-        //    restart();
-        //});
     }
 
     PoolEthashStratum::~PoolEthashStratum() {
