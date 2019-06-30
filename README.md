@@ -44,27 +44,27 @@ auto gpus = compute.getAllDevices(kDeviceTypeGPU);
 auto algo = AlgoEthashCL{ gpus, pools };
 ```
 
-### Pools: `WorkProvider` Interface
-Every Pool and PoolSwitcher implementation uses the WorkProvider interface to talk to algorithms
+### Pools: `Pool` Interface
+Every Pool and PoolSwitcher implementation uses the Pool interface to talk to algorithms
 
 ```cpp
-class WorkProvider {
+class Pool {
    virtual unique_ptr<Work> tryGetWork();
    virtual void submitWork(unique_ptr<WorkResult>);
 };
 
 //the pool classes from previous examples implement this interface
-class PoolEthashStratum      : public WorkProvider {
-class PoolEthashGetWork      : public WorkProvider {
-class PoolCryptoNightStratum : public WorkProvider {
+class PoolEthashStratum      : public Pool {
+class PoolEthashGetWork      : public Pool {
+class PoolCryptoNightStratum : public Pool {
 
-class PoolSwitcher           : public WorkProvider {
+class PoolSwitcher           : public Pool {
 ```
 
 
 ### Work, WorkResult
-Each pool's work is communicated to the algorithm via the Work and WorkResult types of the respective algorithm-kind (e.g. Ethash, Equihash, CryptoNight) by calling `WorkProvider::tryGetWork`.
-Each Work type has a corresponding WorkResult type that is returned to the pool via `WorkProvider::submitWork`
+Each pool's work is communicated to the algorithm via the Work and WorkResult types of the respective algorithm-kind (e.g. Ethash, Equihash, CryptoNight) by calling `Pool::tryGetWork`.
+Each Work type has a corresponding WorkResult type that is returned to the pool via `Pool::submitWork`
 ```cpp
 Work<kEquihash>        ---.makeResult()-->  WorkResult<kEquihash>
 Work<kCryptoNightV8>   ---.makeResult()-->  WorkResult<kCryptoNightV8>
