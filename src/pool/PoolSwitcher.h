@@ -9,13 +9,13 @@
 
 namespace miner {
 
-    //maintains connections to multiple WorkProviders (pools) in descending priority order.
-    //tryGetWork always fetches work from the highest priority WorkProvider that does not
+    //maintains connections to multiple Pools in descending priority order.
+    //tryGetWork always fetches work from the highest priority Pool that does not
     //have a dead connection
-    //a connection is considered dead if the WorkProvider (which extends StillAliveTrackable)
+    //a connection is considered dead if the Pool (which extends StillAliveTrackable)
     //did not call its onStillAlive() for 'durUntilDeclaredDead' seconds
     //This condition being checked regularly on a separate thread every 'checkInterval' seconds
-    class PoolSwitcher : public WorkProvider {
+    class PoolSwitcher : public Pool {
     public:
         using clock = StillAliveTrackable::clock;
 
@@ -25,7 +25,7 @@ namespace miner {
         ~PoolSwitcher() override;
 
         //the provided pool records will get connected to the total records of this PoolSwitcher
-        WorkProvider &push(unique_ptr<WorkProvider> pool, unique_ptr<PoolRecords> records, PoolConstructionArgs args) {
+        Pool &push(unique_ptr<Pool> pool, unique_ptr<PoolRecords> records, PoolConstructionArgs args) {
             std::lock_guard<std::mutex> lock(mut);
             pools.emplace_back(PoolData{std::move(records), std::move(args), std::move(pool)});
 
@@ -79,14 +79,14 @@ namespace miner {
         struct PoolData {
             unique_ptr<PoolRecords> records;
             PoolConstructionArgs args;
-            unique_ptr<WorkProvider> pool;
+            unique_ptr<Pool> pool;
         };
 
         //TODO: replace unique_ptr with shared_ptr so that lock doesn't need to be held the entire time in tryGetWork();
         std::vector<PoolData> pools;
         size_t activePoolIndex = 0; //if > pools.size(), no pool is active
 
-        optional_ref<WorkProvider> activePool();
+        optional_ref<Pool> activePool();
 
         void aliveCheckAndMaybeSwitch();
 

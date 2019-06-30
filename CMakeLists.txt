@@ -13,11 +13,10 @@ link_directories(${OpenCL_LIBRARY})
 add_library(LibMiner
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
-        src/application/Types.cpp src/application/Types.h
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
         src/application/LoggingMain.cpp
-        src/algorithm/Algorithm.h
+        src/algorithm/Algorithm.cpp src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp
         src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
@@ -25,7 +24,6 @@ add_library(LibMiner
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/algorithm/dummy/AlgoDummy.cpp src/algorithm/dummy/AlgoDummy.h
-        src/algorithm/AlgoFactory.cpp src/algorithm/AlgoFactory.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
         src/statistics/Average.cpp src/statistics/Average.h
         src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
@@ -52,7 +50,6 @@ add_library(LibMiner
         src/network/JsonRpcMethod.cpp src/network/JsonRpcMethod.h
         src/network/JsonRpcHandlerMap.cpp src/network/JsonRpcHandlerMap.h
         src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
-        src/pool/PoolFactory.cpp src/pool/PoolFactory.h
         src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
@@ -79,6 +76,8 @@ add_library(LibMiner
         src/common/JsonForward.h
         src/common/Assert.h
         src/common/PlatformDefines.h
+        src/gpu_api/GpuApi.cpp src/gpu_api/GpuApi.h
+        src/gpu_api/AmdgpuApi.cpp src/gpu_api/AmdgpuApi.h
         src/util/Bytes.h
         src/util/Copy.h
         src/util/Logging.h
@@ -151,9 +150,9 @@ target_link_libraries (Miner Threads::Threads)
 #Google Tests
 include(GoogleTest)
 find_package(GTest REQUIRED)
- 
-add_executable(tests 
-    src/algorithm/grin/CuckatooTest.cpp    
+
+add_executable(tests
+    src/algorithm/grin/CuckatooTest.cpp
     src/algorithm/grin/GraphTest.cpp
     src/network/JrpcBuilderTest.cpp
     src/pool/WorkTest.cpp
@@ -162,6 +161,6 @@ add_executable(tests
 target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
- 
+
 gtest_add_tests(TARGET tests)
 add_test(NAME monolithic COMMAND tests)

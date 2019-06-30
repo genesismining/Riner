@@ -74,7 +74,7 @@ namespace miner {
         }
     }
 
-    optional_ref<WorkProvider> PoolSwitcher::activePool() {
+    optional_ref<Pool> PoolSwitcher::activePool() {
         if (activePoolIndex >= pools.size())
             return nullopt;
         auto &poolData = pools[activePoolIndex];

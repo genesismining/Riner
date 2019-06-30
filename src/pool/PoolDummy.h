@@ -29,7 +29,7 @@ namespace miner {
         std::string jobId;
     };
 
-    class PoolDummy : public WorkProvider {
+    class PoolDummy : public Pool {
     public:
         explicit PoolDummy(PoolConstructionArgs);
         ~PoolDummy() override;
@@ -39,7 +39,7 @@ namespace miner {
     private:
         PoolConstructionArgs args;
 
-        // WorkProvider interface
+        // Pool interface
         optional<unique_ptr<WorkBase>> tryGetWork() override;
         void submitWork(unique_ptr<WorkResultBase> result) override;
 

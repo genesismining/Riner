@@ -25,14 +25,14 @@ namespace miner {
         std::string jobId;
     };
 
-    class PoolGrinStratum : public WorkProvider {
+    class PoolGrinStratum : public Pool {
     public:
         explicit PoolGrinStratum(PoolConstructionArgs);
         ~PoolGrinStratum() override;
 
         cstring_span getName() const override;
 
-        // WorkProvider interface
+        // Pool interface
         optional<unique_ptr<WorkBase>> tryGetWork() override;
 
         void submitWork(unique_ptr<WorkResultBase> result) override;

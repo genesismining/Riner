@@ -9,7 +9,7 @@
 
 namespace miner {
 
-    class AlgoDummy : public AlgoBase {
+    class AlgoDummy : public Algorithm {
 
         AlgoConstructionArgs _args;
 
@@ -17,7 +17,7 @@ namespace miner {
 
         struct DeviceThread {
             AlgoDummy &algo;
-            WorkProvider &pool;
+            Pool &pool;
             Device &device;
             cl::Device clDevice;
 

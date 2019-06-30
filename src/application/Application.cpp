@@ -71,7 +71,7 @@ namespace miner {
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            auto algoType = algoFactory.getAlgoTypeForImplName(implName);
+            auto algoType = Algorithm::getAlgoTypeForImplName(implName);
             auto configPools = getConfigPoolsForAlgoType(config, algoType);
 
             auto poolSwitcher = std::make_unique<PoolSwitcher>();
@@ -85,8 +85,8 @@ namespace miner {
                     p.host, p.port, p.username, p.password, *poolRecords
                 };
 
-                auto poolImplName = poolFactory.getImplNameForAlgoTypeAndProtocol(algoType, p.protocol);
-                auto pool = poolFactory.makePool(args, algoType, p.protocol);
+                auto poolImplName = Pool::getImplNameForAlgoTypeAndProtocol(algoType, p.protocol);
+                auto pool = Pool::makePool(args, algoType, p.protocol);
 
                 if (!pool) {
                     LOG(ERROR) << "no pool implementation available for algo type "
@@ -124,7 +124,7 @@ namespace miner {
                 *poolSwitchers[algoType]
             };
 
-            auto algo = algoFactory.makeAlgo(args, implName);
+            auto algo = Algorithm::makeAlgo(args, implName);
 
             algorithms.emplace_back(std::move(algo));
         }

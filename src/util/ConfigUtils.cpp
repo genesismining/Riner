@@ -67,7 +67,7 @@ namespace miner {namespace configUtils {
                     //initialize the device inside the devicesInUse list, and put it
                     //into the assignedDevices list of this algoImpl
 
-                    deviceToInit.emplace(Device{deviceId, algoSettings.value(), i});
+                    deviceToInit.emplace(deviceId, algoSettings.value(), i);
                     result.emplace_back(deviceToInit.value());
                 }
                 else {

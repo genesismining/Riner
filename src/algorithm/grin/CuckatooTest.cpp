@@ -58,7 +58,7 @@ protected:
         context = cl::Context(device);
 
         Device::AlgoSettings algoSettings;
-        Device algoDevice = {deviceId.value(), algoSettings}; //deviceId, algoSettings.value(), i
+        Device algoDevice = {deviceId.value(), algoSettings, 0};
 
         CuckatooSolver::Options options {algoDevice};
         options.programLoader = &programLoader;

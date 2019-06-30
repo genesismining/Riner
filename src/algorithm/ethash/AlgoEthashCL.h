@@ -15,10 +15,10 @@
 
 namespace miner {
 
-    class AlgoEthashCL : public AlgoBase {
+    class AlgoEthashCL : public Algorithm {
 
         LockGuarded<DagCacheContainer> dagCache;
-        WorkProvider &pool;
+        Pool &pool;
         CLProgramLoader &clProgramLoader;
 
         std::atomic<bool> shutdown {false};

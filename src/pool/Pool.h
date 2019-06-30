@@ -8,6 +8,7 @@
 #include <src/pool/Work.h>
 #include <src/common/StringSpan.h>
 #include <string>
+#include <list>
 #include <atomic>
 #include <chrono>
 
@@ -24,7 +25,7 @@ namespace miner {
         PoolRecords &poolRecords;
     };
 
-    class StillAliveTrackable {//WorkProviders extend this class to offer timestamp information of last incoming message to a PoolSwitcher
+    class StillAliveTrackable {//pools extend this class to offer timestamp information of last incoming message to a PoolSwitcher
     public:
         using clock = std::chrono::system_clock;
 
@@ -41,9 +42,25 @@ namespace miner {
         std::atomic<clock::time_point> lastKnownAliveTime = {clock::time_point::min()};
     };
 
-    class WorkProvider : public StillAliveTrackable {
+    class Pool : public StillAliveTrackable {
+
+        struct Entry {
+            std::string implName;
+            AlgoEnum algoEnum;
+            ProtoEnum protoEnum;
+            std::function<unique_ptr<Pool>(PoolConstructionArgs)> makeFunc;
+        };
+
+        static std::list<Entry> &getEntries() {
+            static std::list<Entry> entries {};
+            return entries;
+        }
+
+        static optional_ref<Entry> entryWithName(const std::string &implName);
+
     protected:
         static uint64_t createNewPoolUid();
+        Pool() = default;
 
     public:
         virtual cstring_span getName() const = 0;
@@ -70,7 +87,34 @@ namespace miner {
             submitWork(static_unique_ptr_cast<WorkResultBase>(std::move(result)));
         }
 
-        virtual ~WorkProvider() = default;
+        template<typename T>
+        struct Registry {
+            Registry(const std::string &name, AlgoEnum algoEnum, ProtoEnum protoEnum) noexcept {
+                //create type erased creation function
+                auto makeFunc = [] (PoolConstructionArgs args) {
+                    return std::make_unique<T>(std::move(args));
+                };
+
+                getEntries().emplace_back(Entry{name, algoEnum, protoEnum, makeFunc});
+            }
+        };
+
+        //returns nullptr if no matching pool was found
+        static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &poolImplName);
+        static unique_ptr<Pool> makePool(PoolConstructionArgs args, AlgoEnum, ProtoEnum);
+
+        //returns implName
+        static std::string getImplNameForAlgoTypeAndProtocol(AlgoEnum, ProtoEnum);
+
+        //returns kAlgoTypeCount if implName doesn't match any pool impl
+        static AlgoEnum getAlgoTypeForImplName(const std::string &implName);
+
+        //returns kProtoCount if implName doesn't match any pool impl
+        static ProtoEnum getProtocolForImplName(const std::string &implName);
+
+        virtual ~Pool() = default;
+        Pool(const Pool &) = delete;
+        Pool &operator=(const Pool &) = delete;
     };
 
 }

@@ -18,11 +18,11 @@ namespace miner {
         explicit Config(const nl::json &configJson);
 
         struct GlobalSettings {
-            uint32_t
-            temp_cutoff,
-            temp_overheat,
-            temp_target,
-            temp_hysteresis;
+            optional<int>
+                    temp_cutoff,
+                    temp_overheat,
+                    temp_target;
+            uint32_t temp_hysteresis;
 
             uint16_t api_port;
 
@@ -42,22 +42,29 @@ namespace miner {
         struct DeviceProfile {
             std::string name;
 
+            struct GpuSettings {
+                optional<uint32_t>
+                        core_clock_MHz_min, //engine_min
+                        core_clock_MHz_max, //engine_max
+                        core_clock_MHz,
+                        memory_clock_MHz,
+                        power_limit_W,
+                        core_voltage_mV,
+                        core_voltage_offset_mV;
+            };
+
             struct AlgoSettings {
                 std::string algoImplName; //e.g. "AlgoEthashCL"
 
-                uint32_t
-                core_clock_mhz_min, //engine_min
-                core_clock_mhz_max, //engine_max
-                memclock,
-                powertune;
+                GpuSettings gpuSettings;
 
                 uint32_t
-                num_threads,
-                work_size,
-                raw_intensity;
+                        num_threads,
+                        work_size,
+                        raw_intensity;
             };
 
-            std::vector<AlgoSettings> algoSettings;
+            std::list<AlgoSettings> algoSettings;
 
             optional_ref<const AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
         };
