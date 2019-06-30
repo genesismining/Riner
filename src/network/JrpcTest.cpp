@@ -6,7 +6,6 @@
 #include <src/util/Barrier.h>
 
 #include <gtest/gtest.h>
-#include <gtest/gtest-matchers.h>
 #include <gmock/gmock.h>
 
 namespace miner {
