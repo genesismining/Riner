@@ -90,6 +90,8 @@ namespace miner {
         template<typename T>
         struct Registry {
             Registry(const std::string &name, AlgoEnum algoEnum, ProtoEnum protoEnum) noexcept {
+                LOG(DEBUG) << "register Pool: " << name;
+
                 //create type erased creation function
                 auto makeFunc = [] (PoolConstructionArgs args) {
                     return std::make_unique<T>(std::move(args));
@@ -97,6 +99,9 @@ namespace miner {
 
                 getEntries().emplace_back(Entry{name, algoEnum, protoEnum, makeFunc});
             }
+
+            Registry() = delete;
+            DELETE_COPY_AND_MOVE(Registry);
         };
 
         //returns nullptr if no matching pool was found
@@ -113,8 +118,7 @@ namespace miner {
         static ProtoEnum getProtocolForImplName(const std::string &implName);
 
         virtual ~Pool() = default;
-        Pool(const Pool &) = delete;
-        Pool &operator=(const Pool &) = delete;
+        DELETE_COPY_AND_MOVE(Pool);
     };
 
 }

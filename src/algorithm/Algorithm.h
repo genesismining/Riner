@@ -25,6 +25,7 @@ namespace miner {
         template<typename T>
         struct Registry {
             Registry(const std::string &name, AlgoEnum algoEnum) noexcept {
+                LOG(DEBUG) << "register Algorithm: " << name;
 
                 //create type erased creation function
                 decltype(Entry::makeFunc) makeFunc = [] (AlgoConstructionArgs args) {
@@ -35,15 +36,16 @@ namespace miner {
             }
 
             Registry() = delete;
-            Registry(const Registry &) = delete;
-            Registry &operator=(const Registry &) = delete;
+            DELETE_COPY_AND_MOVE(Registry);
         };
 
         //returns nullptr if algoImplName doesn't match any registered algorithm
         static unique_ptr<Algorithm> makeAlgo(AlgoConstructionArgs args, const std::string &algoImplName);
 
         //returns kAlgoTypeCount if implName doesn't match any algo
-        static AlgoEnum getAlgoTypeForImplName(const std::string &implName);
+        static AlgoEnum stringToAlgoEnum(const std::string &implName);
+
+        static std::string algoEnumToString(AlgoEnum algoEnum);
 
     protected:
         Algorithm() = default;

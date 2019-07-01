@@ -10,8 +10,6 @@
 
 namespace miner {
 
-    static Algorithm::Registry<AlgoEthashCL> registry {"AlgoEthashCL", kEthash};
-
     AlgoEthashCL::AlgoEthashCL(AlgoConstructionArgs args)
             : pool(args.workProvider)
             , clProgramLoader(args.compute.getProgramLoaderOpenCL()) {

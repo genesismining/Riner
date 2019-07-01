@@ -1,10 +1,11 @@
 #pragma once
 
+#include <src/compute/DeviceId.h>
+#include <src/application/Config.h>
+#include <src/util/Copy.h>
 #include <functional>
 #include <list>
 #include <memory>
-#include <src/compute/DeviceId.h>
-#include <src/application/Config.h>
 
 namespace miner {
 
@@ -51,12 +52,13 @@ namespace miner {
 
         template<typename D>
         struct Registry {
-            explicit Registry() noexcept {
+            explicit Registry(const std::string &name) noexcept {
+                LOG(DEBUG) << "register GpuApi: " << name;
                 getApis().push_back(&D::tryMake);
             }
 
-            Registry(const Registry &) = delete;
-            Registry& operator=(const Registry &) = delete;
+            Registry() = delete;
+            DELETE_COPY_AND_MOVE(Registry);
         };
 
     protected:

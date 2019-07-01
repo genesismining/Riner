@@ -12,8 +12,6 @@
 
 namespace miner {
 
-    static Pool::Registry<PoolGrinStratum> registry {"PoolGrinStratum", kCuckatoo31, kStratumTcp};
-
     void PoolGrinStratum::onConnected(CxnHandle cxn) {
 
         jrpc::Message login = jrpc::RequestBuilder{}

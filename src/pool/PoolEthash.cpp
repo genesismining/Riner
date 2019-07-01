@@ -16,8 +16,6 @@
 
 namespace miner {
 
-    static Pool::Registry<PoolEthashStratum> registry {"PoolEthashStratum", kEthash, kStratumTcp};
-
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
         LOG(DEBUG) << "onConnected";
         acceptMiningNotify = false;

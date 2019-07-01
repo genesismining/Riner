@@ -1,6 +1,7 @@
 
 #include "Config.h"
 
+#include <src/algorithm/Algorithm.h>
 #include <src/common/Json.h>
 #include <src/util/Logging.h>
 #include <src/util/OptionalAccess.h>
@@ -62,7 +63,7 @@ namespace miner {
         for (auto &jo : j.at("pools")) {
             Pool pool;
 
-            pool.type = algoEnumFromString(jo.at("type"));
+            pool.type = Algorithm::stringToAlgoEnum(jo.at("type"));
             pool.protocol = protoEnumFromString(jo.at("protocol"));
 
             if (pool.type == kAlgoTypeCount) {

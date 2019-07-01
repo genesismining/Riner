@@ -9,8 +9,6 @@
 
 namespace miner {
 
-    static GpuApi::Registry<AmdgpuApi> registry {};
-
     static optional<int> getCurrentDpmFreq(std::fstream &file) {
         optional<int> freq = nullopt;
         if (file.is_open()) {

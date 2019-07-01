@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include <inttypes.h>
-#include <array>
+#include <string>
 
 namespace miner {
 
@@ -12,10 +11,6 @@ namespace miner {
 
         kAlgoTypeCount,
     };
-
-    //returns kAlgoTypeCount if no match is found
-    AlgoEnum algoEnumFromString(const std::string &);
-    std::string stringFromAlgoEnum(AlgoEnum);
 
     enum ProtoEnum : uint8_t {
         kStratumTcp,

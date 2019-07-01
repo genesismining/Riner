@@ -71,7 +71,7 @@ namespace miner {
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            auto algoType = Algorithm::getAlgoTypeForImplName(implName);
+            auto algoType = Algorithm::stringToAlgoEnum(implName);
             auto configPools = getConfigPoolsForAlgoType(config, algoType);
 
             auto poolSwitcher = std::make_unique<PoolSwitcher>();
@@ -90,7 +90,7 @@ namespace miner {
 
                 if (!pool) {
                     LOG(ERROR) << "no pool implementation available for algo type "
-                    << stringFromAlgoEnum(algoType) << " in combination with protocol type "
+                    << Algorithm::algoEnumToString(algoType) << " in combination with protocol type "
                     << stringFromProtoEnum(p.protocol);
                     continue;
                 }

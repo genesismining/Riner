@@ -1,7 +1,16 @@
 #include "GpuApi.h"
+#include "AmdgpuApi.h"
 
 
 namespace miner {
+
+    /**
+     * Register all GpuApi implementations here.
+     * This is necessary so that the compiler includes the necessary code into a library
+     * because only GpuApi is referenced by another compilation unit.
+     */
+    static const GpuApi::Registry<AmdgpuApi> amdgpuRegistry {"AmdgpuApi"};
+
 
     optional<int> GpuApi::getEngineClock() {
         return nullopt;

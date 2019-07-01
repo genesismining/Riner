@@ -1,6 +1,7 @@
 
 #include "ApiServer.h"
 #include <numeric>
+#include <src/algorithm/Algorithm.h>
 #include <src/common/Assert.h>
 #include <src/pool/PoolSwitcher.h>
 
@@ -97,7 +98,7 @@ namespace miner {
             nl::json result;
 
             for (auto algoIdx = 0; algoIdx < AlgoEnum::kAlgoTypeCount; ++algoIdx) {
-                std::string algoTypeStr = stringFromAlgoEnum((AlgoEnum)algoIdx);
+                std::string algoTypeStr = Algorithm::algoEnumToString(static_cast<AlgoEnum>(algoIdx));
 
                 nl::json algoj;
 

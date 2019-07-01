@@ -1,7 +1,18 @@
 
 #include "Pool.h"
+#include "PoolEthash.h"
+#include "PoolGrin.h"
 
 namespace miner {
+
+    /**
+     * Register all Pool implementations here.
+     * This is necessary so that the compiler includes the necessary code into a library
+     * because only Pool is referenced by another compilation unit.
+     */
+    static const Pool::Registry<PoolEthashStratum> poolEthashRegistry {"PoolEthashStratum", kEthash, kStratumTcp};
+    static const Pool::Registry<PoolGrinStratum> poolGrinRegistry {"PoolGrinStratum", kCuckatoo31, kStratumTcp};
+
 
     uint64_t Pool::createNewPoolUid() {
         static std::atomic<uint64_t> uid = {1};

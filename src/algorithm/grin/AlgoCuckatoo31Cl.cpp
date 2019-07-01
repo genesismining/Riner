@@ -7,8 +7,6 @@
 
 namespace miner {
 
-static Algorithm::Registry<AlgoCuckatoo31Cl> registry {"AlgoCuckatoo31Cl", kCuckatoo31};
-
 AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
         terminate_(false), args_(std::move(args)) {
 
