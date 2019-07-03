@@ -64,11 +64,16 @@ namespace miner {
     //    LayerBelowT convertOutgoing(T)
     // in which you have to interpret the incoming messages from the layer below
     // in terms of your layer's type, and translate them back upon sending.
+    // also you must call stopIOThread() in your subclasses' dtor to ensure that
+    // all async handlers are finished when you start destroying the object
 
     template<class T, class LayerBelow>
     class IOTypeLayer {
     public:
         static_assert(has_value_type_v<LayerBelow>, "LayerBelow must define a LayerBelow::value_type");
+
+        template<class U, class V>
+        friend class IOTypeLayer;
 
         using value_type = T;
         using LayerBelowT = typename LayerBelow::value_type;
@@ -90,7 +95,12 @@ namespace miner {
         virtual T convertIncoming(LayerBelowT) = 0; //e.g. json(string);
         virtual LayerBelowT convertOutgoing(T) = 0; //e.g. string(json);
 
-        virtual ~IOTypeLayer() = default;
+        virtual ~IOTypeLayer() {
+            if (ioThreadRunning()) {
+                LOG(ERROR) << "IOTypeLayer subclass must call 'stopIOThread()' at the start of its destructor to prevent the IO Thread from accessing destroyed resources.";
+            }
+            MI_ENSURES(!ioThreadRunning());
+        };
 
         //let the user define a function that modifies an incoming T before it is further processed
         void setIncomingModifier(ModifierFunc &&func) {
@@ -165,7 +175,17 @@ namespace miner {
             return layerBelow().isIoThread();
         }
 
+    protected:
+        void stopIOThread() { //blocks until io thread has joined
+            _layerBelow.stopIOThread(); //calls BaseIO::stopIOThread();
+        }
+
     private:
+
+        bool ioThreadRunning() const {
+            return _layerBelow.ioThreadRunning();
+        }
+
         T processIncoming(LayerBelowT lbt) {
             //apply all necessary changes to the incoming data so that it can be
             //processed as a T

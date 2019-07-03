@@ -36,7 +36,8 @@ namespace miner { namespace jrpc {
                     }
                 }
 
-                readAsync(cxn); //continue listening in an endless loop
+                if (_readAsyncLoopEnabled)
+                    readAsync(cxn); //continue listening in an endless loop
             });
 
         }
@@ -53,6 +54,12 @@ namespace miner { namespace jrpc {
                     return true;
             }
             return false;
+        }
+
+
+        void JsonRpcUtil::setReadAsyncLoopEnabled(bool val) {
+            MI_EXPECTS(isIoThread() || !hasLaunched());
+            _readAsyncLoopEnabled = val;
         }
 
         void JsonRpcUtil::callAsyncRetryNTimes(CxnHandle cxn, Message request, uint32_t maxTries, milliseconds freq, ResponseHandler &&handler,

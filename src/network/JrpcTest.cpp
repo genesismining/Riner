@@ -103,4 +103,128 @@ namespace miner {
         }
     }
 
+    TEST(JsonRpcUtil, Methods) {
+        using RB = RequestBuilder;
+
+        Barrier barrier;
+        std::future_status status;
+
+        std::atomic_int counter {0};
+
+        {
+            JsonRpcUtil server{IOMode::Tcp};
+            JsonRpcUtil client{IOMode::Tcp};
+
+            //auto logServer = [] (auto &) {LOG(INFO) << "                                   server:";};
+            //auto logClient = [] (auto &) {LOG(INFO) << "                                   client:";};
+            //server.setOutgoingModifier(logServer);
+            //server.setIncomingModifier(logServer);
+            //client.setOutgoingModifier(logClient);
+            //client.setIncomingModifier(logClient);
+
+            server.launchServer(4028, [&](CxnHandle cxn) {
+                server.setReadAsyncLoopEnabled(true);
+                server.readAsync(cxn);
+            }, [&] {
+                ++counter; LOG(INFO) << "server dc";
+                barrier.unblock();
+            });
+
+            server.addMethod("() -> void", [&] () {
+                ++counter; LOG(INFO) << "method 0";
+            });
+
+            server.addMethod("() -> 4", [&] () {
+                ++counter; LOG(INFO) << "method 1";
+                return 4;
+            });
+
+            server.addMethod("(4) -> 8", [&] (int n) {
+                EXPECT_EQ(n, 4);
+                ++counter; LOG(INFO) << "method 2";
+                return 2*4;
+            }, "n");
+
+            server.addMethod("(4, 5) -> 9", [&] (int n, int m) {
+                EXPECT_EQ(n, 4);
+                EXPECT_EQ(m, 5);
+                ++counter; LOG(INFO) << "method 3";
+                return n + m;
+            }, "n", "m");
+
+            client.launchClient("127.0.0.1", 4028, [&](CxnHandle cxn) {
+                client.setReadAsyncLoopEnabled(true);
+                client.readAsync(cxn);
+
+                //pure virtual function call
+                client.callAsync(cxn, RB{}.id(1).method("() -> void").done(), [&] (CxnHandle cxn, Message msg) {
+                    EXPECT_TRUE(msg.isResponse());
+                    EXPECT_TRUE(msg.getIfResult());
+                    ++counter; LOG(INFO) << "return from method 0";
+
+                    if (auto result = msg.getIfResult()) {
+                        EXPECT_TRUE(result.value().empty());
+                        ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                    }
+
+                    client.callAsync(cxn, RB{}.id(2)
+                    .method("() -> 4")
+                    .done(), [&] (CxnHandle cxn, Message msg) {
+                        EXPECT_TRUE(msg.isResponse());
+                        EXPECT_TRUE(msg.getIfResult());
+                        ++counter; LOG(INFO) << "return from method 1";
+
+                        if (auto result = msg.getIfResult()) {
+                            EXPECT_EQ(result.value(), 4);
+                            ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                        }
+
+                        client.callAsync(cxn, RB{}.id(3)
+                        .method("(4) -> 8")
+                        .param("n", 4)
+                        .done(), [&] (CxnHandle cxn, Message msg) {
+                            EXPECT_TRUE(msg.isResponse());
+                            EXPECT_TRUE(msg.getIfResult());
+                            ++counter; LOG(INFO) << "return from method 2";
+
+                            if (auto result = msg.getIfResult()) {
+                                EXPECT_EQ(result.value(), 8);
+                                ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                            }
+
+                            client.callAsync(cxn, RB{}.id(4)
+                            .method("(4, 5) -> 9")
+                            .param("n", 4)
+                            .param("m", 5)
+                            .done(), [&] (CxnHandle cxn, Message msg) {
+                                EXPECT_TRUE(msg.isResponse());
+                                EXPECT_TRUE(msg.getIfResult());
+                                ++counter; LOG(INFO) << "return from method 3";
+
+                                if (auto result = msg.getIfResult()) {
+                                    EXPECT_EQ(result.value(), 9);
+                                    ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                                }
+
+                                client.setReadAsyncLoopEnabled(false); //drop connection, schedule no new readAsync() call on that cxn
+                            });
+                        });
+                    });
+                });
+
+            }, [&] {
+                //on disconnect
+                ++counter; LOG(INFO) << "client dc";
+            });
+
+            status = barrier.wait_for(std::chrono::seconds(2));
+
+            EXPECT_NE(status, std::future_status::timeout);
+        }
+
+        if (status != std::future_status::timeout) {
+            EXPECT_EQ(counter, 14);
+        }
+    }
+
 } // miner

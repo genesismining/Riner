@@ -13,6 +13,8 @@ namespace miner { namespace jrpc {
         nl::json convertOutgoing(Message) override;
     public:
         using IOTypeLayer::IOTypeLayer;
+
+        ~JsonRpcIO() override {stopIOThread();}
     };
 
 }}
