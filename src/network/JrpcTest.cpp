@@ -7,10 +7,12 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <chrono>
 
 namespace miner {
     using namespace jrpc;
     using testing::AnyOf;
+    using namespace std::chrono_literals;
 
     TEST(RequestBuilder, RequestProperties) {
 
@@ -37,7 +39,7 @@ namespace miner {
         EXPECT_EQ(req.str(), R"({"id":0,"jsonrpc":"2.0","method":"methodName","params":["abc",1,2.718,null]})");
     }
 
-    TEST(JsonRpcUtil, Connect_Disconnect) {
+    TEST(JsonRpcUtil, ConnectDisconnect) {
         //this test
         //- starts a jrpc server and client
         //- connects them
@@ -82,7 +84,7 @@ namespace miner {
                 clientDisconnected = ++order; //(2 or 3)
             });
 
-            status = barrier.wait_for(std::chrono::seconds(2));
+            status = barrier.wait_for(2s);
 
             EXPECT_NE(status, std::future_status::timeout);
 
@@ -217,7 +219,7 @@ namespace miner {
                 ++counter; LOG(INFO) << "client dc";
             });
 
-            status = barrier.wait_for(std::chrono::seconds(2));
+            status = barrier.wait_for(2s);
 
             EXPECT_NE(status, std::future_status::timeout);
         }
@@ -225,6 +227,79 @@ namespace miner {
         if (status != std::future_status::timeout) {
             EXPECT_EQ(counter, 14);
         }
+    }
+
+    class JsonRpcServerClientFixture: public testing::Test {
+    protected:
+        Barrier barrier;
+        std::future_status barrier_status;
+
+        unique_ptr<JsonRpcUtil> server;
+        unique_ptr<JsonRpcUtil> client;
+
+    public:
+        using RB = jrpc::RequestBuilder;
+
+        JsonRpcServerClientFixture()
+        : server(make_unique<JsonRpcUtil>(IOMode::Tcp))
+        , client(make_unique<JsonRpcUtil>(IOMode::Tcp)) {
+        }
+
+        void launchServerWithReadLoop() {
+            server->launchServer(4028, [&] (CxnHandle cxn) {
+                server->setReadAsyncLoopEnabled(true);
+                server->readAsync(cxn);
+            });
+        };
+
+        void launchClient(std::function<void(CxnHandle)> onCxn) {
+            client->launchClient("127.0.0.1", 4028, std::move(onCxn));
+        }
+
+        template<class Func>
+        bool waitAndInvoke(Barrier &barrier, Func &&onSuccess, std::chrono::milliseconds timeoutDur = 2s) {
+            auto status = barrier.wait_for(timeoutDur);
+            bool timedOut = status == std::future_status::timeout;
+            if (!timedOut) {
+                onSuccess();
+            }
+            return timedOut;
+        }
+    };
+
+    TEST_F(JsonRpcServerClientFixture, MethodNotFound) {
+        //this test calls a function that the server does not offer
+
+        server->addMethod("myMethod", [] () {
+            EXPECT_TRUE(false); //this line should never be reached
+        });
+
+        LockGuarded<Message> msg;
+
+        launchServerWithReadLoop();
+        launchClient([&] (CxnHandle cxn) {
+            client->callAsync(cxn, RB{}.id(0).method("otherMethod").done(), [&] (CxnHandle cxn, Message res) {
+                *msg.lock() = res;
+                barrier.unblock();
+            });
+            client->readAsync(cxn);
+        });
+
+        bool timeout = waitAndInvoke(barrier, [&] () {
+            server.reset();
+            client.reset();
+
+            {auto lmsg = msg.lock();
+                EXPECT_TRUE(lmsg->isError());
+                if (lmsg->isError())
+                    EXPECT_EQ(lmsg->getIfError().value().code, jrpc::ErrorCode::method_not_found);
+            }
+        });
+        EXPECT_FALSE(timeout);
+    }
+
+    TEST_F(JsonRpcServerClientFixture, ClientAutoReconnect) {
+
     }
 
 } // miner

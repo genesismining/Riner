@@ -137,7 +137,7 @@ namespace miner {
         LOG(INFO) << "BaseIO::startIOThread";
     }
 
-    void BaseIO::stopIOThread() { //TODO: atm subclasses are forced to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
+    void BaseIO::stopIOThread() { //TODO: atm subclasses are required to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
         // A proper way of implementing this would be to have a std::lock_guard style RAII object that guards the io thread's scope on user side.
         // e.g. launchClient returns an IOThreadGuard which has a dtor that allows the io thread to stop
 
