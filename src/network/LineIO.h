@@ -26,6 +26,8 @@ namespace miner {
             LOG(INFO) << "                                   " << "--> " << line;
             return line;
         };
+
+        ~LineIO() override {stopIOThread();}
     };
 
 }

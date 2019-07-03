@@ -25,6 +25,8 @@ namespace miner {
     };
 
     class BaseIO {
+        template<class U, class V>
+        friend class IOTypeLayer;
     public:
         using value_type = std::string;
         using OnReceiveValueFunc = IOOnReceiveValueFunc<value_type>;
@@ -55,6 +57,10 @@ namespace miner {
 
         void retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred);
 
+    protected:
+        void stopIOThread(); //blocking, joins the io thread, no parallel handler execution is happening after this function returns
+        bool ioThreadRunning() const; //not thread safe
+
     private:
         void createCxnWithSocket();
         void serverListen();
@@ -66,7 +72,7 @@ namespace miner {
 
         void startIoThread();
         decltype(std::this_thread::get_id()) _ioThreadId;
-        void setIoThread();
+        void setIoThreadId();
 
         struct AsyncRetry;
         LockGuarded<std::list<shared_ptr<AsyncRetry>>> _activeRetries;
@@ -80,13 +86,14 @@ namespace miner {
             std::list<std::shared_ptr<AsyncRetry>>::iterator it;
         };
 
-        asio::io_service _ioService;
+        IOOnConnectedFunc _onConnected = ioOnConnectedNoop;
+        IOOnDisconnectedFunc _onDisconnected = ioOnDisconnectedNoop;
+
+        asio::io_service _ioService; //must be declared after _onDisconnected since stop() may call _onDisconnected()
         tcp::socket _socket; //depends on _ioService. gets moved into new connections as they are constructed
         unique_ptr<tcp::acceptor> _acceptor; //for server
         unique_ptr<tcp::resolver> _resolver; //for client
 
-        IOOnConnectedFunc _onConnected = ioOnConnectedNoop;
-        IOOnDisconnectedFunc _onDisconnected = ioOnDisconnectedNoop;
 
         OnReceiveValueFunc _onRecv = ioOnReceiveValueNoop<value_type>; //_onRecv referenced by instances of Connection<T>;
         std::atomic_bool _shutdown {false};
