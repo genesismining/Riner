@@ -5,30 +5,37 @@
 #include <src/pool/PoolSwitcher.h>
 
 namespace miner {
+    using namespace jrpc;
 
     ApiServer::ApiServer(uint16_t port, const LockGuarded<std::deque<optional<Device>>> &devicesInUse,
             const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers)
             : devicesInUse(devicesInUse)
             , poolSwitchers(poolSwitchers)
-            , jrpc(std::make_unique<JrpcServer>(port)) {
-        LOG(INFO) << "started api server on port " << port;
+            , io(std::make_unique<JsonRpcUtil>(IOMode::Tcp)){
         registerFunctions();
-        jrpc->launch();
+
+        io->launchServer(port, [this] (CxnHandle cxn) {
+            //on connected
+            io->setReadAsyncLoopEnabled(true);
+            io->readAsync(cxn);
+        });
+
+        LOG(INFO) << "started api server on port " << port;
     }
 
     void ApiServer::registerFunctions() {
-        //json exceptions will get caught by the caller of these functions
+        //json exceptions will get caught by io
 
-        jrpc->registerFunc("divide", [] (float a, float b) -> JrpcReturn {
+        io->addMethod("divide", [] (float a, float b) {
 
             if (b == 0)
-                return {JrpcError::invalid_params, "division by zero"};
+                throw jrpc::Error{invalid_params, "division by zero"};
 
             return a / b;
 
         }, "a", "b");
 
-        jrpc->registerFunc("getGpuStats", [&] () -> JrpcReturn {
+        io->addMethod("getGpuStats", [&] () {
 
             nl::json result;
             auto now = clock::now();
@@ -92,7 +99,7 @@ namespace miner {
             return result;
         });
 
-        jrpc->registerFunc("getPoolStats", [&] () -> JrpcReturn {
+        io->addMethod("getPoolStats", [&] () {
 
             nl::json result;
 
@@ -125,7 +132,7 @@ namespace miner {
     ApiServer::~ApiServer() {
         // manually destroy jrpc first, so the registered functions don't access
         // destroyed members asynchronously by accident
-        jrpc.reset();
+        io.reset();
     }
 
 }

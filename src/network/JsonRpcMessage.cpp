@@ -118,7 +118,7 @@ namespace miner { namespace jrpc {
                     result = type_safe::opt_cref(err);
                 });
             });
-            return nullopt;
+            return result;
         }
 
         optional_ref<nl::json>
