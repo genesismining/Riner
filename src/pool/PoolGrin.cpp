@@ -35,8 +35,10 @@ namespace miner {
                 .done();
 
             io.callAsync(cxn, getjobtemplate, [this] (CxnHandle cxn, jrpc::Message response) {
-                if (auto result = response.getIfResult())
+                if (auto result = response.getIfResult()) {
+                    _cxn = cxn;
                     onMiningNotify(result.value());
+                }
             });
 
         });
@@ -48,50 +50,48 @@ namespace miner {
         io.setIncomingModifier([this] (jrpc::Message &) {
             onStillAlive();
         });
-
-        io.readAsync(cxn); //start listening
     }
-
-    void PoolGrinStratum::restart() {
-        auto login = std::make_shared<JrpcBuilder>();
-        auto getjobtemplate = std::make_shared<JrpcBuilder>();
-
-        login->method("login")
-            .param("agent", "grin-miner")
-            .param("login", args_.username)
-            .param("pass", args_.password);
-
-        login->onResponse([this, getjobtemplate] (const JrpcResponse& ret) {
-            if (ret.error()) {
-                restart();
-                return;
-            }
-            jrpc.call(*getjobtemplate);
-        });
-
-        getjobtemplate->method("getjobtemplate");
-        getjobtemplate->onResponse([this] (auto &ret) {
-            if (!ret.error()) {
-                onMiningNotify(ret.getJson().at("result"));
-            }
-        });
-
-        //set handler for receiving incoming messages that are not responses to sent rpcs
-        jrpc.setOnReceiveUnhandled([this] (const JrpcResponse& ret) {
-            if (ret.atEquals("method", "job")) {
-                onMiningNotify(ret.getJson().at("params"));
-            } else {
-                LOG(WARNING) << "Ignoring unexpected message from server: " << ret.getJson().dump();
-            }
-        });
-
-        //set handler that gets called on any received response, before the other handlers are called
-        jrpc.setOnReceive([this] (auto &ret) {
-            onStillAlive(); //set latest still-alive timestamp to now
-        });
-
-        jrpc.call(*login);
-    }
+//
+//    void PoolGrinStratum::restart() {
+//        auto login = std::make_shared<JrpcBuilder>();
+//        auto getjobtemplate = std::make_shared<JrpcBuilder>();
+//
+//        login->method("login")
+//            .param("agent", "grin-miner")
+//            .param("login", args_.username)
+//            .param("pass", args_.password);
+//
+//        login->onResponse([this, getjobtemplate] (const JrpcResponse& ret) {
+//            if (ret.error()) {
+//                restart();
+//                return;
+//            }
+//            jrpc.call(*getjobtemplate);
+//        });
+//
+//        getjobtemplate->method("getjobtemplate");
+//        getjobtemplate->onResponse([this] (auto &ret) {
+//            if (!ret.error()) {
+//                onMiningNotify(ret.getJson().at("result"));
+//            }
+//        });
+//
+//        //set handler for receiving incoming messages that are not responses to sent rpcs
+//        jrpc.setOnReceiveUnhandled([this] (const JrpcResponse& ret) {
+//            if (ret.atEquals("method", "job")) {
+//                onMiningNotify(ret.getJson().at("params"));
+//            } else {
+//                LOG(WARNING) << "Ignoring unexpected message from server: " << ret.getJson().dump();
+//            }
+//        });
+//
+//        //set handler that gets called on any received response, before the other handlers are called
+//        jrpc.setOnReceive([this] (auto &ret) {
+//            onStillAlive(); //set latest still-alive timestamp to now
+//        });
+//
+//        jrpc.call(*login);
+//    }
 
     void PoolGrinStratum::onMiningNotify(const nl::json &jparams) {
         int64_t height = jparams.at("height");
@@ -126,7 +126,7 @@ namespace miner {
 
         //build and send submitMessage on the tcp thread
 
-        jrpc.postAsync([this, result = std::move(result)] {
+        io.postAsync([this, result = std::move(result)] {
 
             std::shared_ptr<GrinStratumProtocolData> protoData = result->tryGetProtocolDataAs<GrinStratumProtocolData>();
             if (!protoData) {
@@ -134,46 +134,53 @@ namespace miner {
                 return; //work has expired
             }
 
-            auto submit = std::make_shared<JrpcBuilder>();
-
             nl::json pow;
             for(uint32_t i: result->pow) {
                 pow.push_back(i);
             }
 
-            submit->method("submit")
-                .param("edge_bits", 31)
-                .param("height", result->height)
-                .param("job_id", std::stoll(protoData->jobId))
-                .param("nonce", result->nonce)
-                .param("pow", pow);
+            jrpc::Message submit = jrpc::RequestBuilder{}.id(io.nextId++)
+                    .param("edge_bits", 31)
+                    .param("height", result->height)
+                    .param("job_id", std::stoll(protoData->jobId))
+                    .param("nonce", result->nonce)
+                    .param("pow", pow)
+                    .done();
 
-            submit->onResponse([] (const JrpcResponse& ret) {
-                auto idStr = ret.id() ? std::to_string(ret.id().value()) : "<no id>";
-                bool accepted = ret.atEquals("result", "ok");
+            auto onResponse = [] (CxnHandle cxn, jrpc::Message res) {
+                auto idStr = res.id.empty() ? std::string(res.id) : "<no id>";
+                bool accepted = false;
+                if (auto result = res.getIfResult()) {
+                    if (result.value() == "ok")
+                        accepted = true;
+                }
 
                 std::string acceptedStr = accepted ? "accepted" : "rejected";
                 LOG(INFO) << "share with id " << idStr << " got " << acceptedStr;
 
                 if (!accepted) {
-                    int code = ret.error().value_or(JrpcError({})).code;
-                    LOG_IF(code == -32502, FATAL) << "Invalid share";
+                    if (auto error = res.getIfError()) {
+                        auto code = error.value().code;
+                        LOG_IF(code == -32502, FATAL) << "Invalid share";
+                    }
                 }
-            });
+            };
 
-            jrpc.callRetryNTimes(*submit, 5, std::chrono::seconds(5), [submit] {
+            auto onNeverResponded = [submit] () {
                 //this handler gets called if there was no response after the last try
-                auto idStr = submit->getId() ? std::to_string(submit->getId().value()) : "<no id>";
+                auto idStr = submit.id.empty() ? std::string(submit.id) : "<no id>";
 
                 LOG(INFO) << "share with id " << idStr << " got discarded after pool did not respond multiple times";
-            });
+            };
+
+            io.callAsyncRetryNTimes(_cxn, submit, 5, std::chrono::seconds(5), onResponse, onNeverResponded);
         });
     }
 
     PoolGrinStratum::PoolGrinStratum(PoolConstructionArgs args)
     : args_(std::move(args))
     , uid(createNewPoolUid())
-    , jrpc(args_.host, args_.port)
+    //, jrpc(args_.host, args_.port)
     , io(IOMode::Tcp) {
         //initialize workQueue
         auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
@@ -189,12 +196,14 @@ namespace miner {
         workQueue = std::make_unique<WorkQueue>(refillThreshold, refillFunc);
 
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
-        jrpc.setOnRestart([this] {
-            restart();
-        });
+        //jrpc.setOnRestart([this] {
+        //    restart();
+        //});
 
         io.launchClientAutoReconnect(args_.host, args_.port, [this] (CxnHandle cxn) {
             onConnected(cxn);
+            io.setReadAsyncLoopEnabled(true);
+            io.readAsync(cxn);//start listening
         });
 
         io.io().layerBelow().setIncomingModifier([] (nl::json &json) {

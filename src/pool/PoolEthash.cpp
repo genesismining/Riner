@@ -69,6 +69,7 @@ namespace miner {
                 msg.id = {};
         });
 
+        io.setReadAsyncLoopEnabled(true);
         io.readAsync(cxn); //start listening for incoming responses and rpcs from this cxn
     }
 

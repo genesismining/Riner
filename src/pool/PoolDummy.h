@@ -5,8 +5,6 @@
 
 #include <src/pool/Pool.h>
 #include <src/pool/WorkEthash.h>
-#include <src/network/TcpJsonProtocolUtil.h>
-#include <src/network/TcpJsonRpcProtocolUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/pool/WorkQueue.h>

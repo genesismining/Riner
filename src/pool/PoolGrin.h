@@ -6,8 +6,6 @@
 #include "WorkCuckaroo.h"
 
 #include <src/pool/WorkEthash.h>
-#include <src/network/TcpJsonProtocolUtil.h>
-#include <src/network/TcpJsonRpcProtocolUtil.h>
 #include <src/network/JsonRpcUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
@@ -52,8 +50,8 @@ namespace miner {
         std::unique_ptr<WorkQueue> workQueue;
         std::atomic<bool> shutdown {false};
         std::vector<std::shared_ptr<GrinStratumProtocolData>> protocolDatas;
-        TcpJsonRpcProtocolUtil jrpc;
         jrpc::JsonRpcUtil io;
+        CxnHandle _cxn; //connection to submit shares to (set on mining notify)
 
         int64_t currentHeight = -1;
     };
