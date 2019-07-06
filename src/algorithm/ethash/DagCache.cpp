@@ -7,7 +7,7 @@ namespace miner {
 
     void DagCacheContainer::generate(uint32_t epoch, cByteSpan<32> seedHash) {
         valid = false;
-        if (epoch == 0)
+        if (epoch == std::numeric_limits<uint32_t>::max())
             return;
 
         try {

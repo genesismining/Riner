@@ -36,7 +36,7 @@ namespace miner {
 
         LOG(ERROR) << "Error on epoch calculation.";
 
-        return 0UL;
+        return std::numeric_limits<uint32_t>::max();
     }
 
     Node CalcDAGItem(const Node *CacheInputNodes, uint32_t NodeCount, uint32_t NodeIdx) {

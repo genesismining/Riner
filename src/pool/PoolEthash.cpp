@@ -1,6 +1,5 @@
 
 #include "PoolEthash.h"
-#include <src/algorithm/ethash/Ethash.h>
 #include <src/pool/WorkEthash.h>
 #include <src/pool/AutoRefillQueue.h>
 #include <src/util/Logging.h>
@@ -143,9 +142,7 @@ namespace miner {
 
         auto refillFunc = [] (auto &out, auto &workMaster, size_t currentSize) {
 
-            if (workMaster->epoch == 0) {//calculate epoch for master if it didn't happen yet
-                workMaster->epoch = EthCalcEpochNumber(workMaster->seedHash);
-            }
+            workMaster->setEpoch();
 
             for (auto i = currentSize; i < 16; ++i) {
                 ++workMaster->extraNonce;

@@ -12,7 +12,7 @@ namespace miner {
 
     class DagFile {
 
-        uint32_t epoch = 0;
+        uint32_t epoch = std::numeric_limits<uint32_t>::max();
         uint32_t allocationMaxEpoch = 0; //the epoch that is used for
         // allocating the dag memory. It is chosen larger than current epoch, so
         // that the dag can be recreated several times for a new epoch before a
