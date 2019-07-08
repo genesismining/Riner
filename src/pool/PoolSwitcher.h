@@ -36,9 +36,9 @@ namespace miner {
             return *pools.back().pool;
         }
 
-        optional<unique_ptr<WorkBase>> tryGetWork() override;
+        optional<unique_ptr<Work>> tryGetWork() override;
 
-        void submitWork(unique_ptr<WorkResultBase>) override;
+        void submitWork(unique_ptr<WorkSolution>) override;
 
         size_t poolCount() const;
 

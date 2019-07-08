@@ -54,10 +54,10 @@ namespace miner {
         void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device::AlgoSettings deviceSettings);
 
         //gets called by gpuSubTask for each non-empty result vector
-        void submitShareTask(std::shared_ptr<const Work<kEthash>> work, std::vector<uint32_t> resultNonces);
+        void submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint32_t> resultNonces);
 
         //returns possible solution nonces
-        std::vector<uint32_t> runKernel(PerGpuSubTask &, DagFile &dag, const Work<kEthash> &,
+        std::vector<uint32_t> runKernel(PerGpuSubTask &, DagFile &dag, const WorkEthash &,
                 uint64_t nonceBegin, uint64_t nonceEnd);
 
     public:

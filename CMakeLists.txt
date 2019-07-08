@@ -17,8 +17,7 @@ add_library(LibMiner
         src/application/Device.cpp src/application/Device.h
         src/application/LoggingMain.cpp
         src/algorithm/Algorithm.cpp src/algorithm/Algorithm.h
-        src/algorithm/ethash/AlgoEthashCL.cpp
-        src/algorithm/ethash/AlgoEthashCL.h
+        src/algorithm/ethash/AlgoEthashCL.cpp src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
         src/algorithm/ethash/DagCache.cpp src/algorithm/ethash/DagCache.h
         src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
@@ -54,6 +53,7 @@ add_library(LibMiner
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
+        src/pool/WorkCuckoo.h
         src/pool/WorkEthash.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h

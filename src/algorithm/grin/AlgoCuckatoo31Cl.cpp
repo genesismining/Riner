@@ -3,7 +3,7 @@
 #include <src/common/Endian.h>
 #include <src/common/OpenCL.h>
 #include <src/crypto/blake2.h>
-#include <src/pool/WorkCuckaroo.h>
+#include <src/pool/WorkCuckoo.h>
 
 namespace miner {
 
@@ -39,7 +39,7 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
     }
 }
 
-/* static */SiphashKeys AlgoCuckatoo31Cl::calculateKeys(const CuckooHeader& header) {
+/* static */SiphashKeys AlgoCuckatoo31Cl::calculateKeys(const WorkCuckatoo31& header) {
     SiphashKeys keys;
     std::vector<uint8_t> h = header.prePow;
     uint64_t nonce = header.nonce;
@@ -58,7 +58,7 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
 
 void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
     while (!terminate_) {
-        unique_ptr<CuckooHeader> work = args_.workProvider.tryGetWork<kCuckatoo31>().value_or(nullptr);
+        auto work = args_.workProvider.tryGetWork<WorkCuckatoo31>().value_or(nullptr);
         if (!work) {
             continue;
         }
@@ -69,7 +69,7 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
         LOG(INFO)<< "Found " << cycles.size() << " cycles of target length.";
         // TODO sha pow and compare to difficulty
         for (auto& cycle : cycles) {
-            unique_ptr<CuckooPow> pow = work->makeWorkResult<kCuckatoo31>();
+            auto pow = work->makeWorkResult<POWCuckatoo31>();
             pow->height = work->height;
             pow->nonce = work->nonce;
             pow->pow = std::move(cycle.edges);

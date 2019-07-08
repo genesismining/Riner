@@ -15,7 +15,8 @@ namespace miner {
 
         std::vector<std::string> getUniqueAlgoImplNamesForProfile(Config::Profile &prof, const std::vector<DeviceId> &deviceIds);
 
-        std::vector<std::reference_wrapper<const Config::Pool>> getConfigPoolsForAlgoType(const Config &config, AlgoEnum algoType);
+        std::vector<std::reference_wrapper<const Config::Pool>> getConfigPoolsForAlgoName(const Config &config,
+                                                                                          const std::string &algoType);
 
         Config::Profile::Mapping getMappingForDevice(Config::Profile &prof, size_t deviceIndex);
 

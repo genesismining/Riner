@@ -31,11 +31,11 @@ namespace miner {namespace configUtils {
     }
 
     std::vector<std::reference_wrapper<const Config::Pool>>
-    getConfigPoolsForAlgoType(const Config &config, AlgoEnum algoType) {
+    getConfigPoolsForAlgoName(const Config &config, const std::string &algoName) {
         std::vector<std::reference_wrapper<const Config::Pool>> result;
 
         for (auto &pool : config.getPools()) {
-            if (pool.type == algoType)
+            if (pool.algorithmName == algoName)
                 result.emplace_back(std::cref(pool));
         }
 

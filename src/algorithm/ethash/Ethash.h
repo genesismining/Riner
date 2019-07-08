@@ -19,7 +19,7 @@ namespace miner {
         Bytes<32> mixHash;
     };
 
-    EthashRegenhashResult ethash_regenhash(const Work<kEthash> &work, cByteSpan<> dagCache, uint64_t nonce);
+    EthashRegenhashResult ethash_regenhash(const WorkEthash &work, cByteSpan<> dagCache, uint64_t nonce);
 
     uint32_t EthCalcEpochNumber(cByteSpan<32> SeedHash);
 

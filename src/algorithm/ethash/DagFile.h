@@ -3,7 +3,7 @@
 
 #include <mutex>
 #include <src/common/OpenCL.h>
-#include <src/pool/Work.h>
+#include <src/pool/WorkEthash.h>
 #include <src/common/Optional.h>
 #include <src/common/Span.h>
 #include <src/algorithm/ethash/DagCache.h>

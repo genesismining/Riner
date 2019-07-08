@@ -3,7 +3,7 @@
 #include <src/algorithm/grin/AlgoCuckatoo31Cl.h>
 #include <src/common/Optional.h>
 #include <src/compute/DeviceId.h>
-#include <src/pool/WorkCuckaroo.h>
+#include <src/pool/WorkCuckoo.h>
 #include <src/util/HexString.h>
 #include <src/util/Logging.h>
 #include <src/util/StringUtils.h>

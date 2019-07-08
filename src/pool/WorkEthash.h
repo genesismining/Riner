@@ -9,10 +9,19 @@
 
 namespace miner {
 
-    template<>
-    class Work<kEthash> : public WorkBase {
+    static constexpr char algorithmEthashName[] = "ethash";
+
+    struct AlgorithmEthash {
+        static constexpr auto getName() {
+            return "ethash";
+        }
+    };
+
+    class WorkEthash : public Work, public AlgorithmEthash {
     public:
-        Work(std::weak_ptr<WorkProtocolData> data) : WorkBase(std::move(data)) {}
+        WorkEthash(std::weak_ptr<WorkProtocolData> data) :
+                Work(std::move(data), getName()) {
+        }
 
         uint32_t extraNonce = 0;
         //uint32_t minerNonce;
@@ -29,25 +38,18 @@ namespace miner {
                 epoch = EthCalcEpochNumber(seedHash);
             }
         }
-
-        AlgoEnum getAlgoEnum() const override {
-            return kEthash;
-        }
     };
 
-    template<>
-    class WorkResult<kEthash> : public WorkResultBase {
+    class WorkSolutionEthash : public WorkSolution, public AlgorithmEthash {
     public:
-        WorkResult(std::weak_ptr<WorkProtocolData> data) : WorkResultBase(std::move(data)) {}
+        WorkSolutionEthash(std::weak_ptr<WorkProtocolData> data) :
+                WorkSolution(std::move(data), getName()) {
+        }
 
         uint64_t nonce = 0;
 
         Bytes<32> proofOfWorkHash;
         Bytes<32> mixHash; // intermediate hash to prevent DOS
-
-        AlgoEnum getAlgoEnum() const override {
-            return kEthash;
-        }
     };
 
 }

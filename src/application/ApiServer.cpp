@@ -7,8 +7,8 @@
 
 namespace miner {
 
-    ApiServer::ApiServer(uint16_t port, const LockGuarded<std::deque<optional<Device>>> &devicesInUse,
-            const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers)
+    ApiServer::ApiServer(uint16_t port, const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse,
+            const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers)
             : devicesInUse(devicesInUse)
             , poolSwitchers(poolSwitchers)
             , jrpc(std::make_unique<JrpcServer>(port)) {
@@ -34,7 +34,7 @@ namespace miner {
             nl::json result;
             auto now = clock::now();
 
-            auto devicesInUseLocked = devicesInUse.lock();
+            auto devicesInUseLocked = devicesInUse.readLock();
 
             size_t i = 0;
             for (const optional<Device> &deviceInUse : *devicesInUseLocked) {
@@ -97,26 +97,25 @@ namespace miner {
 
             nl::json result;
 
-            for (auto algoIdx = 0; algoIdx < AlgoEnum::kAlgoTypeCount; ++algoIdx) {
-                std::string algoTypeStr = Algorithm::algoEnumToString(static_cast<AlgoEnum>(algoIdx));
+            auto lockedPoolSwitchers = poolSwitchers.readLock();
+            for (auto &poolSwitcherPair : *lockedPoolSwitchers) {
+                auto &poolSwitcher = poolSwitcherPair.second;
 
                 nl::json algoj;
 
-                if (auto &poolSwitcher = poolSwitchers.at(algoIdx)) {
+                auto info = poolSwitcher->gatherApiInfo();
 
-                    auto info = poolSwitcher->gatherApiInfo();
+                for (auto &poolInfo : info.pools) {
 
-                    for (auto &poolInfo : info.pools) {
+                    nl::json poolj = {
+                            {"ip", poolInfo.host + ":" + std::to_string(poolInfo.port)},
+                    };
 
-                        nl::json poolj = {
-                                {"ip", poolInfo.host + ":" + std::to_string(poolInfo.port)},
-                        };
-
-                        algoj.push_back(poolj);
-                    }
+                    algoj.push_back(poolj);
                 }
 
-                result[algoTypeStr] = algoj;
+
+                result[poolSwitcher->getAlgoName()] = algoj;
             }
             return result;
         });

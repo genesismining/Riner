@@ -10,8 +10,8 @@ namespace miner {
      * This is necessary so that the compiler includes the necessary code into a library
      * because only Pool is referenced by another compilation unit.
      */
-    static const Pool::Registry<PoolEthashStratum> poolEthashRegistry {"PoolEthashStratum", kEthash, kStratumTcp};
-    static const Pool::Registry<PoolGrinStratum> poolGrinRegistry {"PoolGrinStratum", kCuckatoo31, kStratumTcp};
+    static const Pool::Registry<PoolEthashStratum> poolEthashRegistry {"PoolEthashStratum", AlgorithmEthash::getName(), kStratumTcp};
+    static const Pool::Registry<PoolGrinStratum> poolGrinRegistry {"PoolGrinStratum", AlgorithmCuckatoo31::getName(), kStratumTcp};
 
 
     uint64_t Pool::createNewPoolUid() {
@@ -38,24 +38,24 @@ namespace miner {
         return nullptr;
     }
 
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, AlgoEnum algoEnum, ProtoEnum protoEnum) {
+    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &algoName, ProtoEnum protoEnum) {
         for (auto &entry : getEntries())
-            if (entry.algoEnum == algoEnum && entry.protoEnum == protoEnum)
+            if (entry.algoName == algoName && entry.protoEnum == protoEnum)
                 return entry.makeFunc(std::move(args));
         return nullptr;
     }
 
-    std::string Pool::getImplNameForAlgoTypeAndProtocol(AlgoEnum algoEnum, ProtoEnum protoEnum) {
+    std::string Pool::getImplNameForAlgoTypeAndProtocol(const std::string &algoName, ProtoEnum protoEnum) {
         for (auto &entry : getEntries())
-            if (entry.algoEnum == algoEnum && entry.protoEnum == protoEnum)
+            if (entry.algoName == algoName && entry.protoEnum == protoEnum)
                 return entry.implName;
         return "";
     }
 
-    AlgoEnum Pool::getAlgoTypeForImplName(const std::string &implName) {
+    std::string Pool::getAlgoTypeForImplName(const std::string &implName) {
         if (auto entry = entryWithName(implName))
-            return entry.value().algoEnum;
-        return kAlgoTypeCount; //no matching algo type found
+            return entry.value().algoName;
+        return ""; //no matching algo type found
     }
 
     ProtoEnum Pool::getProtocolForImplName(const std::string &implName) {

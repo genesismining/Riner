@@ -3,7 +3,7 @@
 #include "Graph.h"
 
 #include <src/common/Endian.h>
-#include <src/pool/WorkCuckaroo.h>
+#include <src/pool/WorkCuckoo.h>
 #include <src/util/Logging.h>
 #include <src/util/StringUtils.h>
 

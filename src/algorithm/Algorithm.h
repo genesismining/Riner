@@ -24,15 +24,18 @@ namespace miner {
 
         template<typename T>
         struct Registry {
-            Registry(const std::string &name, AlgoEnum algoEnum) noexcept {
-                LOG(DEBUG) << "register Algorithm: " << name;
+            Registry(const std::string &implName, const std::string &algoName) noexcept {
+                LOG(DEBUG) << "register Algorithm: " << implName;
 
+                getEntries().emplace_back(Entry{implName, algoName});
+
+                auto *entry = &getEntries().back();
                 //create type erased creation function
-                decltype(Entry::makeFunc) makeFunc = [] (AlgoConstructionArgs args) {
-                    return std::make_unique<T>(std::move(args));
+                entry->makeFunc = [entry] (AlgoConstructionArgs args) {
+                    auto algorithm = std::make_unique<T>(std::move(args));
+                    algorithm->info = entry;
+                    return algorithm;
                 };
-
-                getEntries().emplace_back(Entry{name, algoEnum, makeFunc});
             }
 
             Registry() = delete;
@@ -42,18 +45,24 @@ namespace miner {
         //returns nullptr if algoImplName doesn't match any registered algorithm
         static unique_ptr<Algorithm> makeAlgo(AlgoConstructionArgs args, const std::string &algoImplName);
 
-        //returns kAlgoTypeCount if implName doesn't match any algo
-        static AlgoEnum stringToAlgoEnum(const std::string &implName);
+        //returns empty string if implName doesn't match any algo
+        static std::string implNameToAlgoName(const std::string &implName);
 
-        static std::string algoEnumToString(AlgoEnum algoEnum);
+        inline std::string getAlgoName() const {
+            return info->algorithmName;
+        }
+
+        inline std::string getImplName() const {
+            return info->implName;
+        }
 
     protected:
         Algorithm() = default;
 
     private:
         struct Entry {
-            std::string implName;
-            AlgoEnum algoEnum;
+            const std::string implName;
+            const std::string algorithmName;
             std::function<unique_ptr<Algorithm>(AlgoConstructionArgs)> makeFunc;
         };
 
@@ -63,6 +72,7 @@ namespace miner {
         }
 
         static optional_ref<Entry> entryWithName(const std::string &implName);
+        const Entry *info = nullptr;
 
     };
 

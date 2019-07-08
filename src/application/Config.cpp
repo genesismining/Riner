@@ -63,10 +63,10 @@ namespace miner {
         for (auto &jo : j.at("pools")) {
             Pool pool;
 
-            pool.type = Algorithm::stringToAlgoEnum(jo.at("type"));
+            pool.algorithmName = Algorithm::implNameToAlgoName(jo.at("type"));
             pool.protocol = protoEnumFromString(jo.at("protocol"));
 
-            if (pool.type == kAlgoTypeCount) {
+            if (pool.algorithmName.empty()) {
                 LOG(WARNING) << jo.at("type") << " is not a valid algorithm type, cannot add pool";
                 continue;
             }

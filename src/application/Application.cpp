@@ -57,9 +57,6 @@ namespace miner {
         //clear old state
         algorithms.clear(); //algos call into pools => clear algos before pools!
 
-        for (auto &ptr : poolSwitchers)
-            ptr.reset();
-
         //launch profile
         auto &allIds = compute->getAllDeviceIds();
 
@@ -68,11 +65,14 @@ namespace miner {
 
         LOG(INFO) << "starting profile '" << prof.name << "'";
 
+        auto lockedPoolSwitchers = poolSwitchers.lock();
+        lockedPoolSwitchers->clear();
+
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            auto algoType = Algorithm::stringToAlgoEnum(implName);
-            auto configPools = getConfigPoolsForAlgoType(config, algoType);
+            auto algoName = Algorithm::implNameToAlgoName(implName);
+            auto configPools = getConfigPoolsForAlgoName(config, algoName);
 
             auto poolSwitcher = std::make_unique<PoolSwitcher>();
 
@@ -85,17 +85,16 @@ namespace miner {
                     p.host, p.port, p.username, p.password, *poolRecords
                 };
 
-                auto poolImplName = Pool::getImplNameForAlgoTypeAndProtocol(algoType, p.protocol);
-                auto pool = Pool::makePool(args, algoType, p.protocol);
+                auto pool = Pool::makePool(args, algoName, p.protocol);
 
                 if (!pool) {
                     LOG(ERROR) << "no pool implementation available for algo type "
-                    << Algorithm::algoEnumToString(algoType) << " in combination with protocol type "
-                    << stringFromProtoEnum(p.protocol);
+                               << algoName << " in combination with protocol type "
+                               << stringFromProtoEnum(p.protocol);
                     continue;
                 }
 
-                LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host << " on port " << p.port;
+                LOG(INFO) << "launching pool '" << pool->getImplName() << "' to connect to " << p.host << " on port " << p.port;
 
                 poolSwitcher->push(std::move(pool), std::move(poolRecords), args);
             }
@@ -104,9 +103,8 @@ namespace miner {
                 LOG(ERROR) << "no pools available for algoType of " << implName << ". Cannot launch algorithm";
             }
 
-            poolSwitchers[algoType] = std::move(poolSwitcher);
-
-            MI_ENSURES(poolSwitchers[algoType]);
+            lockedPoolSwitchers->emplace(algoName, std::move(poolSwitcher));
+            MI_ENSURES(lockedPoolSwitchers->count(algoName));
 
             decltype(AlgoConstructionArgs::assignedDevices) assignedDeviceRefs;
 
@@ -118,15 +116,18 @@ namespace miner {
 
             logLaunchInfo(implName, assignedDeviceRefs);
 
-            AlgoConstructionArgs args {
-                *compute,
-                assignedDeviceRefs,
-                *poolSwitchers[algoType]
-            };
+            {
+                auto lockedPoolSwitchers = poolSwitchers.readLock();
+                AlgoConstructionArgs args{
+                        *compute,
+                        assignedDeviceRefs,
+                        *lockedPoolSwitchers->at(algoName)
+                };
 
-            auto algo = Algorithm::makeAlgo(args, implName);
+                auto algo = Algorithm::makeAlgo(args, implName);
 
-            algorithms.emplace_back(std::move(algo));
+                algorithms.emplace_back(std::move(algo));
+            }
         }
     }
 

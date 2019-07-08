@@ -45,8 +45,8 @@ namespace miner {
     class Pool : public StillAliveTrackable {
 
         struct Entry {
-            std::string implName;
-            AlgoEnum algoEnum;
+            const std::string implName;
+            const std::string algoName;
             ProtoEnum protoEnum;
             std::function<unique_ptr<Pool>(PoolConstructionArgs)> makeFunc;
         };
@@ -57,6 +57,7 @@ namespace miner {
         }
 
         static optional_ref<Entry> entryWithName(const std::string &implName);
+        const Entry *info = nullptr;
 
     protected:
         static uint64_t createNewPoolUid();
@@ -65,39 +66,50 @@ namespace miner {
     public:
         virtual cstring_span getName() const = 0;
         virtual uint64_t getPoolUid() const = 0;
-        virtual optional<unique_ptr<WorkBase>> tryGetWork() = 0;
-        virtual void submitWork(unique_ptr<WorkResultBase> result) = 0;
+        virtual optional<unique_ptr<Work>> tryGetWork() = 0;
+        virtual void submitWork(unique_ptr<WorkSolution> result) = 0;
+
+        inline std::string getImplName() const {
+            return info->implName;
+        }
+
+        inline std::string getAlgoName() const {
+            return info->algoName;
+        }
 
         //returns either nullopt or a valid unique_ptr (!= nullptr)
-        template<AlgoEnum A>
-        optional<unique_ptr<Work<A>>> tryGetWork() {
+        template<class Work>
+        optional<unique_ptr<Work>> tryGetWork() {
             auto maybeWork = tryGetWork();
             if (maybeWork) {
                 auto &work = maybeWork.value();
-                MI_EXPECTS(work != nullptr && work->getAlgoEnum() == A);
-                return static_unique_ptr_cast<Work<A>>(std::move(maybeWork.value()));
+                MI_EXPECTS(work != nullptr && work->algorithmName == Work::getName());
+                return static_unique_ptr_cast<Work>(std::move(maybeWork.value()));
             }
             return nullopt;
         }
 
-        template<AlgoEnum A>
-        void submitWork(unique_ptr<WorkResult<A>> result) {
-            MI_EXPECTS(result != nullptr && result->getAlgoEnum() == A);
+        template<class WorkSolution>
+        void submitWork(unique_ptr<WorkSolution> result) {
+            MI_EXPECTS(result != nullptr && result->algorithmName == WorkSolution::getName());
 
-            submitWork(static_unique_ptr_cast<WorkResultBase>(std::move(result)));
+            submitWork(static_unique_ptr_cast<WorkSolution>(std::move(result)));
         }
 
         template<typename T>
         struct Registry {
-            Registry(const std::string &name, AlgoEnum algoEnum, ProtoEnum protoEnum) noexcept {
+            Registry(const std::string &name, const std::string &algoName, ProtoEnum protoEnum) noexcept {
                 LOG(DEBUG) << "register Pool: " << name;
 
-                //create type erased creation function
-                auto makeFunc = [] (PoolConstructionArgs args) {
-                    return std::make_unique<T>(std::move(args));
-                };
+                getEntries().emplace_back(Entry{name, algoName, protoEnum});
 
-                getEntries().emplace_back(Entry{name, algoEnum, protoEnum, makeFunc});
+                auto *entry = &getEntries().back();
+                //create type erased creation function
+                entry->makeFunc = [entry] (PoolConstructionArgs args) {
+                    auto pool = std::make_unique<T>(std::move(args));
+                    pool->info = entry;
+                    return pool;
+                };
             }
 
             Registry() = delete;
@@ -106,13 +118,13 @@ namespace miner {
 
         //returns nullptr if no matching pool was found
         static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &poolImplName);
-        static unique_ptr<Pool> makePool(PoolConstructionArgs args, AlgoEnum, ProtoEnum);
+        static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &algoName, ProtoEnum);
 
         //returns implName
-        static std::string getImplNameForAlgoTypeAndProtocol(AlgoEnum, ProtoEnum);
+        static std::string getImplNameForAlgoTypeAndProtocol(const std::string &algoName, ProtoEnum);
 
-        //returns kAlgoTypeCount if implName doesn't match any pool impl
-        static AlgoEnum getAlgoTypeForImplName(const std::string &implName);
+        //returns empty string if implName doesn't match any pool impl
+        static std::string getAlgoTypeForImplName(const std::string &implName);
 
         //returns kProtoCount if implName doesn't match any pool impl
         static ProtoEnum getProtocolForImplName(const std::string &implName);

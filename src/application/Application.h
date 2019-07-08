@@ -10,6 +10,7 @@
 #include <src/pool/PoolSwitcher.h>
 #include <src/application/ApiServer.h>
 #include <deque>
+#include <map>
 #include "Config.h"
 
 namespace miner {
@@ -21,10 +22,10 @@ namespace miner {
         unique_ptr<ComputeModule> compute; //lazy init, depends on config
 
         //This below is implicitly assuming that the same Gpu cannot be used by 2 AlgoImpls simultaneoulsy since they share the AlgoSettings. If this ever changes this vector must be something else
-        LockGuarded<std::deque<optional<Device>>> devicesInUse; //nullopt if device is not used by any algo, same indexing as ConfigModule::getAllDeviceIds()
+        SharedLockGuarded<std::deque<optional<Device>>> devicesInUse; //nullopt if device is not used by any algo, same indexing as ConfigModule::getAllDeviceIds()
 
-        //this array is accessed with the AlgoEnum and may contain nullptr
-        std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> poolSwitchers;
+        //algorithm name is the key of this map
+        SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> poolSwitchers;
 
         std::list<unique_ptr<Algorithm>> algorithms;
 

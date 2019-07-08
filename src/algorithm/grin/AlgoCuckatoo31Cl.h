@@ -8,16 +8,13 @@
 
 namespace miner {
 
-typedef Work<kCuckatoo31> CuckooHeader;
-typedef WorkResult<kCuckatoo31> CuckooPow;
-
 class AlgoCuckatoo31Cl: public Algorithm {
 
 public:
     explicit AlgoCuckatoo31Cl(AlgoConstructionArgs args);
     ~AlgoCuckatoo31Cl() override;
 
-    static SiphashKeys calculateKeys(const CuckooHeader& header);
+    static SiphashKeys calculateKeys(const WorkCuckatoo31& header);
 
 private:
     void run(cl::Context& context, CuckatooSolver& solver);

@@ -4,7 +4,7 @@
 
 #include <src/util/Copy.h>
 #include <src/util/ConfigUtils.h>
-#include <src/pool/Work.h>
+#include <src/pool/WorkCuckoo.h>
 
 #include <src/common/OpenCL.h>
 #include <src/compute/opencl/CLProgramLoader.h>

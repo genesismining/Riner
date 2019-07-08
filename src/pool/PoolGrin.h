@@ -3,7 +3,7 @@
 
 #include "AutoRefillQueue.h"
 #include "Pool.h"
-#include "WorkCuckaroo.h"
+#include "WorkCuckoo.h"
 
 #include <src/pool/WorkEthash.h>
 #include <src/network/TcpJsonProtocolUtil.h>
@@ -33,11 +33,11 @@ namespace miner {
         cstring_span getName() const override;
 
         // Pool interface
-        optional<unique_ptr<WorkBase>> tryGetWork() override;
+        optional<unique_ptr<Work>> tryGetWork() override;
 
-        void submitWork(unique_ptr<WorkResultBase> result) override;
+        void submitWork(unique_ptr<WorkSolution> result) override;
     private:
-        using QueueItem = std::unique_ptr<Work<kCuckatoo31>>;
+        using QueueItem = std::unique_ptr<WorkCuckatoo31>;
         using WorkQueue = AutoRefillQueue<QueueItem>;
 
         uint64_t getPoolUid() const override;

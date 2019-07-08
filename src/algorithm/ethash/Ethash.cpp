@@ -117,7 +117,7 @@ namespace miner {
     }
 
 
-    EthashRegenhashResult ethash_regenhash(const Work<kEthash> &work, cByteSpan<> dagCache, uint64_t nonce) {
+    EthashRegenhashResult ethash_regenhash(const WorkEthash &work, cByteSpan<> dagCache, uint64_t nonce) {
         EthashRegenhashResult result {};
 
         //LOG(DEBUG) << printfStr("Regenhash: First qword of input: 0x%016llX.", nonce);

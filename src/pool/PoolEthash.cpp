@@ -82,7 +82,7 @@ namespace miner {
         auto &sharedProtoData = protocolDatas.back();
         auto weakProtoData = make_weak(sharedProtoData);
 
-        auto work = std::make_unique<Work<kEthash>>(weakProtoData);
+        auto work = std::make_unique<WorkEthash>(weakProtoData);
 
         sharedProtoData->jobId = jparams.at(0);
         HexString(jparams[1]).getBytes(work->header);
@@ -94,9 +94,9 @@ namespace miner {
         workQueue->setMaster(std::move(work), cleanFlag);
     }
 
-    void PoolEthashStratum::submitWork(unique_ptr<WorkResultBase> resultBase) {
+    void PoolEthashStratum::submitWork(unique_ptr<WorkSolution> resultBase) {
 
-        auto result = static_unique_ptr_cast<WorkResult<kEthash>>(std::move(resultBase));
+        auto result = static_unique_ptr_cast<WorkSolutionEthash>(std::move(resultBase));
 
         //build and send submitMessage on the tcp thread
 
@@ -146,7 +146,7 @@ namespace miner {
 
             for (auto i = currentSize; i < 16; ++i) {
                 ++workMaster->extraNonce;
-                auto newWork = std::make_unique<Work<kEthash>>(*workMaster);
+                auto newWork = std::make_unique<WorkEthash>(*workMaster);
                 out.push_back(std::move(newWork));
             }
             LOG(INFO) << "workQueue got refilled from " << currentSize << " to " << currentSize + out.size() << " items";
@@ -165,7 +165,7 @@ namespace miner {
         shutdown = true;
     }
 
-    optional<unique_ptr<WorkBase>> PoolEthashStratum::tryGetWork() {
+    optional<unique_ptr<Work>> PoolEthashStratum::tryGetWork() {
         if (auto work = workQueue->popWithTimeout(std::chrono::milliseconds(100)))
             return std::move(work.value()); //implicit unique_ptr upcast
         return nullopt; //timeout

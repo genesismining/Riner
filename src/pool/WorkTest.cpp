@@ -1,6 +1,6 @@
 #include <src/pool/Work.h>
 
-#include <src/pool/WorkCuckaroo.h>
+#include <src/pool/WorkCuckoo.h>
 
 #include <src/util/Logging.h>
 #include <gtest/gtest.h>

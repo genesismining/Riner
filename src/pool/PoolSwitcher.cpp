@@ -82,7 +82,7 @@ namespace miner {
         return type_safe::opt_ref(*poolData.pool);
     }
 
-    optional<unique_ptr<WorkBase>> PoolSwitcher::tryGetWork() {
+    optional<unique_ptr<Work>> PoolSwitcher::tryGetWork() {
         std::lock_guard<std::mutex> lock(mut);
         auto pool = activePool();
         if (pool) {
@@ -97,7 +97,7 @@ namespace miner {
         return nullopt;
     }
 
-    void PoolSwitcher::submitWork(unique_ptr<WorkResultBase> result) {
+    void PoolSwitcher::submitWork(unique_ptr<WorkSolution> result) {
         std::shared_ptr<WorkProtocolData> data = result->getProtocolData().lock();
         if (!data) {
             LOG(INFO) << "work result cannot be submitted because it has expired";

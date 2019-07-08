@@ -31,7 +31,7 @@ namespace miner {
         };
 
         struct Pool {
-            AlgoEnum type; //e.g. ethash
+            std::string algorithmName; //e.g. ethash
             ProtoEnum protocol; //e.g. stratum
 
             std::string host;

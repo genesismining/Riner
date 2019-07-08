@@ -55,7 +55,7 @@ namespace miner {
         while (!shutdown) {
             //get work only for obtaining dag creation info
 		    LOG(INFO) << "trying to get work for dag creation";
-            auto work = pool.tryGetWork<kEthash>().value_or(nullptr);
+            auto work = pool.tryGetWork<WorkEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
 
@@ -122,7 +122,7 @@ namespace miner {
         }
 
         while (!shutdown) {
-            std::shared_ptr<const Work<kEthash>> work = pool.tryGetWork<kEthash>().value_or(nullptr);
+            std::shared_ptr<const WorkEthash> work = pool.tryGetWork<WorkEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
 
@@ -155,14 +155,14 @@ namespace miner {
         }
     }
 
-    void AlgoEthashCL::submitShareTask(std::shared_ptr<const Work<kEthash>> work, std::vector<uint32_t> resultNonces) {
+    void AlgoEthashCL::submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint32_t> resultNonces) {
 
         for (auto nonce32 : resultNonces) {//for each possible solution
 
             uint64_t shiftedExtraNonce = uint64_t(work->extraNonce) << 32ULL;
             uint64_t nonce = nonce32 | shiftedExtraNonce;
 
-            auto result = work->makeWorkResult<kEthash>();
+            auto result = work->makeWorkResult<WorkSolutionEthash>();
 
             //calculate proof of work hash from nonce and dag-caches
             EthashRegenhashResult hashes {};
@@ -210,7 +210,7 @@ namespace miner {
     }
     */
 
-    std::vector<uint32_t> AlgoEthashCL::runKernel(PerGpuSubTask &state, DagFile &dag, const Work<kEthash> &work,
+    std::vector<uint32_t> AlgoEthashCL::runKernel(PerGpuSubTask &state, DagFile &dag, const WorkEthash &work,
                                                           uint64_t nonceBegin, uint64_t nonceEnd) {
         cl_int err = 0;
         std::vector<uint32_t> results;

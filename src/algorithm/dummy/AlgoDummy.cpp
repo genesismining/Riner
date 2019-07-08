@@ -12,8 +12,6 @@ namespace miner {
     using namespace std::chrono;
     using namespace std::this_thread;
 
-    static Algorithm::Registry<AlgoDummy> registry {"AlgoDummy", kEthash};
-
     AlgoDummy::AlgoDummy(AlgoConstructionArgs argsMoved)
     : _args(std::move(argsMoved)) {
 
@@ -49,11 +47,9 @@ namespace miner {
 
         while (!algo._shutdown) {
 
-            auto workOr = pool.tryGetWork<kEthash>().value_or(nullptr);
+            auto workOr = pool.tryGetWork<WorkEthash>().value_or(nullptr);
             if (!workOr)
                 continue;
-
-            Work<kEthash> &work = *workOr;
 
             auto rawIntensity = device.settings.raw_intensity;
 
@@ -63,7 +59,7 @@ namespace miner {
             device.records.reportFailedShareVerification();
             sleep_for(seconds(1));
 
-            if (work.expired()) {
+            if (workOr->expired()) {
                 continue;
             }
         }

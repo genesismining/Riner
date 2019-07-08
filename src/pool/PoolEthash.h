@@ -38,10 +38,10 @@ namespace miner {
         PoolConstructionArgs args;
 
         // Pool interface
-        optional<unique_ptr<WorkBase>> tryGetWork() override;
-        void submitWork(unique_ptr<WorkResultBase> result) override;
+        optional<unique_ptr<Work>> tryGetWork() override;
+        void submitWork(unique_ptr<WorkSolution> result) override;
 
-        using WorkQueueType = AutoRefillQueue<unique_ptr<Work<kEthash>>>;
+        using WorkQueueType = AutoRefillQueue<unique_ptr<WorkEthash>>;
         unique_ptr<WorkQueueType> workQueue;
 
         // Pool Uid

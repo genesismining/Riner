@@ -7,19 +7,21 @@
 #include <src/util/LockUtils.h>
 #include "Device.h"
 #include <deque>
+#include <map>
 
 namespace miner {
     class PoolSwitcher;
 
     class ApiServer {
-        const LockGuarded<std::deque<optional<Device>>> &devicesInUse;
-        const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers;
+        const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse;
+        const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers;
 
         unique_ptr<JrpcServer> jrpc;
 
         void registerFunctions();
     public:
-        explicit ApiServer(uint16_t port, const LockGuarded<std::deque<optional<Device>>> &devicesInUse, const std::array<unique_ptr<PoolSwitcher>, kAlgoTypeCount> &poolSwitchers);
+        explicit ApiServer(uint16_t port, const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse,
+                const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers);
         ~ApiServer();
     };
 
