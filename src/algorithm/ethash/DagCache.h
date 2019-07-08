@@ -17,7 +17,7 @@ namespace miner {
     public:
         void generate(uint32_t epoch, cByteSpan<32> seedHash);
 
-        void generateIfNeeded(uint32_t epoch, cByteSpan<32> seedHash);
+        bool isGenerated(uint32_t epoch) const;
 
         uint32_t getEpoch() const;
 

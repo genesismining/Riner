@@ -62,18 +62,20 @@ namespace miner {
             LOG(INFO) << "using work to generate dag";
 
             //~ every 5 days
-            DagCacheContainer *dagCachePtr = nullptr; //TODO: implement read locks and replace this ptr with a read-locked dagCache
             {
-		        LOG(INFO) << "waiting for dag cache to be generated";
-                auto cache = dagCache.lock(); //TODO: obtain write-lock here once read/write locks are implemented
-                cache->generateIfNeeded(work->epoch, work->seedHash);
-		        LOG(INFO) << "dag cache was generated for epoch " << cache->getEpoch();
-                dagCachePtr = &*cache;
-            }
+                LOG(INFO) << "waiting for dag cache to be generated";
+                auto cache = dagCache.readLock();
+                if (!cache->isGenerated(work->epoch)) {
+                    auto writeCache = cache.upgrade();
+                    writeCache->generate(work->epoch, work->seedHash);
+                    cache = writeCache.downgrade();
+                }
+                LOG(INFO) << "dag cache was generated for epoch " << cache->getEpoch();
 
-            if (!dag.generate(*dagCachePtr, work->seedHash, plat.clContext, clDevice, plat.clProgram)) {
-                LOG(ERROR) << "generating dag file failed.";
-                continue;
+                if (!dag.generate(*cache, work->seedHash, plat.clContext, clDevice, plat.clProgram)) {
+                    LOG(ERROR) << "generating dag file failed.";
+                    continue;
+                }
             }
 
             LOG(INFO) << "launching " << numGpuSubTasks << " gpu-subtasks for the current gpu-task";
@@ -167,7 +169,7 @@ namespace miner {
             //calculate proof of work hash from nonce and dag-caches
             EthashRegenhashResult hashes {};
             {
-                auto caches = dagCache.lock(); //todo: implement readlock
+                auto caches = dagCache.readLock();
                 hashes = ethash_regenhash(*work, caches->getCache(), nonce);
             }
 

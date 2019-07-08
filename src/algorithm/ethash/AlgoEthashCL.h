@@ -17,7 +17,7 @@ namespace miner {
 
     class AlgoEthashCL : public Algorithm {
 
-        LockGuarded<DagCacheContainer> dagCache;
+        UpgradeableLockGuarded<DagCacheContainer> dagCache;
         Pool &pool;
         CLProgramLoader &clProgramLoader;
 
