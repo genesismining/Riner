@@ -193,7 +193,7 @@ namespace miner {
             this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
             auto ret = ReadLocked<T, Mutex>{this->getConstRef()}; // shared lock is owned now
             this->guarded.get().upgradeMut.unlock();
-            return std::move(ret);
+            return ret;
         }
     };
 
