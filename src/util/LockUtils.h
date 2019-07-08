@@ -153,12 +153,12 @@ namespace miner {
         ReadLocked &operator=(ReadLocked &&) noexcept = default;
 
         WriteLocked<T, Mutex> upgrade() {
-            std::lock_guard<std::mutex> lk(this->guarded.get().upgradeMut);
+            this->guarded.get().upgradeMut.lock();
             // move this->lock to new object
             auto mut = this->lock.release();
             mut->unlock_shared();
             this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
-            return {this->getMutableRef()};
+            return {this->getMutableRef()}; // now we own a unique lock
         }
     };
 
@@ -178,13 +178,22 @@ namespace miner {
         WriteLocked(WriteLocked &&) noexcept = default;
         WriteLocked &operator=(WriteLocked &&) noexcept = default;
 
+        ~WriteLocked() {
+            // check whether the object was moved
+            if (this->lock) {
+                this->lock.release()->unlock();
+                this->guarded.get().upgradeMut.unlock();
+            }
+        }
+
         ReadLocked<T, Mutex> downgrade() {
-            std::lock_guard<std::mutex> lk(this->guarded.get().upgradeMut);
             // move this->lock to new object
             auto mut = this->lock.release();
             mut->unlock();
             this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
-            return {this->getConstRef()};
+            auto ret = ReadLocked<T, Mutex>{this->getConstRef()}; // shared lock is owned now
+            this->guarded.get().upgradeMut.unlock();
+            return std::move(ret);
         }
     };
 
@@ -213,12 +222,12 @@ namespace miner {
         }
 
         WriteLocked<T, SharedMutex> lock() const {
-            std::lock_guard<std::mutex> lk(upgradeMut);
+            upgradeMut.lock();
             return {*this};
         }
 
         WriteLocked<T, SharedMutex> lock() {
-            std::lock_guard<std::mutex> lk(upgradeMut);
+            upgradeMut.lock();
             return {*this};
         }
 
