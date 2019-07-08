@@ -19,7 +19,7 @@ namespace miner {
         return size;
     }
 
-    bool DagFile::generate(const DagCacheContainer &cache, cByteSpan<32> seedHash,
+    bool DagFile::generate(const DagCacheContainer &cache,
                   const cl::Context &context, const cl::Device &device, cl::Program &generateDagProgram) {
         cl_int err;
         auto epoch = cache.getEpoch();

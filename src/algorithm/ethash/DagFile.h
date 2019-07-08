@@ -24,7 +24,7 @@ namespace miner {
         bool valid = false;
     public:
 
-        bool generate(const DagCacheContainer &cache, cByteSpan<32> seedHash,
+        bool generate(const DagCacheContainer &cache,
                 const cl::Context &, const cl::Device &, cl::Program &generateDagProgram);
 
         uint32_t getEpoch() const;

@@ -72,7 +72,7 @@ namespace miner {
                 }
                 LOG(INFO) << "dag cache was generated for epoch " << cache->getEpoch();
 
-                if (!dag.generate(*cache, work->seedHash, plat.clContext, clDevice, plat.clProgram)) {
+                if (!dag.generate(*cache, plat.clContext, clDevice, plat.clProgram)) {
                     LOG(ERROR) << "generating dag file failed.";
                     continue;
                 }

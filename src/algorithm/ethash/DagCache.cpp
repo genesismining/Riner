@@ -24,7 +24,7 @@ namespace miner {
     }
 
     bool DagCacheContainer::isGenerated(uint32_t epoch) const {
-        return epoch == currentEpoch && currentEpoch != std::numeric_limits<uint32_t>::max();
+        return valid && epoch == currentEpoch;
     }
 
     uint32_t DagCacheContainer::getEpoch() const {
