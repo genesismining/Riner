@@ -128,6 +128,10 @@ namespace miner {
             return {*this};
         }
 
+        Locked<const SharedLockGuarded<T, SharedMutex>, std::shared_lock<SharedMutex>> readLock() const {
+            return {*this};
+        }
+
     };
 
 
@@ -208,7 +212,17 @@ namespace miner {
                 : t(std::forward<Args>(args) ...) {
         }
 
+        WriteLocked<T, SharedMutex> lock() const {
+            std::lock_guard<std::mutex> lk(upgradeMut);
+            return {*this};
+        }
+
         WriteLocked<T, SharedMutex> lock() {
+            std::lock_guard<std::mutex> lk(upgradeMut);
+            return {*this};
+        }
+
+        ReadLocked<T, SharedMutex> readLock() const {
             std::lock_guard<std::mutex> lk(upgradeMut);
             return {*this};
         }
