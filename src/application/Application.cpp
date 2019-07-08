@@ -116,18 +116,15 @@ namespace miner {
 
             logLaunchInfo(implName, assignedDeviceRefs);
 
-            {
-                auto lockedPoolSwitchers = poolSwitchers.readLock();
-                AlgoConstructionArgs args{
-                        *compute,
-                        assignedDeviceRefs,
-                        *lockedPoolSwitchers->at(algoName)
-                };
+            AlgoConstructionArgs args{
+                    *compute,
+                    assignedDeviceRefs,
+                    *lockedPoolSwitchers->at(algoName)
+            };
 
-                auto algo = Algorithm::makeAlgo(args, implName);
+            auto algo = Algorithm::makeAlgo(args, implName);
 
-                algorithms.emplace_back(std::move(algo));
-            }
+            algorithms.emplace_back(std::move(algo));
         }
     }
 
