@@ -7,6 +7,7 @@
 #include <src/common/Endian.h>
 #include <src/compute/opencl/CLProgramLoader.h>
 #include "Ethash.h"
+#include <memory>
 
 namespace miner {
 
@@ -64,15 +65,21 @@ namespace miner {
             //~ every 5 days
             {
                 LOG(INFO) << "waiting for dag cache to be generated";
-                auto cache = dagCache.readLock();
-                if (!cache->isGenerated(work->epoch)) {
-                    auto writeCache = cache.upgrade();
+                typedef decltype(dagCache.readLock()) read_locked_cache_t;
+                unique_ptr<read_locked_cache_t> readCachePtr;
+                auto lockedCache = dagCache.immediateLock();
+                if (!lockedCache->isGenerated(work->epoch)) {
+                    auto writeCache = lockedCache.upgrade();
                     writeCache->generate(work->epoch, work->seedHash);
-                    cache = writeCache.downgrade();
+                    readCachePtr = std::make_unique<read_locked_cache_t>(writeCache.downgrade());
                 }
-                LOG(INFO) << "dag cache was generated for epoch " << cache->getEpoch();
+                else {
+                    readCachePtr = std::make_unique<read_locked_cache_t>(lockedCache.downgrade());
+                }
+                auto &readCache = *readCachePtr;
+                LOG(INFO) << "dag cache was generated for epoch " << readCache->getEpoch();
 
-                if (!dag.generate(*cache, plat.clContext, clDevice, plat.clProgram)) {
+                if (!dag.generate(*readCache, plat.clContext, clDevice, plat.clProgram)) {
                     LOG(ERROR) << "generating dag file failed.";
                     continue;
                 }

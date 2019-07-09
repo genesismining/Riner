@@ -28,6 +28,7 @@ namespace miner {
 
     template<class T, class Lock = std::unique_lock<typename T::mutex_type>>
     class Locked {
+        template<class U, class M> friend class Locked;
         template<class U, class M> friend class LockGuarded;
         template<class U, class M> friend class SharedLockGuarded;
 
@@ -49,7 +50,15 @@ namespace miner {
             guarded.get().refCount.fetch_add(1, std::memory_order_relaxed);
         }
 
+        template<class U, class L>
+        Locked(Locked<U, L> &&other) : guarded(other.getMutableRef()) {
+            other.lock.unlock();
+            lock = Lock(other.guarded.get().mut);
+        }
+
     public:
+
+        typedef typename T::value_type value_t;
 
         Locked(Locked &&) noexcept = default;
         Locked &operator=(Locked &&) noexcept = default;
@@ -62,17 +71,21 @@ namespace miner {
 
         inline operator bool() const {return lock;}
 
-        inline std::conditional_t<std::is_const<T>::value, std::add_const_t<typename T::value_type>, typename T::value_type> &operator*() {
+        inline std::conditional_t<std::is_const<T>::value, std::add_const_t<value_t>, value_t> &operator*() {
             MI_EXPECTS(lock);
             return guarded.get().t;
         }
-        inline std::conditional_t<std::is_const<T>::value, std::add_const_t<typename T::value_type>, typename T::value_type> *operator->() {return &operator*();}
+        inline std::conditional_t<std::is_const<T>::value, std::add_const_t<value_t>, value_t> *operator->() {
+            return &operator*();
+        }
 
-        inline const typename T::value_type *operator->() const {
+        inline const value_t *operator->() const {
             MI_EXPECTS(lock);
             return guarded.get().t;
         }
-        inline const typename T::value_type &operator *() const {return  operator*();}
+        inline const value_t &operator *() const {
+            return  operator*();
+        }
     };
 
     template<class T, class Mutex>
@@ -139,6 +152,7 @@ namespace miner {
     template<class T, class Mutex>
     class ReadLocked : public Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>> {
         template<class U, class M> friend class WriteLocked;
+        template<class U, class M> friend class ImmediateLocked;
         template<class U, class M> friend class UpgradeableLockGuarded;
 
     protected:
@@ -147,30 +161,84 @@ namespace miner {
                 : Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>>(t) {
         }
 
+        ReadLocked(Locked<UpgradeableLockGuarded<T, Mutex>, std::unique_lock<Mutex>> &&other)
+                : Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>>(std::move(other)) {
+        }
+
+        ReadLocked(Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>> &&other)
+                : Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>>(std::move(other)) {
+        }
+
     public:
 
         ReadLocked(ReadLocked &&) noexcept = default;
         ReadLocked &operator=(ReadLocked &&) noexcept = default;
 
+        /**
+         * Dangerous: can cause a deadlock when used together with UpgradeableLockGuarded::lock()
+         */
         WriteLocked<T, Mutex> upgrade() {
             this->guarded.get().upgradeMut.lock();
-            // move this->lock to new object
-            auto mut = this->lock.release();
-            mut->unlock_shared();
-            this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
-            return {this->getMutableRef()}; // now we own a unique lock
+            return std::move(*this);
         }
     };
 
     template<class T, class Mutex>
+    class ImmediateLocked : public Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>> {
+        template<class U, class M> friend class ReadLocked;
+        template<class U, class M> friend class WriteLocked;
+        template<class U, class M> friend class UpgradeableLockGuarded;
+
+    protected:
+
+        ImmediateLocked(const UpgradeableLockGuarded<T, Mutex> &t)
+                : Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>>(t) {
+        }
+
+        ImmediateLocked(Locked<UpgradeableLockGuarded<T, Mutex>, std::unique_lock<Mutex>> &&other)
+                : Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>>(std::move(other)) {
+        }
+
+    public:
+
+        ImmediateLocked(ImmediateLocked &&) noexcept = default;
+        ImmediateLocked &operator=(ImmediateLocked &&) noexcept = default;
+
+        ~ImmediateLocked() {
+            // check whether the object was moved
+            if (this->lock) {
+                this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
+                this->lock.unlock();
+                this->guarded.get().upgradeMut.unlock();
+            }
+        }
+
+        WriteLocked<T, Mutex> upgrade() {
+            return std::move(*this);
+        }
+
+        ReadLocked<T, Mutex> downgrade() {
+            ImmediateLocked ret = std::move(*this);
+            ret.guarded.get().upgradeMut.unlock();
+            return ret;
+        }
+    };
+
+
+    template<class T, class Mutex>
     class WriteLocked : public Locked<UpgradeableLockGuarded<T, Mutex>, std::unique_lock<Mutex>> {
         template<class U, class M> friend class ReadLocked;
+        template<class U, class M> friend class ImmediateLocked;
         template<class U, class M> friend class UpgradeableLockGuarded;
 
     protected:
 
         WriteLocked(UpgradeableLockGuarded<T, Mutex> &t)
                 : Locked<UpgradeableLockGuarded<T, Mutex>, std::unique_lock<Mutex>>(t) {
+        }
+
+        WriteLocked(Locked<const UpgradeableLockGuarded<T, Mutex>, std::shared_lock<Mutex>> &&other)
+                : Locked<UpgradeableLockGuarded<T, Mutex>, std::unique_lock<Mutex>>(std::move(other)) {
         }
 
     public:
@@ -181,18 +249,15 @@ namespace miner {
         ~WriteLocked() {
             // check whether the object was moved
             if (this->lock) {
-                this->lock.release()->unlock();
+                this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
+                this->lock.unlock();
                 this->guarded.get().upgradeMut.unlock();
             }
         }
 
         ReadLocked<T, Mutex> downgrade() {
-            // move this->lock to new object
-            auto mut = this->lock.release();
-            mut->unlock();
-            this->guarded.get().refCount.fetch_add(-1, std::memory_order_relaxed);
-            auto ret = ReadLocked<T, Mutex>{this->getConstRef()}; // shared lock is owned now
-            this->guarded.get().upgradeMut.unlock();
+            ReadLocked<T, Mutex> ret = std::move(*this); // shared lock is owned now
+            ret.guarded.get().upgradeMut.unlock();
             return ret;
         }
     };
@@ -203,6 +268,7 @@ namespace miner {
         template<class U, class M> friend class Locked;
         template<class U, class M> friend class WriteLocked;
         template<class U, class M> friend class ReadLocked;
+        template<class U, class M> friend class ImmediateLocked;
 
     protected:
         T t;
@@ -227,6 +293,16 @@ namespace miner {
         }
 
         WriteLocked<T, SharedMutex> lock() {
+            upgradeMut.lock();
+            return {*this};
+        }
+
+        ImmediateLocked<T, SharedMutex> immediateLock() const {
+            upgradeMut.lock();
+            return {*this};
+        }
+
+        ImmediateLocked<T, SharedMutex> immediateLock() {
             upgradeMut.lock();
             return {*this};
         }
