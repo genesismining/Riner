@@ -3,17 +3,10 @@
 
 #include "Application.h"
 #include <src/util/FileUtils.h>
-#include <src/application/Config.h>
 #include <src/util/Logging.h>
-#include <src/common/Optional.h>
-#include <src/compute/ComputeModule.h>
 #include <src/common/Json.h>
-#include <src/pool/PoolEthash.h>
-#include <src/algorithm/ethash/AlgoEthashCL.h>
-#include <thread>
-#include <src/algorithm/Algorithm.h>
-#include <src/pool/PoolSwitcher.h>
 #include <src/util/ConfigUtils.h>
+#include <thread>
 
 namespace miner {
 

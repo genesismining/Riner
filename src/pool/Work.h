@@ -57,7 +57,7 @@ namespace miner {
         }
 
         template<class T>
-        unique_ptr<T> makeWorkResult() const {
+        unique_ptr<T> makeWorkSolution() const {
             return std::make_unique<T>(protocolData);
         }
     };

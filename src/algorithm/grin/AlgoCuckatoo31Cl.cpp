@@ -69,7 +69,7 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
         LOG(INFO)<< "Found " << cycles.size() << " cycles of target length.";
         // TODO sha pow and compare to difficulty
         for (auto& cycle : cycles) {
-            auto pow = work->makeWorkResult<POWCuckatoo31>();
+            auto pow = work->makeWorkSolution<POWCuckatoo31>();
             pow->height = work->height;
             pow->nonce = work->nonce;
             pow->pow = std::move(cycle.edges);

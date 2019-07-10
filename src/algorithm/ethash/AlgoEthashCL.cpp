@@ -171,7 +171,7 @@ namespace miner {
             uint64_t shiftedExtraNonce = uint64_t(work->extraNonce) << 32ULL;
             uint64_t nonce = nonce32 | shiftedExtraNonce;
 
-            auto result = work->makeWorkResult<WorkSolutionEthash>();
+            auto result = work->makeWorkSolution<WorkSolutionEthash>();
 
             //calculate proof of work hash from nonce and dag-caches
             EthashRegenhashResult hashes {};

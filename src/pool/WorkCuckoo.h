@@ -10,7 +10,7 @@
 namespace miner {
 
 struct AlgorithmCuckatoo31 {
-    static constexpr auto getName() {
+    static inline constexpr auto &getName() {
         return "cuckatoo31";
     }
 };

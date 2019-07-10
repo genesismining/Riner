@@ -9,10 +9,8 @@
 
 namespace miner {
 
-    static constexpr char algorithmEthashName[] = "ethash";
-
     struct AlgorithmEthash {
-        static constexpr auto getName() {
+        static inline constexpr auto &getName() {
             return "ethash";
         }
     };
