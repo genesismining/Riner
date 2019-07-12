@@ -81,8 +81,7 @@ namespace miner {
         }
 
         /**
-         * get the name string that uniquely identifies the AlgoImpl class (subclass of Algorithm)
-         * @return
+         * @return name string that uniquely identifies the AlgoImpl class (subclass of Algorithm)
          */
         inline std::string getImplName() const {
             return info->implName;
