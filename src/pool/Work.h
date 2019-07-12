@@ -66,9 +66,9 @@ namespace miner {
 
     /** @brief base class for all classes representing a unit of work of a POWtype as provided by the pool protocol
      * this unit of work does not necessarily correspond to e.g. a stratum job, it may be a work representation of smaller granularity.
-     * The pool protocol implementation is incentivized to make this work of appropriate size (read: amount of work, not byte size) so that the threads in an algorithm impl which are responsible
-     * for pushing work to a GPU can conveniently acquire one Work object with no need of further dividing it into pieces before sending it to one of the GPUs.
-     * Data that is specific to Pool protocol implementations may not be added to a Work superclass, but rather to a WorkProtocolData superclass //TODO: proofread
+     * The pool protocol implementation is incentivized to make this work of appropriate size (read: amount of work, not byte size) so that minimal overhead is
+     * required on the AlgoImpl side to make use of it.
+     * Data that is specific to Pool protocol implementations may not be added to a Work subclass, but rather to a WorkProtocolData subclass //TODO: proofread
      */
     class Work {
         /**
