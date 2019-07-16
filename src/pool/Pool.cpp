@@ -10,8 +10,8 @@ namespace miner {
      * This is necessary so that the compiler includes the necessary code into a library
      * because only Pool is referenced by another compilation unit.
      */
-    static const Pool::Registry<PoolEthashStratum> poolEthashRegistry {"PoolEthashStratum", AlgorithmEthash::getName(), kStratumTcp};
-    static const Pool::Registry<PoolGrinStratum> poolGrinRegistry {"PoolGrinStratum", AlgorithmCuckatoo31::getName(), kStratumTcp};
+    static const Pool::Registry<PoolEthashStratum> poolEthashRegistry {"PoolEthashStratum", AlgorithmEthash::getName(), "EthashStratum3"};
+    static const Pool::Registry<PoolGrinStratum> poolGrinRegistry {"PoolGrinStratum", AlgorithmCuckatoo31::getName(), "EthashStratum3"};
 
 
     uint64_t Pool::createNewPoolUid() {
@@ -32,41 +32,46 @@ namespace miner {
         lastKnownAliveTime = time;
     }
 
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &implName) {
-        if (auto entry = entryWithName(implName))
+    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &poolImplName) {
+        if (auto entry = entryWithName(poolImplName))
             return entry.value().makeFunc(std::move(args));
         return nullptr;
     }
 
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &algoName, ProtoEnum protoEnum) {
-        for (auto &entry : getEntries())
-            if (entry.algoName == algoName && entry.protoEnum == protoEnum)
+    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType) {
+        for (auto &entry : getEntries()) {
+            bool hasMatchingName =
+                    protocolType == entry.protocolType ||
+                    protocolType == entry.protocolTypeAlias;
+
+            if (hasMatchingName && entry.powType == powType)
                 return entry.makeFunc(std::move(args));
+        }
         return nullptr;
     }
 
-    std::string Pool::getImplNameForAlgoTypeAndProtocol(const std::string &algoName, ProtoEnum protoEnum) {
+    std::string Pool::getPoolImplNameForPowAndProtocolType(const std::string &powType, const std::string &protocolType) {
         for (auto &entry : getEntries())
-            if (entry.algoName == algoName && entry.protoEnum == protoEnum)
-                return entry.implName;
-        return "";
+            if (entry.powType == powType && entry.protocolType == protocolType)
+                return entry.poolImplName;
+        return ""; //no matching poolImpl found
     }
 
-    std::string Pool::getAlgoTypeForImplName(const std::string &implName) {
-        if (auto entry = entryWithName(implName))
-            return entry.value().algoName;
-        return ""; //no matching algo type found
+    std::string Pool::getPowTypeForPoolImplName(const std::string &poolImplName) {
+        if (auto entry = entryWithName(poolImplName))
+            return entry.value().powType;
+        return ""; //no matching powType found
     }
 
-    ProtoEnum Pool::getProtocolForImplName(const std::string &implName) {
-        if (auto entry = entryWithName(implName))
-            return entry.value().protoEnum;
-        return kProtoCount;
+    std::string Pool::getProtocolTypeForPoolImplName(const std::string &poolImplName) {
+        if (auto entry = entryWithName(poolImplName))
+            return entry.value().protocolType;
+        return ""; //no matching protocol type found
     }
 
-    auto Pool::entryWithName(const std::string &implName) -> optional_ref<Entry> {
+    auto Pool::entryWithName(const std::string &poolImplName) -> optional_ref<Entry> {
         for (auto &entry : getEntries())
-            if (entry.implName == implName)
+            if (entry.poolImplName == poolImplName)
                 return type_safe::opt_ref(entry);
         return nullopt;
     }

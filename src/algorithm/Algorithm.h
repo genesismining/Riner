@@ -39,10 +39,10 @@ namespace miner {
          */
         template<typename T>
         struct Registry {
-            Registry(const std::string &implName, const std::string &algoName) noexcept {
-                LOG(DEBUG) << "register Algorithm: " << implName;
+            Registry(const std::string &algoImplName, const std::string &powType) noexcept {
+                LOG(DEBUG) << "register Algorithm: " << algoImplName;
 
-                getEntries().emplace_back(Entry{implName, algoName});
+                getEntries().emplace_back(Entry{algoImplName, powType});
 
                 auto *entry = &getEntries().back();
                 //create type erased creation function
@@ -69,22 +69,22 @@ namespace miner {
          */
         static unique_ptr<Algorithm> makeAlgo(AlgoConstructionArgs args, const std::string &algoImplName);
 
-        //returns empty string if implName doesn't match any algo
-        static std::string implNameToAlgoName(const std::string &implName);
+        //returns empty string if algoImplName doesn't match any algo
+        static std::string powTypeForAlgoImplName(const std::string &algoImplName);
 
         /**
          * get the POWtype that this algorithm implements (e.g. in order to find a matching PoolImpl that provides work for this POWtype)
          * @return
          */
         inline std::string getAlgoName() const {
-            return info->algorithmName;
+            return info->powType;
         }
 
         /**
          * @return name string that uniquely identifies the AlgoImpl class (subclass of Algorithm)
          */
-        inline std::string getImplName() const {
-            return info->implName;
+        inline std::string getAlgoImplName() const {
+            return info->algoImplName;
         }
 
     protected:
@@ -95,8 +95,8 @@ namespace miner {
          * necessary information for instantiating AlgoImpls based on name string
          */
         struct Entry {
-            const std::string implName;
-            const std::string algorithmName;
+            const std::string algoImplName;
+            const std::string powType;
             std::function<unique_ptr<Algorithm>(AlgoConstructionArgs)> makeFunc;
         };
 
@@ -105,7 +105,7 @@ namespace miner {
             return entries;
         }
 
-        static optional_ref<Entry> entryWithName(const std::string &implName);
+        static optional_ref<Entry> entryWithName(const std::string &algoImplName);
         const Entry *info = nullptr;
 
     };

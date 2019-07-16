@@ -28,16 +28,16 @@ namespace miner {
         return nullptr;
     }
 
-    std::string Algorithm::implNameToAlgoName(const std::string &implName) {
-        if (auto entry = entryWithName(implName)) {
-            return entry.value().algorithmName;
+    std::string Algorithm::powTypeForAlgoImplName(const std::string &algoImplName) {
+        if (auto entry = entryWithName(algoImplName)) {
+            return entry.value().powType;
         }
         return ""; //no matching algo type found
     }
 
-    auto Algorithm::entryWithName(const std::string &implName) -> optional_ref<Entry> {
+    auto Algorithm::entryWithName(const std::string &algoImplName) -> optional_ref<Entry> {
         for (auto &entry : getEntries()) {
-            if (entry.implName == implName) {
+            if (entry.algoImplName == algoImplName) {
                 return type_safe::opt_ref(entry);
             }
         }

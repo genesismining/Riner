@@ -39,7 +39,7 @@ public:
     CuckatooSolverTest() :
             programLoader(testKernelDir, "") {
         workProtocolData = std::make_shared<WorkProtocolData>(33);
-        header = std::make_unique<CuckooHeader>(workProtocolData);
+        header = std::make_unique<WorkCuckatoo31>(workProtocolData);
     }
 
 protected:
@@ -84,7 +84,7 @@ protected:
     cl::Context context;
     VendorEnum vendor = VendorEnum::kUnknown;
     std::shared_ptr<WorkProtocolData> workProtocolData;
-    std::unique_ptr<CuckooHeader> header;
+    std::unique_ptr<WorkCuckatoo31> header;
 };
 
 TEST_F(CuckatooSolverTest, Solve29) {

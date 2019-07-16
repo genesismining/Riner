@@ -35,7 +35,7 @@ namespace miner {namespace configUtils {
         std::vector<std::reference_wrapper<const Config::Pool>> result;
 
         for (auto &pool : config.getPools()) {
-            if (pool.algorithmName == algoName)
+            if (pool.powType == algoName)
                 result.emplace_back(std::cref(pool));
         }
 
