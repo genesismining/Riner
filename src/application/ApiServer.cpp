@@ -115,7 +115,7 @@ namespace miner {
                 }
 
 
-                result[poolSwitcher->getAlgoName()] = algoj;
+                result[poolSwitcher->getPowType()] = algoj;
             }
             return result;
         });

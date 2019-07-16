@@ -64,8 +64,8 @@ namespace miner {
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            auto algoName = Algorithm::implNameToAlgoName(implName);
-            auto configPools = getConfigPoolsForAlgoName(config, algoName);
+            auto powType = Algorithm::powTypeForAlgoImplName(implName);
+            auto configPools = getConfigPoolsForAlgoName(config, powType);
 
             auto poolSwitcher = std::make_unique<PoolSwitcher>();
 
@@ -78,16 +78,16 @@ namespace miner {
                     p.host, p.port, p.username, p.password, *poolRecords
                 };
 
-                auto pool = Pool::makePool(args, algoName, p.protocol);
+                auto pool = Pool::makePool(args, powType, p.protocolType);
 
                 if (!pool) {
                     LOG(ERROR) << "no pool implementation available for algo type "
-                               << algoName << " in combination with protocol type "
-                               << stringFromProtoEnum(p.protocol);
+                               << powType << " in combination with protocol type "
+                               << p.protocolType;
                     continue;
                 }
 
-                LOG(INFO) << "launching pool '" << pool->getImplName() << "' to connect to " << p.host << " on port " << p.port;
+                LOG(INFO) << "launching pool '" << pool->getPoolImplName() << "' to connect to " << p.host << " on port " << p.port;
 
                 poolSwitcher->push(std::move(pool), std::move(poolRecords), args);
             }
@@ -96,8 +96,8 @@ namespace miner {
                 LOG(ERROR) << "no pools available for algoType of " << implName << ". Cannot launch algorithm";
             }
 
-            lockedPoolSwitchers->emplace(algoName, std::move(poolSwitcher));
-            MI_ENSURES(lockedPoolSwitchers->count(algoName));
+            lockedPoolSwitchers->emplace(powType, std::move(poolSwitcher));
+            MI_ENSURES(lockedPoolSwitchers->count(powType));
 
             decltype(AlgoConstructionArgs::assignedDevices) assignedDeviceRefs;
 
@@ -112,7 +112,7 @@ namespace miner {
             AlgoConstructionArgs args{
                     *compute,
                     assignedDeviceRefs,
-                    *lockedPoolSwitchers->at(algoName)
+                    *lockedPoolSwitchers->at(powType)
             };
 
             auto algo = Algorithm::makeAlgo(args, implName);

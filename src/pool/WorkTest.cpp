@@ -15,7 +15,7 @@ TEST(Work, CreateResult) {
     auto wpd = std::make_shared<WorkProtocolData>(88);
     WorkCuckatoo31 work(wpd);
 
-    unique_ptr<Work<kCuckatoo31>> result = work.makeWorkResult<kCuckatoo31>();
+    unique_ptr<POWCuckatoo31> result = work.makeWorkSolution<POWCuckatoo31>();
     EXPECT_FALSE(work.expired());
     EXPECT_FALSE(result->tryGetProtocolDataAs<WorkProtocolData>() == nullptr);
 }

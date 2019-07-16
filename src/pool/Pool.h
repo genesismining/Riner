@@ -74,25 +74,34 @@ namespace miner {
      */
     class Pool : public StillAliveTrackable {
 
+        /**
+         * Entry in the global registry of Pool subclasses (aka PoolImpls)
+         * it associates a makeFunc (a function that can instantiate a certain subclass)
+         * with runtime string arguments as they would come from the config
+         */
         struct Entry {
-            const std::string implName;
-            const std::string algoName;
-            ProtoEnum protoEnum;
+            const std::string poolImplName;
+            const std::string powType;
+            const std::string protocolType;
+            const std::string protocolTypeAlias;
             std::function<unique_ptr<Pool>(PoolConstructionArgs)> makeFunc;
         };
 
         static std::list<Entry> &getEntries() {
             static std::list<Entry> entries {};
+            static_assert(std::is_same<std::list<Entry>, decltype(entries)>::value, "reminder that elements of entries get pointed to by pool instances, make sure you use a type like std::list with persistent element addresses");
             return entries;
         }
 
-        static optional_ref<Entry> entryWithName(const std::string &implName);
+        static optional_ref<Entry> entryWithName(const std::string &poolImplName);
+
+        //info points to the actual Entry in the global registry. it gets assigned in Entry::makeFunc TODO: refactor, just copy it instead
         const Entry *info = nullptr;
 
     protected:
         /**
          * all pool uids get created through this call
-         * @return a new pool uid that is never 0 for simpler debugging of uninitialized poolUids
+         * @return a new pool uid (that is never 0 for simpler debugging of uninitialized poolUids)
          */
         static uint64_t createNewPoolUid();
         Pool() = default;
@@ -133,7 +142,7 @@ namespace miner {
          * This method is supposed to be called repeatedly in a loop in AlgoImpls, and will not cause busy waiting if
          * nullopt is returned repeatedly due to its internal timeout mechanism
          *
-         * @tparam Work the Work subclass for a specific POWtype
+         * @tparam WorkT the Work subclass for a specific POWtype
          * @return a valid unique_ptr containing work or a nullopt optional
          */
         template<class WorkT>
@@ -142,7 +151,7 @@ namespace miner {
             if (maybeWork) {
                 auto &work = maybeWork.value();
                 MI_EXPECTS(work != nullptr && work->algorithmName == WorkT::getName());
-                return static_unique_ptr_cast<Work>(std::move(maybeWork.value()));
+                return static_unique_ptr_cast<WorkT>(std::move(maybeWork.value()));
             }
             return nullopt;
         }
@@ -165,8 +174,8 @@ namespace miner {
         /**
          * @return string name of the Pool subclass (aka PoolImpl) as it can be passed to makePool
          */
-        inline std::string getImplName() const {
-            return info->implName;
+        inline std::string getPoolImplName() const {
+            return info->poolImplName;
         }
 
         /**
@@ -174,16 +183,25 @@ namespace miner {
          * with Pools that support the same POWtype in a PoolSwitcher)
          * @return this pool's supported POWtype as a string
          */
-        inline std::string getAlgoName() const {
-            return info->algoName;
+        inline std::string getPowType() const {
+            return info->powType;
         }
 
         template<typename T>
         struct Registry {
-            Registry(const std::string &name, const std::string &algoName, ProtoEnum protoEnum) noexcept {
-                LOG(DEBUG) << "register Pool: " << name;
 
-                getEntries().emplace_back(Entry{name, algoName, protoEnum});
+            /**
+             * Registers a new PoolImpl globally, so it can be identified and instantiated based on user provided config arguments
+             *
+             * @param poolImplName string that uniquely identifies the Pool subclass (= PoolImpl)
+             * @param powType powType (e.g. "ethash") that this PoolImpl generates Work/accepts solutions for
+             * @param protocolType name of the protocol as it will be called by the user in the config file
+             * @param protocolTypeAlias optionally an alternative name for the protocol that gets mapped to the actual name above
+             */
+            Registry(const std::string &poolImplName, const std::string &powType, std::string protocolType, std::string protocolTypeAlias = "") noexcept {
+                LOG(DEBUG) << "register Pool: " << poolImplName;
+
+                getEntries().emplace_back(Entry{poolImplName, powType, protocolType, protocolTypeAlias});
 
                 auto *entry = &getEntries().back();
                 //create type erased creation function
@@ -198,20 +216,21 @@ namespace miner {
             DELETE_COPY_AND_MOVE(Registry);
         };
 
-        //returns nullptr if no matching pool was found
+        //returns nullptr if no matching PoolImpl subclass was found
         static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &poolImplName);
-        static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &algoName, ProtoEnum);
+        static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType);
 
-        //returns implName
-        static std::string getImplNameForAlgoTypeAndProtocol(const std::string &algoName, ProtoEnum);
+        //returns emptyString if no matching poolImplName was found
+        static std::string getPoolImplNameForPowAndProtocolType(const std::string &powType, const std::string &protocolType);
 
-        //returns empty string if implName doesn't match any pool impl
-        static std::string getAlgoTypeForImplName(const std::string &implName);
+        //returns empty string if powType doesn't match any registered poolImpl
+        static std::string getPowTypeForPoolImplName(const std::string &powType);
 
-        //returns kProtoCount if implName doesn't match any pool impl
-        static ProtoEnum getProtocolForImplName(const std::string &implName);
+        //returns empty string if poolImplName doesn't match any registered poolImpl
+        static std::string getProtocolTypeForPoolImplName(const std::string &poolImplName);
 
         virtual ~Pool() = default;
+
         DELETE_COPY_AND_MOVE(Pool);
     };
 

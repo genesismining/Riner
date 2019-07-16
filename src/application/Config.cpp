@@ -63,14 +63,14 @@ namespace miner {
         for (auto &jo : j.at("pools")) {
             Pool pool;
 
-            pool.algorithmName = Algorithm::implNameToAlgoName(jo.at("type"));
-            pool.protocol = protoEnumFromString(jo.at("protocol"));
+            pool.powType = Algorithm::powTypeForAlgoImplName(jo.at("type"));
+            pool.protocolType = protoEnumFromString(jo.at("protocol"));
 
-            if (pool.algorithmName.empty()) {
+            if (pool.powType.empty()) {
                 LOG(WARNING) << jo.at("type") << " is not a valid algorithm type, cannot add pool";
                 continue;
             }
-            if (pool.protocol == kProtoCount) {
+            if (pool.protocolType.empty()) {
                 LOG(WARNING) << jo.at("protocol") << " is not a valid protocol type, cannot add pool";
                 continue;
             }
