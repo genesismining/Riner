@@ -13,20 +13,20 @@ namespace {
 
 TEST(Work, CreateResult) {
     auto wpd = std::make_shared<WorkProtocolData>(88);
-    Work<kCuckatoo31> work(wpd);
+    WorkCuckatoo31 work(wpd);
 
-    unique_ptr<WorkResult<kCuckatoo31>> result = work.makeWorkResult<kCuckatoo31>();
+    unique_ptr<Work<kCuckatoo31>> result = work.makeWorkResult<kCuckatoo31>();
     EXPECT_FALSE(work.expired());
     EXPECT_FALSE(result->tryGetProtocolDataAs<WorkProtocolData>() == nullptr);
 }
 
 TEST(Work, CreateResultFromExpiredWork) {
     auto wpd = std::make_shared<WorkProtocolData>(88);
-    Work<kCuckatoo31> work(wpd);
+    WorkCuckatoo31 work(wpd);
     wpd.reset();
     EXPECT_TRUE(work.expired());
 
-    unique_ptr<WorkResult<kCuckatoo31>> result = work.makeWorkResult<kCuckatoo31>();
+    unique_ptr<POWCuckatoo31> result = work.makeWorkSolution<POWCuckatoo31>();
     EXPECT_TRUE(result->tryGetProtocolDataAs<WorkProtocolData>() == nullptr);
 }
 
