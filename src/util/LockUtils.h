@@ -25,7 +25,12 @@ namespace miner {
     template<class T, class Mutex = std::shared_timed_mutex>
     class ReadLocked;
 
-
+    /**
+     * @brief return value of LockGuarded<V>'s lock() method
+     * Locked allows access to a V instance while ensuring that a certain mutex is locked.
+     * It's mainly used as the return type of Lockguarded<V>'s lock() method.
+     * @tparam T the LockGuarded<V> that generated this instance via its lock() method
+     */
     template<class T, class Lock = std::unique_lock<typename T::mutex_type>>
     class Locked {
         template<class U, class M> friend class Locked;
@@ -88,6 +93,15 @@ namespace miner {
         }
     };
 
+    /**
+     * @brief Wrapper around an instance of T that is only accessible after acquiring a lock.
+     * LockGuarded contains a T instance t that is associated with a mutex. t is only accessible via the lock()
+     * method which returns an object of type Locked<...>. This Locked<...> object acts as a RAII-style lock guard, but also provides
+     * operator-> and operator* for accessing the T instance.
+     *
+     * @tparam T type of the instance which is to be protected by the mutex
+     */
+
     template<class T, class Mutex>
     class LockGuarded {
         template<class U, class M> friend class Locked;
@@ -108,10 +122,18 @@ namespace miner {
                 : t(std::forward<Args>(args) ...) {
         }
 
+        /**
+         *
+         * @return Locked<...> that allows access to only the const interface of the wrapped T via operator* and ->
+         */
         auto lock() const -> Locked<std::remove_reference_t<decltype(*this)>> {
             return {*this};
         }
 
+        /**
+         *
+         * @return Locked<...> that allows access to the wrapped T via operator* and ->
+         */
         auto lock() -> Locked<std::remove_reference_t<decltype(*this)>> {
             return {*this};
         }

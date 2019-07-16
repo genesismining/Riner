@@ -9,7 +9,7 @@ namespace miner {
 
     /** @brief base class for pool protocol implementation specific data, e.g. stratum job id for stratum
      *  WorkProtocolData is attached to every Work object. Pool protocol implementations can subclass it to store
-     *  any additional data that is not necessary for the POW algorithm but necessary for identifying which pool/work-package/etc. the work belongs to
+     *  any additional data that is not necessary for the POW algorithm but necessary for identifying which pool/work-package/etc. the work belongs to.
      *  When WorkSolutions are submitted to a Pool, they carry a weak_ptr to that same WorkProtocolData, allowing the pool to immediately read
      *  the necessary information for submission of the share.
      */
@@ -64,11 +64,11 @@ namespace miner {
         virtual ~WorkSolution() = default;
     };
 
-    /** @brief base class for all classes representing a unit of work of a POWtype as provided by the pool protocol
+    /** @brief base class for all classes representing a unit of work of a POWtype as provided by the pool protocol (e.g. see WorkEthash)
      * this unit of work does not necessarily correspond to e.g. a stratum job, it may be a work representation of smaller granularity.
      * The pool protocol implementation is incentivized to make this work of appropriate size (read: amount of work, not byte size) so that minimal overhead is
      * required on the AlgoImpl side to make use of it.
-     * Data that is specific to Pool protocol implementations may not be added to a Work subclass, but rather to a WorkProtocolData subclass //TODO: proofread
+     * Data that is specific to Pool protocol implementations may not be added to a Work subclass, but rather to a WorkProtocolData subclass
      */
     class Work {
         /**
@@ -83,10 +83,10 @@ namespace miner {
         const std::string algorithmName;
         virtual ~Work() = default;
 
-        /** @brief checks whether a solution to this work can still be submitted by the pool protocol when being passed to it.
+        /** @brief checks whether a solution to this work will still be accepted by the pool protocol.
          * expired() may be used as a hint to the algorithm that calculating solutions to this work package is not
-         * beneficial anymore. It is expected (but not necessary) that an algorithm stops working on this work and
-         * acquires fresh work from the pool if work is expired.
+         * beneficial anymore. Upon expiration it is expected (but not necessary) that an algorithm stops working on this work and
+         * acquires fresh work from the pool.
          *
          * @return whether the work has been marked expired by the pool protocol implementation
          */
