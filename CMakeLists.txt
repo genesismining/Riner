@@ -49,7 +49,6 @@ add_library(LibMiner
         src/network/JsonRpcMethod.cpp src/network/JsonRpcMethod.h
         src/network/JsonRpcHandlerMap.cpp src/network/JsonRpcHandlerMap.h
         src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
-        src/pool/WorkQueue.h
         src/pool/AutoRefillQueue.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
