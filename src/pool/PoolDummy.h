@@ -9,7 +9,6 @@
 #include <src/network/TcpJsonRpcProtocolUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
-#include <src/pool/WorkQueue.h>
 #include <src/common/Pointers.h>
 #include <queue>
 #include <future>
@@ -34,7 +33,6 @@ namespace miner {
         explicit PoolDummy(PoolConstructionArgs);
         ~PoolDummy() override;
 
-        cstring_span getName() const override;
 
     private:
         PoolConstructionArgs args;

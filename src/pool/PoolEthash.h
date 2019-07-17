@@ -7,7 +7,6 @@
 #include <src/network/TcpJsonRpcProtocolUtil.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
-#include <src/pool/WorkQueue.h>
 #include <src/common/Pointers.h>
 #include <queue>
 #include <future>
