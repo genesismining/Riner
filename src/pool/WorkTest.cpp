@@ -15,7 +15,7 @@ TEST(Work, CreateResult) {
     auto wpd = std::make_shared<WorkProtocolData>(88);
     WorkCuckatoo31 work(wpd);
 
-    unique_ptr<POWCuckatoo31> result = work.makeWorkSolution<POWCuckatoo31>();
+    unique_ptr<WorkSolutionCuckatoo31> result = work.makeWorkSolution<WorkSolutionCuckatoo31>();
     EXPECT_FALSE(work.expired());
     EXPECT_FALSE(result->tryGetProtocolDataAs<WorkProtocolData>() == nullptr);
 }
@@ -26,7 +26,7 @@ TEST(Work, CreateResultFromExpiredWork) {
     wpd.reset();
     EXPECT_TRUE(work.expired());
 
-    unique_ptr<POWCuckatoo31> result = work.makeWorkSolution<POWCuckatoo31>();
+    unique_ptr<WorkSolutionCuckatoo31> result = work.makeWorkSolution<WorkSolutionCuckatoo31>();
     EXPECT_TRUE(result->tryGetProtocolDataAs<WorkProtocolData>() == nullptr);
 }
 

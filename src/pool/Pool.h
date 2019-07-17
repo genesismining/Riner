@@ -150,7 +150,7 @@ namespace miner {
             auto maybeWork = tryGetWork();
             if (maybeWork) {
                 auto &work = maybeWork.value();
-                MI_EXPECTS(work != nullptr && work->algorithmName == WorkT::getName());
+                MI_EXPECTS(work != nullptr && work->powType == WorkT::getPowType());
                 return static_unique_ptr_cast<WorkT>(std::move(maybeWork.value()));
             }
             return nullopt;
@@ -166,7 +166,7 @@ namespace miner {
          */
         template<class WorkSolutionT>
         void submitWork(unique_ptr<WorkSolutionT> result) {
-            MI_EXPECTS(result != nullptr && result->algorithmName == WorkSolutionT::getName());
+            MI_EXPECTS(result != nullptr && result->powType == WorkSolutionT::getPowType());
 
             submitWork(static_unique_ptr_cast<WorkSolutionT>(std::move(result)));
         }

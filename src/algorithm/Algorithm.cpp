@@ -16,9 +16,9 @@ namespace miner {
      * This is necessary so that the compiler includes the necessary code into a library
      * because only Algorithm is referenced by another compilation unit.
      */
-    static const Algorithm::Registry<AlgoCuckatoo31Cl> cuckatoo31Registry {"cuckatoo31", AlgorithmCuckatoo31::getName()};
-    static Algorithm::Registry<AlgoDummy> registry {"dummy", AlgorithmEthash::getName()};
-    static const Algorithm::Registry<AlgoEthashCL> ethashRegistry {"ethash", AlgorithmEthash::getName()};
+    static const Algorithm::Registry<AlgoCuckatoo31Cl> registryAlgoCuckatoo31Cl {"AlgoCuckatoo31Cl", HasPowTypeCuckatoo31::getPowType()};
+    static const Algorithm::Registry<AlgoDummy>        regustryAlgoDummy        {"AlgoDummy"   , HasPowTypeEthash::getPowType()};
+    static const Algorithm::Registry<AlgoEthashCL>     registryAlgoEthashCL     {"AlgoEthashCL", HasPowTypeEthash::getPowType()};
 
 
     unique_ptr<Algorithm> Algorithm::makeAlgo(AlgoConstructionArgs args, const std::string &implName) {
