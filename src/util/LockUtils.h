@@ -220,7 +220,7 @@ namespace miner {
         ReadLocked<T, Mutex> downgrade() {
             ImmediateLocked ret = std::move(*this);
             ret.guarded.get().upgradeMut.unlock();
-            return ret;
+            return std::move(ret);
         }
     };
 

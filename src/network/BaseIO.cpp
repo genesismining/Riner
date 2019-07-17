@@ -26,7 +26,7 @@ namespace miner {
         };
 
         ~Connection() override {
-            LOG(DEBUG) << "closing connection (likely because no read/write operations are queued on it)";
+            LOG(DEBUG) << this << " closing connection (likely because no read/write operations are queued on it)";
             MI_EXPECTS(_onDisconnected);
             _onDisconnected();
         }
@@ -50,12 +50,12 @@ namespace miner {
             asio::async_read_until(_socket, _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
-                if (error == asio::error::eof) {
-                    LOG(INFO) << "BaseIO connection closed by other side";
+                if (error) {
+                    LOG(INFO) << "BaseIO connection closed: " << error.message();
                     return;
                 }
 
-                std::string line = "asio read_until error occured";
+                std::string line = "asio read_until error occured: #" + std::to_string(error.value()) + " " + error.message() + "\n";
 
                 if (!error && numBytes != 0) {
                     std::istream stream(&_incoming);
@@ -73,13 +73,7 @@ namespace miner {
     };
 
     BaseIO::~BaseIO() {
-        _shutdown = true;
-
-        _ioService.stop();
-
-        if (_thread && _thread->joinable()) {
-            _thread->join();
-        }
+        stopIOThread();
     }
 
     BaseIO::BaseIO(IOMode mode)
@@ -119,7 +113,7 @@ namespace miner {
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
-            setIoThread(); //set this thread id to be the IO Thread
+            setIoThreadId(); //set this thread id to be the IO Thread
             try {
                 while(true) {
                     _ioService.run();
@@ -140,6 +134,28 @@ namespace miner {
             _ioThreadId = {}; //reset io thread id
         });
         MI_ENSURES(_thread);
+        LOG(INFO) << "BaseIO::startIOThread";
+    }
+
+    void BaseIO::stopIOThread() { //TODO: atm subclasses are required to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
+        // A proper way of implementing this would be to have a std::lock_guard style RAII object that guards the io thread's scope on user side.
+        // e.g. launchClient returns an IOThreadGuard which has a dtor that allows the io thread to stop
+
+        if (_thread) {
+            _shutdown = true;
+
+            _ioService.stop();
+
+            if (_thread) {
+                MI_EXPECTS(_thread->joinable());
+                _thread->join();
+                _thread = nullptr;
+            }
+            _shutdown = false;
+            _hasLaunched = false;
+        }
+
+        MI_ENSURES(!_thread);
     }
 
     //used by client and server
@@ -154,6 +170,7 @@ namespace miner {
     void BaseIO::launchServer(uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
         MI_EXPECTS(_thread && !hasLaunched());
         _hasLaunched = true;
+        LOG(INFO) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = std::move(onDc);
@@ -176,6 +193,7 @@ namespace miner {
     void BaseIO::launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
         MI_EXPECTS(_thread && !hasLaunched());
         _hasLaunched = true;
+        LOG(INFO) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = [&, onDc = std::move(onDc)] () {
@@ -314,12 +332,16 @@ namespace miner {
         return _hasLaunched;
     }
 
-    void BaseIO::setIoThread() {
+    void BaseIO::setIoThreadId() {
         _ioThreadId = std::this_thread::get_id();
     }
 
     bool BaseIO::isIoThread() const {
         return std::this_thread::get_id() == _ioThreadId;
+    }
+
+    bool BaseIO::ioThreadRunning() const {
+        return (bool)_thread;
     }
 
 }

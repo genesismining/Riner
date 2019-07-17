@@ -14,6 +14,8 @@ namespace miner {
         std::string convertOutgoing(nl::json j)       override;
     public:
         using IOTypeLayer::IOTypeLayer;
+
+        ~JsonIO() override {stopIOThread();}
     };
 
 }
