@@ -72,21 +72,6 @@ namespace miner {
         //returns empty string if algoImplName doesn't match any algo
         static std::string powTypeForAlgoImplName(const std::string &algoImplName);
 
-        /**
-         * get the POWtype that this algorithm implements (e.g. in order to find a matching PoolImpl that provides work for this POWtype)
-         * @return
-         */
-        inline std::string getAlgoName() const {
-            return info->powType;
-        }
-
-        /**
-         * @return name string that uniquely identifies the AlgoImpl class (subclass of Algorithm)
-         */
-        inline std::string getAlgoImplName() const {
-            return info->algoImplName;
-        }
-
     protected:
         Algorithm() = default;
 

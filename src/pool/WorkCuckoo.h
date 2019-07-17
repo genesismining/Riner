@@ -41,8 +41,8 @@ public:
     std::vector<uint32_t> pow;
 };
 
-using WorkCuckatoo31 = WorkCuckoo<PowTypeCuckatoo31>;
-using WorkSolutionCuckatoo31 = WorkSolutionCuckoo<PowTypeCuckatoo31>;
+using WorkCuckatoo31 = WorkCuckoo<HasPowTypeCuckatoo31>;
+using WorkSolutionCuckatoo31 = WorkSolutionCuckoo<HasPowTypeCuckatoo31>;
 
 } // namespace miner
 
