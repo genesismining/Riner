@@ -43,7 +43,7 @@ namespace miner {
         };
 
         //submit tasks are created from several threads, therefore LockGuarded
-        LockGuarded<std::vector<std::future<void>>> submitTasks;
+        LockGuarded<std::future<void>> submitTask;
 
         std::vector<std::future<void>> gpuTasks; //one task per gpu
 

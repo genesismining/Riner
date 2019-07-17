@@ -76,6 +76,7 @@ add_library(LibMiner
         src/common/JsonForward.h
         src/common/Assert.h
         src/common/PlatformDefines.h
+        src/common/Future.h
         src/gpu_api/GpuApi.cpp src/gpu_api/GpuApi.h
         src/gpu_api/AmdgpuApi.cpp src/gpu_api/AmdgpuApi.h
         src/util/Bytes.h

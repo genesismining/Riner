@@ -7,6 +7,7 @@
 #include <src/common/Endian.h>
 #include <src/compute/opencl/CLProgramLoader.h>
 #include "Ethash.h"
+#include <src/common/Future.h>
 #include <memory>
 
 namespace miner {
@@ -152,8 +153,12 @@ namespace miner {
 
                 if (!resultNonces.empty()) {
                     //todo: submitTasks lock can be avoided by declaring one vector per subTask inside the gpuTask
-                    submitTasks.lock()->push_back(std::async(std::launch::async,
-                            &AlgoEthashCL::submitShareTask, this, work, std::move(resultNonces)));
+
+                    auto sTask = submitTask.lock();
+
+                    asyncAppend(*sTask, launch::async, [this, work, resultNonces = std::move(resultNonces)] () {
+                        submitShareTask(work, std::move(resultNonces));
+                    });
                 }
 
                 if (work->expired()) {
