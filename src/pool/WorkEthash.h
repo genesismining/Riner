@@ -9,16 +9,18 @@
 
 namespace miner {
 
-    struct AlgorithmEthash {
-        static inline constexpr auto &getName() {
+    struct HasPowTypeEthash {
+        static inline constexpr auto &getPowType() {
             return "ethash";
         }
     };
 
-    class WorkEthash : public Work, public AlgorithmEthash {
+    class WorkEthash : public Work, public HasPowTypeEthash {
     public:
+        static constexpr auto powType = "ethash";
+
         WorkEthash(std::weak_ptr<WorkProtocolData> data) :
-                Work(std::move(data), getName()) {
+                Work(std::move(data), getPowType()) {
         }
 
         uint32_t extraNonce = 0;
@@ -38,10 +40,10 @@ namespace miner {
         }
     };
 
-    class WorkSolutionEthash : public WorkSolution, public AlgorithmEthash {
+    class WorkSolutionEthash : public WorkSolution, public HasPowTypeEthash {
     public:
         WorkSolutionEthash(std::weak_ptr<WorkProtocolData> data) :
-                WorkSolution(std::move(data), getName()) {
+                WorkSolution(std::move(data), getPowType()) {
         }
 
         uint64_t nonce = 0;

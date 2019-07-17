@@ -9,17 +9,17 @@
 
 namespace miner {
 
-struct AlgorithmCuckatoo31 {
-    static inline constexpr auto &getName() {
+struct HasPowTypeCuckatoo31 {
+    static inline constexpr auto &getPowType() {
         return "cuckatoo31";
     }
 };
 
-template<class Algorithm>
-class WorkCuckoo : public Work, public Algorithm {
+template<class PowTypeT>
+class WorkCuckoo : public Work, public PowTypeT {
 public:
     WorkCuckoo(std::shared_ptr<WorkProtocolData> data) :
-            Work(make_weak(data), Algorithm::getName()) {
+            Work(make_weak(data), PowTypeT::getPowType()) {
     }
 
     int64_t difficulty = 1;
@@ -29,11 +29,11 @@ public:
     uint64_t nonce = 0;
 };
 
-template<class Algorithm>
-class WorkSolutionCuckoo : public WorkSolution, public Algorithm {
+template<class PowTypeT>
+class WorkSolutionCuckoo : public WorkSolution, public PowTypeT {
 public:
     WorkSolutionCuckoo(std::weak_ptr<WorkProtocolData> data) :
-            WorkSolution(std::move(data), Algorithm::getName()) {
+            WorkSolution(std::move(data), PowTypeT::getPowType()) {
     }
 
     int64_t height = 0;
@@ -41,8 +41,8 @@ public:
     std::vector<uint32_t> pow;
 };
 
-typedef WorkCuckoo<AlgorithmCuckatoo31> WorkCuckatoo31;
-typedef WorkSolutionCuckoo<AlgorithmCuckatoo31> POWCuckatoo31;
+using WorkCuckatoo31 = WorkCuckoo<PowTypeCuckatoo31>;
+using WorkSolutionCuckatoo31 = WorkSolutionCuckoo<PowTypeCuckatoo31>;
 
 } // namespace miner
 

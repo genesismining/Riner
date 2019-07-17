@@ -199,31 +199,6 @@ namespace miner {
         }
     }
 
-/*
-    //C implementation
-    std::vector<uint32_t> AlgoEthashCL::runKernel(PerGpuSubTask &state, DagFile &dag, const Work<kEthash> &work,
-                                                      uint64_t nonceBegin, uint64_t nonceEnd) {
-
-        std::vector<uint32_t> results;
-
-        auto &cache = *dagCache.lock(); //(bad!) stealing the actual dagCache reference without holding the lock (TODO: remove by implementing read lock)
-
-        LOG(INFO) << "starting nonce range [" << nonceBegin << ", " << nonceEnd << ") on thread " << std::this_thread::get_id();
-        for (auto nonce = nonceBegin; nonce < nonceEnd; ++nonce) {
-            auto hashes = ethash_regenhash(work, cache.getCache(), nonce);
-
-            if (lessThanLittleEndian(hashes.proofOfWorkHash, work.target)) {
-                LOG(INFO) << "result found: nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
-                results.push_back(static_cast<uint32_t>(nonce));
-            }
-        }
-        LOG(INFO) << (nonceEnd - nonceBegin) << " nonces traversed on " << std::this_thread::get_id();
-
-
-        return results;
-    }
-    */
-
     std::vector<uint32_t> AlgoEthashCL::runKernel(PerGpuSubTask &state, DagFile &dag, const WorkEthash &work,
                                                           uint64_t nonceBegin, uint64_t nonceEnd) {
         cl_int err = 0;

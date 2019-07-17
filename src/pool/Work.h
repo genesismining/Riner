@@ -37,10 +37,10 @@ namespace miner {
         std::weak_ptr<WorkProtocolData> protocolData;
 
     protected:
-        WorkSolution(std::weak_ptr<WorkProtocolData>, const std::string &);
+        WorkSolution(std::weak_ptr<WorkProtocolData>, const std::string &powType);
 
     public:
-        const std::string algorithmName;
+        const std::string powType;
 
         /**
          * access type erased protocol data (use tryGetProtocolDataAs<T>() instead if you want to upcast it anyways)
@@ -77,10 +77,10 @@ namespace miner {
         std::weak_ptr<WorkProtocolData> protocolData;
 
     protected:
-        Work(std::weak_ptr<WorkProtocolData>, const std::string &);
+        Work(std::weak_ptr<WorkProtocolData>, const std::string &powType);
 
     public:
-        const std::string algorithmName;
+        const std::string powType;
         virtual ~Work() = default;
 
         /** @brief checks whether a solution to this work will still be accepted by the pool protocol.
