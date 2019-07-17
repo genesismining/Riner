@@ -10,7 +10,6 @@
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/util/Random.h>
-#include <src/pool/WorkQueue.h>
 #include <src/common/Pointers.h>
 #include <atomic>
 #include <vector>
