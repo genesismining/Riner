@@ -10,9 +10,8 @@ namespace miner {
      * This is necessary so that the compiler includes the necessary code into a library
      * because only Pool is referenced by another compilation unit.
      */
-    static const Pool::Registry<PoolEthashStratum> poolEthashRegistry {"PoolEthashStratum",
-                                                                       AlgorithmEthash::getPowType(), "EthashStratum3"};
-    static const Pool::Registry<PoolGrinStratum> poolGrinRegistry {"PoolGrinStratum", AlgorithmCuckatoo31::getPowType(), "EthashStratum3"};
+    static const Pool::Registry<PoolEthashStratum> registryPoolEthashStratum {"PoolEthashStratum", HasPowTypeEthash::getPowType(), "EthashStratum3", "stratum3"};
+    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"PoolGrinStratum"  , HasPowTypeCuckatoo31::getPowType(), "GrinStratum"};
 
 
     uint64_t Pool::createNewPoolUid() {
