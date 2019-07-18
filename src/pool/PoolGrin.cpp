@@ -148,7 +148,7 @@ namespace miner {
                     .done();
 
             auto onResponse = [] (CxnHandle cxn, jrpc::Message res) {
-                auto idStr = res.id.empty() ? std::string(res.id) : "<no id>";
+                auto idStr = res.id.empty() ? res.id.get<std::string>() : "<no id>";
                 bool accepted = false;
                 if (auto result = res.getIfResult()) {
                     if (result.value() == "ok")
@@ -168,7 +168,7 @@ namespace miner {
 
             auto onNeverResponded = [submit] () {
                 //this handler gets called if there was no response after the last try
-                auto idStr = submit.id.empty() ? std::string(submit.id) : "<no id>";
+                auto idStr = submit.id.empty() ? submit.id.get<std::string>() : "<no id>";
 
                 LOG(INFO) << "share with id " << idStr << " got discarded after pool did not respond multiple times";
             };
