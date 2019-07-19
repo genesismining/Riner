@@ -229,6 +229,10 @@ namespace miner {
         //returns empty string if poolImplName doesn't match any registered poolImpl
         static std::string getProtocolTypeForPoolImplName(const std::string &poolImplName);
 
+        static bool hasPowType(const std::string &powType);
+
+        static bool hasProtocolType(const std::string &protocolType);
+
         virtual ~Pool() = default;
 
         DELETE_COPY_AND_MOVE(Pool);

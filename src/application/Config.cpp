@@ -1,7 +1,7 @@
 
 #include "Config.h"
 
-#include <src/algorithm/Algorithm.h>
+#include <src/pool/Pool.h>
 #include <src/common/Json.h>
 #include <src/util/Logging.h>
 #include <src/util/OptionalAccess.h>
@@ -63,16 +63,22 @@ namespace miner {
         for (auto &jo : j.at("pools")) {
             Pool pool;
 
-            pool.powType = Algorithm::powTypeForAlgoImplName(jo.at("type"));
-            pool.protocolType = protoEnumFromString(jo.at("protocol"));
+            pool.protocolType = jo.at("protocol");
+            pool.powType = miner::Pool::getPowTypeForPoolImplName(pool.protocolType);
+            // check whether protocolType is actually a poolImplName
+            if (!pool.powType.empty())
+                pool.protocolType = miner::Pool::getProtocolTypeForPoolImplName(pool.protocolType);
+            else {
+                if (!miner::Pool::hasProtocolType(pool.protocolType)) {
+                    LOG(WARNING) << pool.protocolType << " is not a valid protocol type, cannot add pool";
+                    continue;
+                }
 
-            if (pool.powType.empty()) {
-                LOG(WARNING) << jo.at("type") << " is not a valid algorithm type, cannot add pool";
-                continue;
-            }
-            if (pool.protocolType.empty()) {
-                LOG(WARNING) << jo.at("protocol") << " is not a valid protocol type, cannot add pool";
-                continue;
+                pool.powType = jo.at("type");
+                if (!miner::Pool::hasPowType(pool.powType)) {
+                    LOG(WARNING) << pool.powType << " is not a valid POW type, cannot add pool";
+                    continue;
+                }
             }
 
             pool.host = jo.at("host");
