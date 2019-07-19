@@ -17,7 +17,6 @@ namespace miner {
 
     class WorkEthash : public Work, public HasPowTypeEthash {
     public:
-        static constexpr auto powType = "ethash";
 
         WorkEthash(std::weak_ptr<WorkProtocolData> data) :
                 Work(std::move(data), getPowType()) {

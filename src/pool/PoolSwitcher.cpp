@@ -97,7 +97,7 @@ namespace miner {
         return nullopt;
     }
 
-    void PoolSwitcher::submitWork(unique_ptr<WorkSolution> result) {
+    void PoolSwitcher::submitWorkImpl(unique_ptr<WorkSolution> result) {
         std::shared_ptr<WorkProtocolData> data = result->getProtocolData().lock();
         if (!data) {
             LOG(INFO) << "work result cannot be submitted because it has expired";
@@ -117,7 +117,7 @@ namespace miner {
 
                 sameUid = activePoolUid == resultPoolUid;
                 if (sameUid) {
-                    return pool.value().submitWork(std::move(result));
+                    return pool.value().submitWorkImpl(std::move(result));
                 }
             }
         } //unlock

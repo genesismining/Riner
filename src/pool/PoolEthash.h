@@ -36,7 +36,7 @@ namespace miner {
 
         // Pool interface
         optional<unique_ptr<Work>> tryGetWork() override;
-        void submitWork(unique_ptr<WorkSolution> result) override;
+        void submitWorkImpl(unique_ptr<WorkSolution> result) override;
 
         using WorkQueueType = AutoRefillQueue<unique_ptr<WorkEthash>>;
         unique_ptr<WorkQueueType> workQueue;

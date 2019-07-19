@@ -32,7 +32,7 @@ namespace miner {
         // Pool interface
         optional<unique_ptr<Work>> tryGetWork() override;
 
-        void submitWork(unique_ptr<WorkSolution> result) override;
+        void submitWorkImpl(unique_ptr<WorkSolution> result) override;
     private:
         using QueueItem = std::unique_ptr<WorkCuckatoo31>;
         using WorkQueue = AutoRefillQueue<QueueItem>;

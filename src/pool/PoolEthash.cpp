@@ -95,7 +95,7 @@ namespace miner {
         workQueue->setMaster(std::move(work), cleanFlag);
     }
 
-    void PoolEthashStratum::submitWork(unique_ptr<WorkSolution> resultBase) {
+    void PoolEthashStratum::submitWorkImpl(unique_ptr<WorkSolution> resultBase) {
 
         auto result = static_unique_ptr_cast<WorkSolutionEthash>(std::move(resultBase));
 

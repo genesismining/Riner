@@ -124,13 +124,13 @@ namespace miner {
         virtual optional<unique_ptr<Work>> tryGetWork() = 0;
 
         /**
-         * @brief submitWork call as implemented by the Pool subclasses (aka PoolImpls)
+         * @brief submitWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)
          * this method is only supposed to be called by the templated submitWork<WorkSolutionT>() method below.
          * this method takes the ownership of the given solution and starts its async submission, so that this
          * method can return quickly without blocking.
          * @param solution the solution to be submitted to the pool
          */
-        virtual void submitWork(unique_ptr<WorkSolution> solution) = 0;
+        virtual void submitWorkImpl(unique_ptr<WorkSolution> solution) = 0;
 
         /**
          * @brief obtain work from a pool
@@ -167,7 +167,7 @@ namespace miner {
         void submitWork(unique_ptr<WorkSolutionT> result) {
             MI_EXPECTS(result != nullptr && result->powType == WorkSolutionT::getPowType());
 
-            submitWork(static_unique_ptr_cast<WorkSolutionT>(std::move(result)));
+            submitWorkImpl(static_unique_ptr_cast<WorkSolutionT>(std::move(result)));
         }
 
         /**

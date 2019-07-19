@@ -121,7 +121,7 @@ namespace miner {
         workQueue->setMaster(std::move(work), true);
     }
 
-    void PoolGrinStratum::submitWork(unique_ptr<WorkSolution> resultBase) {
+    void PoolGrinStratum::submitWorkImpl(unique_ptr<WorkSolution> resultBase) {
         auto result = static_unique_ptr_cast<WorkSolutionCuckatoo31>(std::move(resultBase));
 
         //build and send submitMessage on the tcp thread

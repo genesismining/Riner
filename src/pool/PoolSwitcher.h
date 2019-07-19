@@ -38,7 +38,7 @@ namespace miner {
 
         optional<unique_ptr<Work>> tryGetWork() override;
 
-        void submitWork(unique_ptr<WorkSolution>) override;
+        void submitWorkImpl(unique_ptr<WorkSolution>) override;
 
         size_t poolCount() const;
 
