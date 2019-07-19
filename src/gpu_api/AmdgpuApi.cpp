@@ -69,7 +69,7 @@ namespace miner {
         return success;
     }
 
-    bool AmdgpuApi::applyPowerplaySettings(AmdgpuApi::frequency_settings &settings, bool commit) {
+    bool AmdgpuApi::applyPowerplaySettings(AmdgpuApi::frequency_settings &settings, int *pMaxState) {
         bool isSet = !settings.freqTarget.has_value();
         int maxState = settings.table.size();
         if (readOnly || maxState == 0)
@@ -84,7 +84,7 @@ namespace miner {
                 maxState = state + 1;
                 newFreq = settings.freqTarget.value();
             }
-            ss << settings.type << ' ' << state << " " << newFreq;
+            ss << settings.type << ' ' << state << " " << (newFreq - (state > 0));
             if (entry.vddc.has_value()) {
                 int voltage = std::min(entry.vddc.value(), vddcTarget.value_or(INT_MAX));
                 if (entry.measuredVddc.has_value() && entry.measuredVddc.value() < voltage)
@@ -93,9 +93,12 @@ namespace miner {
             }
             success &= writeToFile(vddcTable, ss.str());
         }
-        if (commit)
+        if (pMaxState != nullptr)
+            *pMaxState = maxState;
+        else {
             success &= writeToFile(vddcTable, "c");
-        setPowerstateRange(settings, 0, maxState);
+            setPowerstateRange(settings, 0, maxState);
+        }
         return success;
     }
 
@@ -200,9 +203,12 @@ namespace miner {
         optional<int> oldVddc = vddcTarget;
         vddcTarget = voltage;
         setPowerstateRange(sclk, 0, 1);
-        bool success = applyPowerplaySettings(mclk, false) && applyPowerplaySettings(sclk);
+        int maxMclkState = 0;
+        bool success = applyPowerplaySettings(mclk, &maxMclkState) && applyPowerplaySettings(sclk);
         if (!success)
             vddcTarget = oldVddc;
+        else
+            setPowerstateRange(mclk, 0, maxMclkState);
         return success;
     }
 
@@ -222,11 +228,13 @@ namespace miner {
         setFanProfile(2); // switch to automatic fan
         if (tdp)
             setTdp(tdp.value());
+        setPowerstateRange(sclk, 0, 1);
+        setPowerstateRange(mclk, 0, 1);
         writeToFile(vddcTable, "r");
         writeToFile(vddcTable, "c"); // reset PowerplayTable
-        setPowerProfile("auto");
         setPowerstateRange(sclk, 0);
         setPowerstateRange(mclk, 0);
+        setPowerProfile("auto");
     }
 
     std::unique_ptr<GpuApi> AmdgpuApi::tryMake(const CtorArgs &args) {
@@ -313,7 +321,7 @@ namespace miner {
                             case SCLK:
                                 table = &api->sclk.table;
                                 setPowerstateRange(api->sclk, table->size(), table->size() + 1);
-                                realVoltage = api->getVoltage();
+                                realVoltage = nullopt; // TODO: check whether api->getVoltage() to set optimized voltages
                                 if (realVoltage)
                                     realVoltage = realVoltage.value() + realVoltage.value() / 50; // add ~2 percent
                                 break;

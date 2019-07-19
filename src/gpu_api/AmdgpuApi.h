@@ -56,7 +56,7 @@ namespace miner {
         };
 
         static bool setPowerstateRange(frequency_settings &settings, int begin, int end = INT_MAX);
-        bool applyPowerplaySettings(frequency_settings &settings, bool commit = true);
+        bool applyPowerplaySettings(frequency_settings &settings, int *pMaxState = nullptr);
         bool setPowerProfile(const std::string &mode);
         bool setFanProfile(int profile);
 
