@@ -123,7 +123,7 @@ namespace miner {
         return {};
     }
 
-    void PoolDummy::submitWork(unique_ptr<WorkSolution>) {
+    void PoolDummy::submitWorkImpl(unique_ptr<WorkSolution>) {
 
     }
 
