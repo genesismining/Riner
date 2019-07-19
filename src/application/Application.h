@@ -5,7 +5,6 @@
 #include <src/common/StringSpan.h>
 #include <src/algorithm/Algorithm.h>
 #include <src/pool/Pool.h>
-#include <src/common/WorkCommon.h>
 #include <src/compute/ComputeModule.h>
 #include <src/pool/PoolSwitcher.h>
 #include <src/application/ApiServer.h>

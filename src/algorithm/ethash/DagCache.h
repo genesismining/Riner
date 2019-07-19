@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <src/common/WorkCommon.h>
 #include <src/common/Span.h>
 #include <src/util/DynamicBuffer.h>
 

@@ -64,7 +64,6 @@ add_library(LibMiner
         src/compute/opencl/CLProgramLoader.cpp src/compute/opencl/CLProgramLoader.h
         src/common/Chrono.h
         src/common/Endian.h
-        src/common/WorkCommon.cpp src/common/WorkCommon.h
         src/common/Pointers.h
         src/common/StringSpan.h
         src/common/OpenCL.h

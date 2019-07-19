@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <src/common/WorkCommon.h>
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 

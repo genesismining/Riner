@@ -6,7 +6,6 @@
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 #include <src/common/JsonForward.h>
-#include <src/common/WorkCommon.h>
 
 namespace miner {
 
