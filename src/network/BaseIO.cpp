@@ -151,7 +151,8 @@ namespace miner {
                 _thread->join();
                 _thread = nullptr;
             }
-            _shutdown = false;
+            //TODO: What was the purpose of this line?
+            //_shutdown = false;
             _hasLaunched = false;
         }
 
@@ -254,6 +255,8 @@ namespace miner {
         };
 
         auto connect = [this, host, port, failedTriesToConnect] () {
+            if (this->_shutdown)
+                return;
 
             //if connecting has failed last time, wait a little bit before trying again
             if (*failedTriesToConnect > 0) {
