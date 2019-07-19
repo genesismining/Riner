@@ -12,18 +12,16 @@
 #include <future>
 #include <list>
 #include <atomic>
+#include <src/network/JsonRpcUtil.h>
+#include "AutoRefillQueue.h"
 
 namespace miner {
-    template<class T>
-    class AutoRefillQueue;
-    class TcpJsonSubscription;
 
-    /*
-    struct DummyProtocolData : public DummyProtocolData {
-        DummyProtocolData(uint64_t poolUid) : WorkProtocolData(poolUid) {
-        }
+    struct EthashDummyProtocolData : public WorkProtocolData {
+        using WorkProtocolData::WorkProtocolData;
 
         std::string jobId;
+        std::string someExtraData;
     };
 
     class PoolDummy : public Pool {
@@ -31,31 +29,34 @@ namespace miner {
         explicit PoolDummy(PoolConstructionArgs);
         ~PoolDummy() override;
 
-
     private:
+        std::atomic_bool shutdown {false};
         PoolConstructionArgs args;
 
         // Pool interface
-        optional<unique_ptr<WorkBase>> tryGetWork() override;
-        void submitWorkImpl(unique_ptr<WorkSolution> result) override;
+        optional<unique_ptr<Work>> tryGetWork() override;
+        void submitWorkImpl(unique_ptr<WorkSolution>) override;
 
-        using WorkQueueType = AutoRefillQueue<unique_ptr<WorkEthash>>;
-        unique_ptr<WorkQueueType> workQueue;
+        // Work Queue
+        using WorkQueue = AutoRefillQueue<unique_ptr<WorkEthash>>;
+        unique_ptr<WorkQueue> workQueue;
 
         // Pool Uid
-        uint64_t getPoolUid() const override;
-        uint64_t uid = createNewPoolUid();
+        const uint64_t uid = createNewPoolUid();
+        uint64_t getPoolUid() const override {
+            return uid;
+        }
 
-        std::atomic<bool> shutdown {false};
+        std::vector<shared_ptr<EthashDummyProtocolData>> protocolDatas;
 
-        std::vector<std::shared_ptr<DummyProtocolData>> protocolDatas;
+        jrpc::JsonRpcUtil io; //io utility object
+        CxnHandle _cxn; //io connection to pool
 
-        void restart();
-        TcpJsonRpcProtocolUtil jrpc;
+        void onConnected(CxnHandle cxn);
 
-        bool acceptMiningNotify = false;
+        bool acceptWorkMessages = false;
 
         void onMiningNotify (const nl::json &j);
     };
-*/
+
 }

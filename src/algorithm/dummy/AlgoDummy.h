@@ -15,18 +15,16 @@ namespace miner {
 
         std::atomic_bool _shutdown {false};
 
-        struct DeviceThread {
+        struct DeviceThread { //contains everything a device thread needs in our algorithm
             AlgoDummy &algo;
             Pool &pool;
             Device &device;
             cl::Device clDevice;
 
             void run();
-            std::future<void> task;
         };
-        friend DeviceThread;
 
-        std::vector<DeviceThread> _deviceThreads;
+        std::list<std::future<void>> tasks;
 
     public:
         explicit AlgoDummy(AlgoConstructionArgs args);
