@@ -31,15 +31,18 @@ namespace miner {
         struct PerGpuSubTask {
             cl::Kernel clSearchKernel;
             cl::CommandQueue cmdQueue; //for clFinish(queue);
-            cl::Buffer CLbuffer0;
+            cl::Buffer header;
             cl::Buffer clOutputBuffer;
 
             //Statistics &statistics;
 
             Device::AlgoSettings settings;
 
+            typedef uint32_t buffer_entry_t;
             constexpr static size_t bufferCount = 0x100;
-            std::vector<uint32_t> outputBuffer = std::vector<uint32_t>(bufferCount, 0); //this is where clOutputBuffer gets read into
+            constexpr static size_t bufferEntrySize = sizeof(buffer_entry_t);
+            constexpr static size_t bufferSize = bufferCount * bufferEntrySize;
+            std::vector<buffer_entry_t> outputBuffer = std::vector<buffer_entry_t>(bufferCount, 0); //this is where clOutputBuffer gets read into
         };
 
         //submit tasks are created from several threads, therefore LockGuarded
@@ -54,10 +57,10 @@ namespace miner {
         void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device::AlgoSettings deviceSettings);
 
         //gets called by gpuSubTask for each non-empty result vector
-        void submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint32_t> resultNonces);
+        void submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint64_t> resultNonces);
 
         //returns possible solution nonces
-        std::vector<uint32_t> runKernel(PerGpuSubTask &, DagFile &dag, const WorkEthash &,
+        std::vector<uint64_t> runKernel(PerGpuSubTask &, DagFile &dag, const WorkEthash &,
                 uint64_t nonceBegin, uint64_t nonceEnd);
 
     public:

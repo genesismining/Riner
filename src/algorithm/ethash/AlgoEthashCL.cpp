@@ -118,16 +118,21 @@ namespace miner {
         }
 
         size_t headerSize = 32;
-        state.CLbuffer0 = cl::Buffer(plat.clContext, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
+        state.header = cl::Buffer(plat.clContext, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
                 headerSize, nullptr, &err);
         if (err) {
             LOG(ERROR) << "unable to allocate opencl header buffer";
             return;
         }
 
-        state.clOutputBuffer = cl::Buffer(plat.clContext, CL_MEM_READ_WRITE, 0x100 * sizeof(cl_uint), nullptr, &err);
+        state.clOutputBuffer = cl::Buffer(plat.clContext, CL_MEM_READ_WRITE, state.bufferSize, nullptr, &err);
         if (err) {
             LOG(ERROR) << "unable to allocate opencl output buffer";
+            return;
+        }
+        err = state.cmdQueue.enqueueFillBuffer(state.clOutputBuffer, (uint8_t)0, 0, state.bufferSize);
+        if (err) {
+            LOG(ERROR) << "unable to clear opencl output buffer";
             return;
         }
 
@@ -169,12 +174,9 @@ namespace miner {
         }
     }
 
-    void AlgoEthashCL::submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint32_t> resultNonces) {
+    void AlgoEthashCL::submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint64_t> resultNonces) {
 
-        for (auto nonce32 : resultNonces) {//for each possible solution
-
-            uint64_t shiftedExtraNonce = uint64_t(work->extraNonce) << 32ULL;
-            uint64_t nonce = nonce32 | shiftedExtraNonce;
+        for (auto nonce : resultNonces) {//for each possible solution
 
             auto result = work->makeWorkSolution<WorkSolutionEthash>();
 
@@ -199,10 +201,10 @@ namespace miner {
         }
     }
 
-    std::vector<uint32_t> AlgoEthashCL::runKernel(PerGpuSubTask &state, DagFile &dag, const WorkEthash &work,
+    std::vector<uint64_t> AlgoEthashCL::runKernel(PerGpuSubTask &state, DagFile &dag, const WorkEthash &work,
                                                           uint64_t nonceBegin, uint64_t nonceEnd) {
         cl_int err = 0;
-        std::vector<uint32_t> results;
+        std::vector<uint64_t> results;
 
         // Not nodes now (64 bytes), but DAG entries (128 bytes)
         cl_uint ItemsArg = static_cast<cl_uint>(dag.getSize() / 128);
@@ -214,7 +216,7 @@ namespace miner {
 	    MI_EXPECTS(work.target.size() - 24 == sizeof(target64));
 	    memcpy(&target64, work.target.data() + 24, work.target.size() - 24);
 
-        err = state.cmdQueue.enqueueWriteBuffer(state.CLbuffer0, CL_FALSE, 0, work.header.size(), work.header.data());
+        err = state.cmdQueue.enqueueWriteBuffer(state.header, CL_FALSE, 0, work.header.size(), work.header.data());
         if (err) {
             LOG(ERROR) << "#" << err << " error when writing work header to cl buffer";
             return results;
@@ -224,7 +226,7 @@ namespace miner {
         auto &k = state.clSearchKernel;
 
         k.setArg(argI++, state.clOutputBuffer);
-        k.setArg(argI++, state.CLbuffer0);
+        k.setArg(argI++, state.header);
         k.setArg(argI++, dag.getCLBuffer());
         k.setArg(argI++, nonceBegin);
 	    k.setArg(argI++, target64);
@@ -242,34 +244,27 @@ namespace miner {
             LOG(ERROR) << "#" << err << " error when enqueueing search kernel on " << std::this_thread::get_id();
         }
 
-        err = state.cmdQueue.finish(); //clFinish();
-        if (err) {
-            LOG(ERROR) << "#" << err << " error when trying to finish search kernel";
-            return results;
-        }
-
-        cl_bool blocking = CL_TRUE;
-        err = state.cmdQueue.enqueueReadBuffer(state.clOutputBuffer, blocking, 0, state.outputBuffer.size() * sizeof(state.outputBuffer[0]), state.outputBuffer.data());
+        cl_bool blocking = CL_FALSE;
+        err = state.cmdQueue.enqueueReadBuffer(state.clOutputBuffer, blocking, 0, state.bufferSize, state.outputBuffer.data());
         if (err) {
             LOG(ERROR) << "#" << err << " error when trying to read back clOutputBuffer after search kernel";
             return results;
         }
 	    state.cmdQueue.finish();
-        //TODO: test whether blocking = CL_TRUE works as intended here
         //TODO: alternatively for nvidia, use glFlush instead of finish and wait for the cl event of readBuffer command to finish
 
-        auto numFoundNonces = state.outputBuffer[0xFF];
-        if (numFoundNonces >= state.outputBuffer.size()) {
+        auto numFoundNonces = state.outputBuffer.back();
+        if (numFoundNonces >= state.bufferCount) {
             LOG(ERROR) << "amount of nonces (" << numFoundNonces << ") in outputBuffer exceeds outputBuffer's size";
         }
         else if (numFoundNonces > 0) {
             //clear the clOutputBuffer by overwriting it with blank
-            state.cmdQueue.enqueueFillBuffer(state.clOutputBuffer, (uint8_t)0, 0, state.outputBuffer.size() * sizeof(state.outputBuffer[0]));
+            state.cmdQueue.enqueueFillBuffer(state.clOutputBuffer, (uint8_t)0, state.bufferSize - state.bufferEntrySize, state.bufferEntrySize);
 
             //populate the result vector and compute the actual 32 bit nonces by adding the outputBuffer contents
             results.resize(numFoundNonces);
             for (size_t i = 0; i < numFoundNonces; ++i) {
-                results[i] = state.outputBuffer[i] + gsl::narrow_cast<uint32_t>(nonceBegin);
+                results[i] = nonceBegin + state.outputBuffer[i];
             }
         }
 	
