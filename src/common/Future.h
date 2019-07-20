@@ -20,7 +20,8 @@ namespace miner {
     void asyncAppend(std::future<void> &inout, std::launch policy, Fn &&func, Args &&... args) {
 
         inout = std::async(policy, [fut = std::move(inout), func = std::forward<Fn>(func)] (Args &&... args) {
-            fut.wait();
+            if (fut.valid())
+                fut.wait();
             func(std::forward<Args>(args) ...);
         }, std::forward<Args>(args) ...);
     }
