@@ -117,7 +117,7 @@ namespace miner {
                 .param(args.username)
                 .param(protoData->jobId)
                 .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
-                .param("0x" + HexString(result->proofOfWorkHash).str())
+                .param("0x" + HexString(result->header).str())
                 .param("0x" + HexString(result->mixHash).str())
                 .done();
 

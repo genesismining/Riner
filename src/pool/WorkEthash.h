@@ -47,7 +47,7 @@ namespace miner {
 
         uint64_t nonce = 0;
 
-        Bytes<32> proofOfWorkHash;
+        Bytes<32> header;
         Bytes<32> mixHash; // intermediate hash to prevent DOS
     };
 

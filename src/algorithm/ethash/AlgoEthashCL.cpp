@@ -188,10 +188,10 @@ namespace miner {
             }
 
             result->nonce = nonce;
-            result->proofOfWorkHash = hashes.proofOfWorkHash;
+            result->header = work->header;
             result->mixHash = hashes.mixHash;
 
-            bool isValidSolution = lessThanLittleEndian(result->proofOfWorkHash, work->target);
+            bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->target);
 
             if (isValidSolution)
                 pool.submitWork(std::move(result));
