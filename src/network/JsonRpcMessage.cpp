@@ -39,11 +39,14 @@ namespace miner { namespace jrpc {
         Message::Message(nl::json j) {
             id = j.at("id");
 
-            if (j.count("method")) {
+            auto methodIt = j.find("method");
+            if (methodIt != j.end()) {
                 Request req;
 
-                req.method = j.at("method");
-                req.params = j.at("params");
+                req.method = *methodIt;
+                auto paramsIt = j.find("params");
+                if (paramsIt != j.end())
+                    req.params = *paramsIt;
 
                 var = std::move(req);
             }
