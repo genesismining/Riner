@@ -1,3 +1,4 @@
+
 Getting started
 ===============
 
@@ -27,6 +28,8 @@ RAII objects
    auto algo = AlgoEthashCL{ gpus, pool };
    //algorithm starts and runs in parallel until the object is destroyed
 
+.. image:: ../assets/img_algoimpl.png
+   :height: 160
 
 Backup Pools
 ------------
@@ -44,6 +47,3 @@ Backup Pools
    };
    auto gpus = compute.getAllDevices(kDeviceTypeGPU);
    auto algo = AlgoEthashCL{ gpus, pools };
-
-
-

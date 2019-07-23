@@ -1,4 +1,6 @@
 INDEX
 =====
 
-.. doxygenindex::
+.. image:: ../assets/img_wip.png
+
+.. .. doxygenindex::

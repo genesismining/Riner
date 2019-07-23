@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'RAIIner'
+project = 'Riner'
 copyright = '2019, Genesis Mining'
 author = 'Genesis Mining'
 
@@ -36,9 +36,9 @@ extensions = [ 'breathe', 'sphinx.ext.autosectionlabel',
     'sphinx.ext.autosummary',
 ]
 
-breathe_projects = { "raiiner": "../xml/" }
+breathe_projects = { "Riner": "../xml/" }
 
-breathe_default_project = "raiiner"
+breathe_default_project = "Riner"
 breathe_default_members = ('members', 'undoc-members', 'private-members')
 
 # Add any paths that contain templates here, relative to this directory.

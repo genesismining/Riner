@@ -1,45 +1,35 @@
-RAIIner documentation
+.. image:: ../assets/img_banner.jpg
+
+| 
+
+Riner documentation
 =====================
 
+.. note::
 
+    Please note that this documentation is still very much under construction. Head over to the :ref:`getting started` guide for details about installation or learn more about the Riner project at the :ref:`introduction` page.
 
 .. toctree::
-   :caption: Getting started with RAIIner
+   :caption: Getting started with Riner
    :maxdepth: 2
 
-   getting_started
+   introduction
 
 
 
 
 Codebase
---------
-Feel free to explore RAIIner codebase.
+=============
 
  .. toctree::
-    :caption: Codebase
-    :hidden:
+    :caption: Api Reference
     :maxdepth: 2
 
+    class
     function
     struct
     enum
     typedef
-    class
-
-
-Examples
---------
-Example usage of some utility classes introduced in RAIIner
-.. toctree::
-   :caption: Examples
-   :hidden:
-   :maxdepth: 2
-
-   examples_autorefillqueue
-
-
-
 
 Licensing
 ---------
