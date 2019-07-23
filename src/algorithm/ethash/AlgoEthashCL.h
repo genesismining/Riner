@@ -33,9 +33,6 @@ namespace miner {
             cl::CommandQueue cmdQueue; //for clFinish(queue);
             cl::Buffer header;
             cl::Buffer clOutputBuffer;
-
-            //Statistics &statistics;
-
             Device::AlgoSettings settings;
 
             typedef uint32_t buffer_entry_t;
@@ -51,10 +48,10 @@ namespace miner {
         std::vector<std::future<void>> gpuTasks; //one task per gpu
 
         //gets called once for each gpu
-        void gpuTask(cl::Device clDevice, Device::AlgoSettings deviceSettings);
+        void gpuTask(cl::Device clDevice, Device &device);
 
         //gets called numGpuSubTasks times from each gpuTask
-        void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device::AlgoSettings deviceSettings);
+        void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device &deviceSettings);
 
         //gets called by gpuSubTask for each non-empty result vector
         void submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint64_t> resultNonces);

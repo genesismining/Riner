@@ -20,7 +20,7 @@ namespace miner {
             if (auto clDevice = args.compute.getDeviceOpenCL(device.get().id)) {
 
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
-                                              std::move(clDevice.value()), device.get().settings));
+                                              std::move(clDevice.value()), device));
             }
         }
     }
@@ -30,7 +30,8 @@ namespace miner {
         //implicitly waits for gpuTasks and submitTasks to finish
     }
 
-    void AlgoEthashCL::gpuTask(cl::Device clDevice, Device::AlgoSettings settings) {
+    void AlgoEthashCL::gpuTask(cl::Device clDevice, Device &device) {
+        const auto &settings = device.settings;
         const unsigned numGpuSubTasks = settings.num_threads;
 
         //Statistics statistics;
@@ -91,7 +92,7 @@ namespace miner {
 
             for (auto &task : tasks) {
                 task = std::async(std::launch::async, &AlgoEthashCL::gpuSubTask, this,
-                                  std::ref(plat), std::ref(clDevice), std::ref(dag), settings);
+                                  std::ref(plat), std::ref(clDevice), std::ref(dag), std::ref(device));
             }
 
             //tasks destructor waits
@@ -100,11 +101,11 @@ namespace miner {
 
     }
 
-    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag, Device::AlgoSettings settings) {
+    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag, Device &device) {
         cl_int err = 0;
 
         PerGpuSubTask state;
-        state.settings = settings;
+        state.settings = device.settings;
 
         state.cmdQueue = cl::CommandQueue(plat.clContext, clDevice, 0, &err);
         if (err || !state.cmdQueue()) {
@@ -164,6 +165,7 @@ namespace miner {
                         submitShareTask(work, std::move(resultNonces));
                     });
                 }
+                device.records.reportAmtTraversedNonces(raw_intensity);
 
                 if (work->expired()) {
                     LOG(INFO) << "aborting kernel loop because work has expired on " << std::this_thread::get_id();
