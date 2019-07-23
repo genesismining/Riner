@@ -9,6 +9,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++14 -Wall -Werror
 find_package(OpenCL REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 link_directories(${OpenCL_LIBRARY})
+file(DOWNLOAD https://raw.githubusercontent.com/genesismining/sgminer-gm/bc138413d9098d6ed285df1bdebc70b47f69bcac/kernel/ethash-new.cl ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/ethash.cl TLS_VERIFY ON STATUS FILE_RET)
+if(NOT ("0" IN_LIST FILE_RET))
+    list(GET FILE_RET 1 ERROR)
+    message(WARNING "Download of ethash.cl kernel failed: ${ERROR}")
+endif()
 
 add_library(LibMiner
         src/application/Application.cpp src/application/Application.h

@@ -352,11 +352,13 @@ namespace miner {
 
         cl_uint zero = 0;
         cl_uint cacheSize = cache.getSize();
+        cl_uint isolate = UINT32_MAX;
 
         genDagKernel.setArg(arg++, zero);
         genDagKernel.setArg(arg++, clDagCache);
         genDagKernel.setArg(arg++, clDagBuffer);
         genDagKernel.setArg(arg++, cacheSize);
+        genDagKernel.setArg(arg++, isolate);
 
         this->size = getSize(epoch);
         cl::NDRange offset{0};

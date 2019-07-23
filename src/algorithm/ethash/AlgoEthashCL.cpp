@@ -44,7 +44,7 @@ namespace miner {
 
         std::string compilerOptions = "-D WORKSIZE=" + std::to_string(settings.work_size);
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash/ethash.cl", compilerOptions);
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "/kernel/ethash.cl", compilerOptions);
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
@@ -202,10 +202,7 @@ namespace miner {
         std::vector<uint64_t> results;
 
         cl_uint size = dag.getSize();
-        cl_uint max = static_cast<cl_uint>((cl_ulong) UINT32_MAX * size >> 32);
-        cl_uint red_shift = UINT32_MAX;
-        for (; max != 0; max >>= 1, red_shift++);
-        cl_uint red_mult = ((cl_ulong) 1 << (32 + red_shift)) / size;
+        cl_uint isolate = UINT32_MAX;
         uint64_t target64 = 0;
         MI_EXPECTS(work.target.size() - 24 == sizeof(target64));
         memcpy(&target64, work.target.data() + 24, work.target.size() - 24);
@@ -222,11 +219,10 @@ namespace miner {
         k.setArg(argI++, state.clOutputBuffer);
         k.setArg(argI++, state.header);
         k.setArg(argI++, dag.getCLBuffer());
+        k.setArg(argI++, size);
         k.setArg(argI++, nonceBegin);
         k.setArg(argI++, target64);
-        k.setArg(argI++, size);
-        k.setArg(argI++, red_mult);
-        k.setArg(argI++, red_shift);
+        k.setArg(argI++, isolate);
 
         cl::NDRange offset{0};
 
