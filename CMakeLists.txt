@@ -20,7 +20,6 @@ add_library(LibMiner
         src/algorithm/ethash/AlgoEthashCL.cpp src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
         src/algorithm/ethash/DagCache.cpp src/algorithm/ethash/DagCache.h
-        src/algorithm/ethash/Ethash.cpp src/algorithm/ethash/Ethash.h
         src/algorithm/ethash/EthSha3.cpp src/algorithm/ethash/EthSha3.h
         src/algorithm/dummy/AlgoDummy.cpp src/algorithm/dummy/AlgoDummy.h
         src/statistics/StatisticNode.cpp src/statistics/StatisticNode.h
@@ -88,10 +87,8 @@ add_library(LibMiner
         src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
         src/util/HexString.cpp src/util/HexString.h
-        src/util/DynamicBuffer.cpp src/util/DynamicBuffer.h
+        src/util/DynamicBuffer.h
         src/util/Barrier.cpp src/util/Barrier.h
-        src/util/sph/sph_keccak.h
-        src/util/sph/sph_types.h
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         )
 

@@ -19,7 +19,7 @@ namespace miner {
         // new allocation is necessary
 
         cl::Buffer clDagBuffer;
-        size_t size = 0;
+        uint32_t size = 0;
 
         bool valid = false;
     public:
@@ -30,7 +30,11 @@ namespace miner {
         uint32_t getEpoch() const;
 
         cl::Buffer &getCLBuffer();
-        size_t getSize() const;
+        uint64_t getByteSize() const;
+        uint32_t getSize() const;
+
+        static uint64_t getByteSize(uint32_t epoch);
+        static uint32_t getSize(uint32_t epoch);
 
         operator bool() const;
     };

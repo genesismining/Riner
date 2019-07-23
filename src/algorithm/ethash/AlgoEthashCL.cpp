@@ -6,7 +6,6 @@
 #include <src/util/HexString.h> //for debug logging hex
 #include <src/common/Endian.h>
 #include <src/compute/opencl/CLProgramLoader.h>
-#include "Ethash.h"
 #include <src/common/Future.h>
 #include <memory>
 
@@ -45,7 +44,7 @@ namespace miner {
 
         std::string compilerOptions = "-D WORKSIZE=" + std::to_string(settings.work_size);
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethhash/ethash.cl", compilerOptions);
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash/ethash.cl", compilerOptions);
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
@@ -56,7 +55,7 @@ namespace miner {
 
         while (!shutdown) {
             //get work only for obtaining dag creation info
-		    LOG(INFO) << "trying to get work for dag creation";
+            LOG(INFO) << "trying to get work for dag creation";
             auto work = pool.tryGetWork<WorkEthash>().value_or(nullptr);
             if (!work)
                 continue; //check shutdown and try again
@@ -181,11 +180,7 @@ namespace miner {
             auto result = work->makeWorkSolution<WorkSolutionEthash>();
 
             //calculate proof of work hash from nonce and dag-caches
-            EthashRegenhashResult hashes {};
-            {
-                auto caches = dagCache.readLock();
-                hashes = ethash_regenhash(*work, caches->getCache(), nonce);
-            }
+            auto hashes = dagCache.readLock()->getHash(work->header, nonce);
 
             result->nonce = nonce;
             result->header = work->header;
@@ -206,15 +201,14 @@ namespace miner {
         cl_int err = 0;
         std::vector<uint64_t> results;
 
-        // Not nodes now (64 bytes), but DAG entries (128 bytes)
-        cl_uint ItemsArg = static_cast<cl_uint>(dag.getSize() / 128);
-        cl_uint max = static_cast<cl_uint>((cl_ulong) UINT32_MAX * ItemsArg >> 32);
+        cl_uint size = dag.getSize();
+        cl_uint max = static_cast<cl_uint>((cl_ulong) UINT32_MAX * size >> 32);
         cl_uint red_shift = UINT32_MAX;
         for (; max != 0; max >>= 1, red_shift++);
-        cl_uint red_mult = ((cl_ulong) 1 << (32 + red_shift)) / ItemsArg;
-	    uint64_t target64 = 0;
-	    MI_EXPECTS(work.target.size() - 24 == sizeof(target64));
-	    memcpy(&target64, work.target.data() + 24, work.target.size() - 24);
+        cl_uint red_mult = ((cl_ulong) 1 << (32 + red_shift)) / size;
+        uint64_t target64 = 0;
+        MI_EXPECTS(work.target.size() - 24 == sizeof(target64));
+        memcpy(&target64, work.target.data() + 24, work.target.size() - 24);
 
         err = state.cmdQueue.enqueueWriteBuffer(state.header, CL_FALSE, 0, work.header.size(), work.header.data());
         if (err) {
@@ -229,8 +223,8 @@ namespace miner {
         k.setArg(argI++, state.header);
         k.setArg(argI++, dag.getCLBuffer());
         k.setArg(argI++, nonceBegin);
-	    k.setArg(argI++, target64);
-        k.setArg(argI++, ItemsArg);
+        k.setArg(argI++, target64);
+        k.setArg(argI++, size);
         k.setArg(argI++, red_mult);
         k.setArg(argI++, red_shift);
 
@@ -250,7 +244,7 @@ namespace miner {
             LOG(ERROR) << "#" << err << " error when trying to read back clOutputBuffer after search kernel";
             return results;
         }
-	    state.cmdQueue.finish();
+        state.cmdQueue.finish();
         //TODO: alternatively for nvidia, use glFlush instead of finish and wait for the cl event of readBuffer command to finish
 
         auto numFoundNonces = state.outputBuffer.back();
@@ -267,8 +261,8 @@ namespace miner {
                 results[i] = nonceBegin + state.outputBuffer[i];
             }
         }
-	
-	    MI_EXPECTS(results.size() == numFoundNonces);
+
+        MI_EXPECTS(results.size() == numFoundNonces);
         return results;
     }
 

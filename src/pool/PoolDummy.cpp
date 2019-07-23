@@ -127,5 +127,7 @@ namespace miner {
 
     }
 
+    void PoolDummy::onMiningNotify (const nl::json &j) {
+    }
 
 }

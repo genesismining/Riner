@@ -33,8 +33,8 @@ namespace miner {
 
         void setEpoch() {
             if (epoch == std::numeric_limits<uint32_t>::max()) {//calculate epoch for master if it didn't happen yet
-                uint32_t EthCalcEpochNumber(cByteSpan<32>);
-                epoch = EthCalcEpochNumber(seedHash);
+                uint32_t getEthEpoch(cByteSpan<32>);
+                epoch = getEthEpoch(seedHash);
             }
         }
     };
