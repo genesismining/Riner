@@ -6,8 +6,8 @@ Requires Cmake 3.9
 
 ## Getting Started/Documentation
 
-Please see [Introduction to Riner](https://genesismining.github.com/Riner "Riner Documentation")
+Please see [Introduction to Riner](https://genesismining.github.io/Riner "Riner Documentation")
 
 ## License
 
-This project is licensed under the terms of the GPLv3 - see [LICENSE.md](LICENSE.md)
+This project is licensed under the MIT license - see [LICENSE.md](LICENSE.md)
