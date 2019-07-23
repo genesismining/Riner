@@ -6,7 +6,7 @@ Requires Cmake 3.9
 
 ## Getting Started/Documentation
 
-Please see [Introduction to Riner](https://riner.github.com "Riner Documentation")
+Please see [Introduction to Riner](https://genesismining.github.com/Riner "Riner Documentation")
 
 ## License
 
