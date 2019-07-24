@@ -273,9 +273,6 @@ static inline uint32_t fnvReduce(uint32_t v[4]) {
     return fnv(fnv(fnv(v[0], v[1]), v[2]), v[3]);
 }
 
-#define fnv(x, y)    (((x) * FNV_PRIME) ^ (y))
-#define fnv_reduce(v)  fnv(fnv(fnv((v)[0], (v)[1]), (v)[2]), (v)[3])
-
 
 namespace miner {
 
@@ -302,11 +299,11 @@ namespace miner {
         try {
             LOG(INFO) << "calculating dag cache for epoch = " << epoch;
             MI_EXPECTS(epoch == getEthEpoch(seedHash));
-            uint32_t numNodes = cacheSize[epoch];
+            const uint32_t numNodes = cacheSize[epoch];
             buffer = DynamicBuffer<node_t>(numNodes, 64);
             auto nodes = buffer.data();
 
-            sha3_512(buffer.bytes(), 64, seedHash.data(), 32);
+            SHA3_512(buffer.bytes(), seedHash.data(), 32);
 
             for(uint32_t i = 1; i < numNodes; i++) {
                 SHA3_512(nodes[i].byte, nodes[i - 1].byte, 64);
@@ -315,7 +312,7 @@ namespace miner {
             for(int j = 0; j < 3; j++) { // ETHASH_CACHE_ROUNDS == 3
                 for(uint32_t i = 0; i < numNodes; i++) {
                     uint32_t const idx = nodes[i].word[0] % numNodes;
-                    node_t data = nodes[(numNodes - 1 + i) % numNodes];
+                    node_t data = nodes[i == 0 ? numNodes - 1 : i - 1];
                     for(int w = 0; w < 16; w++) {
                         data.word[w] ^= nodes[idx].word[w];
                     }
@@ -361,7 +358,7 @@ namespace miner {
 
         memcpy(tmpBuf, header.data(), 32);
         memcpy(tmpBuf + 32, byteNonce.data(), 8);
-        sha3_512(tmpBuf, 64, tmpBuf, 40);
+        SHA3_512(tmpBuf, tmpBuf, 40);
 
         memcpy(mixState, tmpBuf, 64);
 
@@ -390,13 +387,13 @@ namespace miner {
         // that the initial hash is still in the first 64
         // bytes of TmpBuf - we're appending the mix hash.
         for (int i = 0; i < 8; ++i)
-            tmpState[i + 16] = fnv_reduce(mixState + (i << 2));
+            tmpState[i + 16] = fnvReduce(mixState + (i << 2));
 
         memcpy(result.mixHash.data(), tmpState + 16, 32);
 
         // Hash the initial hash and the mix hash concatenated
         // to get the final proof-of-work hash that is our output.
-        sha3_256(result.proofOfWorkHash.data(), 32, tmpBuf, 96);
+        SHA3_256(result.proofOfWorkHash.data(), tmpBuf, 96);
         std::reverse(result.proofOfWorkHash.begin(), result.proofOfWorkHash.end());
 
         return result;

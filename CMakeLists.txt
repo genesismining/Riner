@@ -1,14 +1,21 @@
 cmake_minimum_required(VERSION 3.9)
 project(Miner)
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE RELEASE)
+endif()
+
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++14 -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS}         -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations -Wno-noexcept-type")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   ${CMAKE_CXX_FLAGS} -Og -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS} -O2 -mtune=native -msse4.1")
 
 #OpenCL
 find_package(OpenCL REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 link_directories(${OpenCL_LIBRARY})
+
+#download external ethash OpenCL kernel
 file(DOWNLOAD https://raw.githubusercontent.com/genesismining/sgminer-gm/bc138413d9098d6ed285df1bdebc70b47f69bcac/kernel/ethash-new.cl ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/ethash.cl TLS_VERIFY ON STATUS FILE_RET)
 if(NOT ("0" IN_LIST FILE_RET))
     list(GET FILE_RET 1 ERROR)
@@ -140,7 +147,7 @@ endif()
 
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})
-if(NOT APPLE)
+if(UNIX AND NOT APPLE)
     target_link_libraries (Miner -static-libgcc -static-libstdc++)
 endif()
 
