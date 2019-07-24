@@ -43,12 +43,6 @@ add_library(LibMiner
         src/algorithm/grin/AlgoCuckatoo31Cl.cpp src/algorithm/grin/AlgoCuckatoo31Cl.h
         src/algorithm/grin/Cuckatoo.cpp src/algorithm/grin/Cuckatoo.h
         src/crypto/blake2b-ref.cpp src/crypto/blake2.h src/crypto/blake2-impl.h
-        src/network/TcpLineProtocolUtil.cpp src/network/TcpLineProtocolUtil.h
-        src/network/TcpJsonProtocolUtil.cpp src/network/TcpJsonProtocolUtil.h
-        src/network/TcpJsonRpcProtocolUtil.cpp src/network/TcpJsonRpcProtocolUtil.h
-        src/network/JrpcBuilder.cpp src/network/JrpcBuilder.h
-        src/network/JrpcServer.cpp src/network/JrpcServer.h
-        src/network/TcpLineServer.cpp src/network/TcpLineServer.h
         src/network/IOTypeLayer.h
         src/network/JsonIO.cpp src/network/JsonIO.h
         src/network/LineIO.cpp src/network/LineIO.h
@@ -162,7 +156,6 @@ find_package(GTest REQUIRED)
 add_executable(tests
     src/algorithm/grin/CuckatooTest.cpp
     src/algorithm/grin/GraphTest.cpp
-    src/network/JrpcBuilderTest.cpp
     src/pool/WorkTest.cpp
     src/network/JrpcTest.cpp
 )
