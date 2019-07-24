@@ -3,6 +3,7 @@
 
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
+#include <string>
 
 namespace miner {
 
