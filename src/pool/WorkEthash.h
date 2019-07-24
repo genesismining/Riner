@@ -16,14 +16,16 @@ namespace miner {
     };
 
     class WorkEthash : public Work, public HasPowTypeEthash {
+
+        static const uint32_t uniqueNonce;
+
     public:
 
         WorkEthash(std::weak_ptr<WorkProtocolData> data) :
                 Work(std::move(data), getPowType()) {
         }
 
-        uint32_t extraNonce = 0;
-        //uint32_t minerNonce;
+        uint32_t extraNonce = uniqueNonce;
 
         Bytes<32> target; //previously difficulty
         Bytes<32> header;

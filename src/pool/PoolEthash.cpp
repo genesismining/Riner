@@ -15,6 +15,8 @@
 
 namespace miner {
 
+    const uint32_t WorkEthash::uniqueNonce{static_cast<uint32_t>(std::random_device()())};
+
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
         LOG(DEBUG) << "onConnected";
         acceptMiningNotify = false;
