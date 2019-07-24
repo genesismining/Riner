@@ -1,6 +1,8 @@
-<img src="https://genesismining.github.io/Riner/build/html/_images/img_wip.png" alt="work in progress" width="200"/>
+<img src="https://genesismining.github.io/Riner/build/html/_images/img_banner.jpg" alt="work in progress" height="200"/>
 
 # Riner
+
+<img src="https://genesismining.github.io/Riner/build/html/_images/img_wip.png" alt="work in progress" height="150"/>
 
 Early development version of a multi-algorithm GPU miner written in C++14.
 

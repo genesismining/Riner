@@ -1,3 +1,5 @@
+.. image:: ../assets/img_banner_white.jpg
+
 License
 =======
 
