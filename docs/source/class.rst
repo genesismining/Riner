@@ -34,3 +34,8 @@ AutoRefillQueue
 ---------------
 .. doxygenclass:: miner::AutoRefillQueue
    :project: Riner
+
+IOTypeLayer
+-----------
+.. doxygenclass:: miner::IOTypeLayer
+   :project: Riner

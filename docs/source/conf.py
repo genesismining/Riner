@@ -75,7 +75,7 @@ html_theme_options = {
     'vcs_pageview_mode': '',
     'style_nav_header_background': '#8E2838',
     # Toc options
-    #'github_url': 'https://github.com/genesismining/tba-miner',
+    #'github_url': 'https://github.com/genesismining/riner',
     'collapse_navigation': True,
     'sticky_navigation': True,
     'navigation_depth': 4,

@@ -94,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#algorithm">Algorithm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#lockguarded">LockGuarded</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#autorefillqueue">AutoRefillQueue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#iotypelayer">IOTypeLayer</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="function.html">Functions</a></li>
@@ -805,6 +806,329 @@
 <dl class="member">
 <dt id="_CPPv4N5miner15AutoRefillQueue10refillTaskE">
 <span id="_CPPv3N5miner15AutoRefillQueue10refillTaskE"></span><span id="_CPPv2N5miner15AutoRefillQueue10refillTaskE"></span><span id="miner::AutoRefillQueue::refillTask__std::future:void:"></span><span class="target" id="classminer_1_1AutoRefillQueue_1af0c8e83f57cf82d410fc4f667a8c6dc6"></span>std::future&lt;void&gt; <code class="sig-name descname">refillTask</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue10refillTaskE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="iotypelayer">
+<h2>IOTypeLayer<a class="headerlink" href="#iotypelayer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="_CPPv4I00EN5miner11IOTypeLayerE">
+<span id="_CPPv3I00EN5miner11IOTypeLayerE"></span><span id="_CPPv2I00EN5miner11IOTypeLayerE"></span><span class="target" id="classminer_1_1IOTypeLayer"></span>template&lt;class <code class="sig-name descname">T</code>, class <code class="sig-name descname">LayerBelow</code>&gt;<br /><em class="property">class </em><code class="sig-name descname">IOTypeLayer</code><a class="headerlink" href="#_CPPv4I00EN5miner11IOTypeLayerE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer"><span class="std std-ref"><span class="pre">IOTypeLayer</span></span></a></code> is used as a base class for network io abstractions that convert to/from certain types</p>
+<p><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="p">:</span>
+<span class="n">std</span><span class="p">::</span><span class="n">string</span> <span class="o">&lt;-&gt;</span> <span class="n">nl</span><span class="p">::</span><span class="n">json</span>              <span class="o">//</span><span class="n">one</span> <span class="n">IOTypeLayer</span>
+                <span class="n">nl</span><span class="p">::</span><span class="n">json</span> <span class="o">&lt;-&gt;</span> <span class="n">JsonRpc</span>  <span class="o">//</span><span class="n">another</span> <span class="n">IOTypeLayer</span>
+</pre></div>
+</div>
+</p>
+<p>In this example, the incoming byte stream is first interpreted as a <code class="docutils literal notranslate"><span class="pre">std::string</span></code>, once that was successful, the next layer tries to parse the <code class="docutils literal notranslate"><span class="pre">std::string</span></code> as a <code class="docutils literal notranslate"><span class="pre">nl::json</span></code>. after that, the next layer tries to parse the <code class="docutils literal notranslate"><span class="pre">nl::json</span></code> as a <code class="docutils literal notranslate"><span class="pre">JsonRpc::Message</span></code>. The core functionality is only implemented based on <code class="docutils literal notranslate"><span class="pre">std::strings</span></code>, and the json and json-rpc layers only add 2 functions each for forward and backward conversions. Adding a new layer is as easy as providing 2 such conversion functions. The resulting <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer"><span class="std std-ref"><span class="pre">IOTypeLayer</span></span></a></code> subclass still provides the same public interface as the implementation on the <code class="docutils literal notranslate"><span class="pre">std::string</span></code> level.</p>
+<p>could be implemented as: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LineIO</span> <span class="p">{</span><span class="o">...</span><span class="p">};</span> <span class="o">//</span><span class="n">std</span><span class="p">::</span><span class="n">string</span> <span class="n">layer</span>
+<span class="k">class</span> <span class="nc">JsonIO</span>       <span class="p">:</span> <span class="n">public</span> <span class="n">IOTypeLayer</span><span class="o">&lt;</span><span class="n">nl</span><span class="p">::</span><span class="n">json</span>        <span class="p">,</span> <span class="n">LineIO</span><span class="o">&gt;</span> <span class="p">{</span><span class="o">...</span><span class="p">};</span>
+<span class="k">class</span> <span class="nc">JsonRpcIO</span>    <span class="p">:</span> <span class="n">public</span> <span class="n">IOTypeLayer</span><span class="o">&lt;</span><span class="n">JsonRpc</span><span class="p">::</span><span class="n">Message</span><span class="p">,</span> <span class="n">JsonIO</span><span class="o">&gt;</span> <span class="p">{</span><span class="o">...</span><span class="p">};</span>
+</pre></div>
+</div>
+</p>
+<p>in this example <code class="docutils literal notranslate"><span class="pre">LineIO</span></code> implements all the actual IO logic (which runs on <code class="docutils literal notranslate"><span class="pre">std::string</span></code>s). <code class="docutils literal notranslate"><span class="pre">JsonIO</span></code> and <code class="docutils literal notranslate"><span class="pre">JsonRpcIO</span></code> only provide conversion functions while still being able to expose the same functionality as <code class="docutils literal notranslate"><span class="pre">LineIO</span></code>. In the end you only end up instantiating <code class="docutils literal notranslate"><span class="pre">JsonRpcIO</span></code>, which internally instantiates all the others in order to provide json-rpc related functionality.</p>
+<p>this solution was chosen to make adding new generic features to all the IO type-abstractions less tedious. They now only have to be added to the bottom most layer and the <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer"><span class="std std-ref"><span class="pre">IOTypeLayer</span></span></a></code> template.</p>
+<p>If you want to implement a new layer, just subclass from the <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer"><span class="std std-ref"><span class="pre">IOTypeLayer</span></span></a></code> you want to build on top of as shown above. Then implement a destructor that calls <code class="docutils literal notranslate"><span class="pre">stopIOThread()</span></code> to make sure no io thread handlers are executing while your class destroys its members. Finally override the following functions: <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">T</span>           <span class="n">convertIncoming</span><span class="p">(</span><span class="n">LayerBelowT</span><span class="p">)</span>
+<span class="n">LayerBelowT</span> <span class="n">convertOutgoing</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+</pre></div>
+</div>
+ in which you have to interpret the incoming messages from the layer below in terms of your layer’s type and translate them back upon sending. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Types</p>
+<dl class="type">
+<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE">
+<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1a39f8d8ea148607a62a4cee5b86d7a131"></span><em class="property">using </em><code class="sig-name descname">value_type</code> = T<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE">
+<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1ae2997d2c1779d7fb87d73a99f594e4fe"></span><em class="property">using </em><code class="sig-name descname">LayerBelowT</code> = <em class="property">typename</em> LayerBelow::value_type<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE">
+<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1a2c59afaeeb1355e0f91add9d102e5992"></span><em class="property">using </em><code class="sig-name descname">OnReceiveValueFunc</code> = IOOnReceiveValueFunc&lt;T&gt;<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE">
+<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1a19da205399e36563238257a1da42511f"></span><em class="property">using </em><code class="sig-name descname">ModifierFunc</code> = std::function&lt;void<span class="sig-paren">(</span>T &amp;t<span class="sig-paren">)</span>&gt;<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Function type passed to <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1acf07069d093046430dfc086dfb908fc5"><span class="std std-ref"><span class="pre">setIncomingModifier()</span></span></a></code> and <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a14573753f1112ab7651a7c2076d6c6d9"><span class="std std-ref"><span class="pre">setOutgoingModifier()</span></span></a></code> </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer10layerBelowEv">
+<span id="_CPPv3N5miner11IOTypeLayer10layerBelowEv"></span><span id="_CPPv2N5miner11IOTypeLayer10layerBelowEv"></span><span id="miner::IOTypeLayer::layerBelow"></span><span class="target" id="classminer_1_1IOTypeLayer_1a134f7f8432e5446f2958362e9d027dea"></span>LayerBelow &amp;<code class="sig-name descname">layerBelow</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer10layerBelowEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>obtain the layer below, e.g. for setting modifier functions via <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1acf07069d093046430dfc086dfb908fc5"><span class="std std-ref"><span class="pre">setIncomingModifier()</span></span></a></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a14573753f1112ab7651a7c2076d6c6d9"><span class="std std-ref"><span class="pre">setOutgoingModifier()</span></span></a></code> for that specific layer’s type. Usually chained to obtain the layer you want (<code class="docutils literal notranslate"><span class="pre">io.layerBelow().</span><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a134f7f8432e5446f2958362e9d027dea"><span class="std std-ref"><span class="pre">layerBelow()</span></span></a><span class="pre">...</span></code>) <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>the instance of <code class="docutils literal notranslate"><span class="pre">LayerBelow</span></code> that this layer builds upon </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer11IOTypeLayerE6IOMode">
+<span id="_CPPv3N5miner11IOTypeLayer11IOTypeLayerE6IOMode"></span><span id="_CPPv2N5miner11IOTypeLayer11IOTypeLayerE6IOMode"></span><span id="miner::IOTypeLayer::IOTypeLayer__IOMode"></span><span class="target" id="classminer_1_1IOTypeLayer_1ad9ce2f62e4d8aa89feafab2ea572483b"></span><code class="sig-name descname">IOTypeLayer</code><span class="sig-paren">(</span>IOMode <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer11IOTypeLayerE6IOMode" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor of the <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer"><span class="std std-ref"><span class="pre">IOTypeLayer</span></span></a></code> does not establish any connection yet. Use <code class="docutils literal notranslate"><span class="pre">launchClient*()</span></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1ada3a96a8a6064aac013bb755dae87b9d"><span class="std std-ref"><span class="pre">launchServer()</span></span></a></code> functions <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span></code>: not implemented yet </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer15convertIncomingE11LayerBelowT">
+<span id="_CPPv3N5miner11IOTypeLayer15convertIncomingE11LayerBelowT"></span><span id="_CPPv2N5miner11IOTypeLayer15convertIncomingE11LayerBelowT"></span><span id="miner::IOTypeLayer::convertIncoming__LayerBelowT"></span><span class="target" id="classminer_1_1IOTypeLayer_1a13901509c0ee7610d3e2aea14defd8bd"></span><em class="property">virtual</em> T <code class="sig-name descname">convertIncoming</code><span class="sig-paren">(</span>LayerBelowT<span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer15convertIncomingE11LayerBelowT" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>converts the incoming type from the layer below to the current layer’s type <code class="docutils literal notranslate"><span class="pre">T</span></code>. This function may throw an <code class="docutils literal notranslate"><span class="pre">IOConversionError</span></code> if the conversion failed. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>successfully converted instance of <code class="docutils literal notranslate"><span class="pre">T</span></code> </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer15convertOutgoingE1T">
+<span id="_CPPv3N5miner11IOTypeLayer15convertOutgoingE1T"></span><span id="_CPPv2N5miner11IOTypeLayer15convertOutgoingE1T"></span><span id="miner::IOTypeLayer::convertOutgoing__T"></span><span class="target" id="classminer_1_1IOTypeLayer_1a036c03bd8f5307260a1b7f4ed8f896a3"></span><em class="property">virtual</em> LayerBelowT <code class="sig-name descname">convertOutgoing</code><span class="sig-paren">(</span>T<span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer15convertOutgoingE1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>converts the outgoing type from this layer’s <code class="docutils literal notranslate"><span class="pre">T</span></code> to the type of the layer below. This function may throw an <code class="docutils literal notranslate"><span class="pre">IOConversionError</span></code> if the conversion failed. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>successfully converted instance of <code class="docutils literal notranslate"><span class="pre">LayerBelowT</span></code> </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayerD0Ev">
+<span id="_CPPv3N5miner11IOTypeLayerD0Ev"></span><span id="_CPPv2N5miner11IOTypeLayerD0Ev"></span><span id="miner::IOTypeLayer::~IOTypeLayer"></span><span class="target" id="classminer_1_1IOTypeLayer_1a7089a6e3ac52238f930956b8618929af"></span><em class="property">virtual</em> <code class="sig-name descname">~IOTypeLayer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayerD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer19setIncomingModifierERR12ModifierFunc">
+<span id="_CPPv3N5miner11IOTypeLayer19setIncomingModifierERR12ModifierFunc"></span><span id="_CPPv2N5miner11IOTypeLayer19setIncomingModifierERR12ModifierFunc"></span><span id="miner::IOTypeLayer::setIncomingModifier__ModifierFuncRR"></span><span class="target" id="classminer_1_1IOTypeLayer_1acf07069d093046430dfc086dfb908fc5"></span>void <code class="sig-name descname">setIncomingModifier</code><span class="sig-paren">(</span>ModifierFunc &amp;&amp;<em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer19setIncomingModifierERR12ModifierFunc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>provide a <code class="docutils literal notranslate"><span class="pre">ModifierFunc</span></code> which can define custom modifications that will be applied to any incoming <code class="docutils literal notranslate"><span class="pre">T</span></code> object before it is exposed in any other way. This is useful e.g. if a specific pool protocol is implemented that has some minor quirks on the way it expects Json Rpcs to behave. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">func</span></code>: function that lets the user modify every incoming <code class="docutils literal notranslate"><span class="pre">T</span></code> before it gets exposed otherwise </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer19setOutgoingModifierERR12ModifierFunc">
+<span id="_CPPv3N5miner11IOTypeLayer19setOutgoingModifierERR12ModifierFunc"></span><span id="_CPPv2N5miner11IOTypeLayer19setOutgoingModifierERR12ModifierFunc"></span><span id="miner::IOTypeLayer::setOutgoingModifier__ModifierFuncRR"></span><span class="target" id="classminer_1_1IOTypeLayer_1a14573753f1112ab7651a7c2076d6c6d9"></span>void <code class="sig-name descname">setOutgoingModifier</code><span class="sig-paren">(</span>ModifierFunc &amp;&amp;<em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer19setOutgoingModifierERR12ModifierFunc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>provide a <code class="docutils literal notranslate"><span class="pre">ModifierFunc</span></code> that can define custom modifications that will be applied to any outgoing <code class="docutils literal notranslate"><span class="pre">T</span></code> object before it is converted to a <code class="docutils literal notranslate"><span class="pre">LayerBelowT</span></code>. This is useful e.g. if a specific pool protocol is implemented that has some minor quirks on the way it expects Json Rpcs to behave. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">func</span></code>: function that lets the user modify every outgoing <code class="docutils literal notranslate"><span class="pre">T</span></code> before it is sent </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer9readAsyncE9CxnHandle">
+<span id="_CPPv3N5miner11IOTypeLayer9readAsyncE9CxnHandle"></span><span id="_CPPv2N5miner11IOTypeLayer9readAsyncE9CxnHandle"></span><span id="miner::IOTypeLayer::readAsync__CxnHandle"></span><span class="target" id="classminer_1_1IOTypeLayer_1a35d8dde682a5eeaed4cddeaa9df95c21"></span>void <code class="sig-name descname">readAsync</code><span class="sig-paren">(</span>CxnHandle <em>cxn</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer9readAsyncE9CxnHandle" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Enqueues an async read operation on the provided <code class="docutils literal notranslate"><span class="pre">cxn</span></code> and keeps that <code class="docutils literal notranslate"><span class="pre">cxn</span></code> alive (if it hasn’t disconnected yet). Once a read was queued and bytes were received that successfully went through the chain of <code class="docutils literal notranslate"><span class="pre">IOTypeLayers</span></code>, the optional <code class="docutils literal notranslate"><span class="pre">OnReceiveValueFunc</span></code> provided in <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a7ea283bc582e842d517b5dc59d470423"><span class="std std-ref"><span class="pre">setOnReceive()</span></span></a></code> gets called with the resulting <code class="docutils literal notranslate"><span class="pre">T</span></code> instance. Otherwise (if no func was provided) the behavior is identical, but the default <code class="docutils literal notranslate"><span class="pre">OnReceiveValueFunc</span></code> (=noop) gets called. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cxn</span></code>: the connection handle to queue a read operation on </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer12setOnReceiveERR18OnReceiveValueFunc">
+<span id="_CPPv3N5miner11IOTypeLayer12setOnReceiveERR18OnReceiveValueFunc"></span><span id="_CPPv2N5miner11IOTypeLayer12setOnReceiveERR18OnReceiveValueFunc"></span><span id="miner::IOTypeLayer::setOnReceive__OnReceiveValueFuncRR"></span><span class="target" id="classminer_1_1IOTypeLayer_1a7ea283bc582e842d517b5dc59d470423"></span>void <code class="sig-name descname">setOnReceive</code><span class="sig-paren">(</span>OnReceiveValueFunc &amp;&amp;<em>onRecv</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer12setOnReceiveERR18OnReceiveValueFunc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Provide a function that gets called whenever an incoming message was successfully converted to a <code class="docutils literal notranslate"><span class="pre">T</span></code> (e.g. if no exceptions were thrown) and also passes an <code class="docutils literal notranslate"><span class="pre">CxnHandle</span></code> that can be used within that callback to send responses/queue reads <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">onRecv</span></code>: the function that is called upon receiving a <code class="docutils literal notranslate"><span class="pre">T</span></code> </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer10writeAsyncE9CxnHandle1T">
+<span id="_CPPv3N5miner11IOTypeLayer10writeAsyncE9CxnHandle1T"></span><span id="_CPPv2N5miner11IOTypeLayer10writeAsyncE9CxnHandle1T"></span><span id="miner::IOTypeLayer::writeAsync__CxnHandle.T"></span><span class="target" id="classminer_1_1IOTypeLayer_1a9ffbf2a56970427dc09960e0306ada7b"></span>void <code class="sig-name descname">writeAsync</code><span class="sig-paren">(</span>CxnHandle <em>cxn</em>, T <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer10writeAsyncE9CxnHandle1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Enqueues an async write operation on the provided <code class="docutils literal notranslate"><span class="pre">cxn</span></code> and keeps that <code class="docutils literal notranslate"><span class="pre">cxn</span></code> alive (if it hasn’t disconnected yet). The t object will get converted down to the base layer on the calling thread, then the actual async write is queued. For more details see boost::asio’s <code class="docutils literal notranslate"><span class="pre">async_write</span></code>. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cxn</span></code>: the connection handle to queue a write operation on </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t</span></code>: the object that gets first converted to the bottom most layer and then async-sent over the <code class="docutils literal notranslate"><span class="pre">cxn</span></code> </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4I0EN5miner11IOTypeLayer9postAsyncEvRR4Func">
+<span id="_CPPv3I0EN5miner11IOTypeLayer9postAsyncERR4Func"></span><span id="_CPPv2I0EN5miner11IOTypeLayer9postAsyncERR4Func"></span><span class="target" id="classminer_1_1IOTypeLayer_1a5b9b505f500c37f6896293a1f24dffd1"></span>template&lt;class <code class="sig-name descname">Func</code>&gt;<br />void <code class="sig-name descname">postAsync</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5miner11IOTypeLayer9postAsyncEvRR4Func" title="miner::IOTypeLayer::postAsync::Func">Func</a> &amp;&amp;<em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN5miner11IOTypeLayer9postAsyncEvRR4Func" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Enqueue an arbitrary function to run on the IO thread. For more details see boost::asio’s <code class="docutils literal notranslate"><span class="pre">asio::post</span></code>. <dl class="simple">
+<dt><strong>Template Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Func</span></code>: functor with a <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">operator()</span></code> that takes no arguments </p></li>
+</ul>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">func</span></code>: the function which is going to be executed on the io thread. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer15retryAsyncEveryE12millisecondsRRNSt8functionIFbvEEE">
+<span id="_CPPv3N5miner11IOTypeLayer15retryAsyncEveryE12millisecondsRRNSt8functionIFbvEEE"></span><span id="_CPPv2N5miner11IOTypeLayer15retryAsyncEveryE12millisecondsRRNSt8functionIFbvEEE"></span><span class="target" id="classminer_1_1IOTypeLayer_1a419eb720653e73ca8440bbd738ba6add"></span>void <code class="sig-name descname">retryAsyncEvery</code><span class="sig-paren">(</span>milliseconds <em>retryInterval</em>, std::function&lt;bool<span class="sig-paren">(</span><span class="sig-paren">)</span>&gt; &amp;&amp;<em>pred</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer15retryAsyncEveryE12millisecondsRRNSt8functionIFbvEEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>call an arbitrary predicate function every <code class="docutils literal notranslate"><span class="pre">retryInterval</span></code> milliseconds until it succeeds (returns <code class="docutils literal notranslate"><span class="pre">true</span></code>) for the first time. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">retryInterval</span></code>: the time duration to wait between the individual tries </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pred</span></code>: the function that should be called repeatedly until it returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for the first time </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc">
+<span id="_CPPv3N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="_CPPv2N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="miner::IOTypeLayer::launchClient__ss.uint16_t.IOOnConnectedFunc.IOOnDisconnectedFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"></span>void <code class="sig-name descname">launchClient</code><span class="sig-paren">(</span>std::string <em>host</em>, uint16_t <em>port</em>, IOOnConnectedFunc <em>onCxn</em> = ioOnConnectedNoop, IOOnDisconnectedFunc <em>onDc</em> = ioOnDisconnectedNoop<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"><span class="std std-ref"><span class="pre">launchClient()</span></span></a></code> opens a single connection to the given host,port. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code>: host name or ip e.g. “localhost” or “127.0.0.1” to connect to </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code>: port to connect to </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">onCxn</span></code>: function that gets called on the io thread when a successful connection was established. A <code class="docutils literal notranslate"><span class="pre">CxnHandle</span></code> is provided as a parameter to enqueue further operations on that connection. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">onDc</span></code>: function that gets called (not necessarily on the io thread!) when the connection was either closed on the other side, lost, or closed on this side by no longer enqueueing any async read/write operations on the <code class="docutils literal notranslate"><span class="pre">CxnHandle</span></code> after it was successfully connected. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc">
+<span id="_CPPv3N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="_CPPv2N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="miner::IOTypeLayer::launchClientAutoReconnect__ss.uint16_t.IOOnConnectedFunc.IOOnDisconnectedFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a24bc932e5f90499384e8880f2711d51e"></span>void <code class="sig-name descname">launchClientAutoReconnect</code><span class="sig-paren">(</span>std::string <em>host</em>, uint16_t <em>port</em>, IOOnConnectedFunc <em>onCxn</em> = ioOnConnectedNoop, IOOnDisconnectedFunc <em>onDc</em> = ioOnDisconnectedNoop<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Same as <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"><span class="std std-ref"><span class="pre">launchClient()</span></span></a></code>, but it tries to reconnect whenever a connection was lost. The <code class="docutils literal notranslate"><span class="pre">onCxn</span></code> and <code class="docutils literal notranslate"><span class="pre">onDc</span></code> callbacks also get called whenever that happens. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">onCxn</span></code>: function that gets called on the io thread whenever a successful connection was established. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">onDc</span></code>: function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer12launchServerE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc">
+<span id="_CPPv3N5miner11IOTypeLayer12launchServerE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="_CPPv2N5miner11IOTypeLayer12launchServerE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="miner::IOTypeLayer::launchServer__uint16_t.IOOnConnectedFunc.IOOnDisconnectedFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1ada3a96a8a6064aac013bb755dae87b9d"></span>void <code class="sig-name descname">launchServer</code><span class="sig-paren">(</span>uint16_t <em>port</em>, IOOnConnectedFunc <em>onCxn</em> = ioOnConnectedNoop, IOOnDisconnectedFunc <em>onDc</em> = ioOnDisconnectedNoop<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer12launchServerE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1ada3a96a8a6064aac013bb755dae87b9d"><span class="std std-ref"><span class="pre">launchServer()</span></span></a></code> listens on the provided port for incoming connections. For every connection, a <code class="docutils literal notranslate"><span class="pre">CxnHandle</span></code> is created and the <code class="docutils literal notranslate"><span class="pre">onCxn</span></code> callback is called with it. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code>: the port to listen on for connections </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">onCxn</span></code>: the function that is called on the IO thread on every successfully established connection </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">onDc</span></code>: function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side. </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer11hasLaunchedEv">
+<span id="_CPPv3N5miner11IOTypeLayer11hasLaunchedEv"></span><span id="_CPPv2N5miner11IOTypeLayer11hasLaunchedEv"></span><span id="miner::IOTypeLayer::hasLaunched"></span><span class="target" id="classminer_1_1IOTypeLayer_1ae63885b59812c48828335de7af285b2a"></span>bool <code class="sig-name descname">hasLaunched</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer11hasLaunchedEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer10isIoThreadEv">
+<span id="_CPPv3N5miner11IOTypeLayer10isIoThreadEv"></span><span id="_CPPv2N5miner11IOTypeLayer10isIoThreadEv"></span><span id="miner::IOTypeLayer::isIoThread"></span><span class="target" id="classminer_1_1IOTypeLayer_1ab02b5f9183069e90e6bcdb75b4861c3e"></span>bool <code class="sig-name descname">isIoThread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer10isIoThreadEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>check whether the calling thread is the io thread. this function can be called from any thread <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if the calling thread is the io thread owned by this object, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Private Functions</p>
+<dl class="function">
+<dt id="_CPPv4NK5miner11IOTypeLayer15ioThreadRunningEv">
+<span id="_CPPv3NK5miner11IOTypeLayer15ioThreadRunningEv"></span><span id="_CPPv2NK5miner11IOTypeLayer15ioThreadRunningEv"></span><span id="miner::IOTypeLayer::ioThreadRunningC"></span><span class="target" id="classminer_1_1IOTypeLayer_1ad95b74a1e282ebee37d8626485513f64"></span>bool <code class="sig-name descname">ioThreadRunning</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner11IOTypeLayer15ioThreadRunningEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>returns whether the io thread’s dtor wasn’t called yet. If this function returns <code class="docutils literal notranslate"><span class="pre">true</span></code> you should assume that handlers are being executed that access the layer’s state <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>whether the io thread’s dtor wasn’t called yet. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer15processIncomingE11LayerBelowT">
+<span id="_CPPv3N5miner11IOTypeLayer15processIncomingE11LayerBelowT"></span><span id="_CPPv2N5miner11IOTypeLayer15processIncomingE11LayerBelowT"></span><span id="miner::IOTypeLayer::processIncoming__LayerBelowT"></span><span class="target" id="classminer_1_1IOTypeLayer_1a93ab649b52f6b789f2b517265526027f"></span>T <code class="sig-name descname">processIncoming</code><span class="sig-paren">(</span>LayerBelowT <em>lbt</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer15processIncomingE11LayerBelowT" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>apply all necessary changes to the incoming data so that it can be processed as a <code class="docutils literal notranslate"><span class="pre">T</span></code> <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>data converted to instance of <code class="docutils literal notranslate"><span class="pre">T</span></code> </p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lbt</span></code>: received data in the type of the layer below </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer15processOutgoingE1T">
+<span id="_CPPv3N5miner11IOTypeLayer15processOutgoingE1T"></span><span id="_CPPv2N5miner11IOTypeLayer15processOutgoingE1T"></span><span id="miner::IOTypeLayer::processOutgoing__T"></span><span class="target" id="classminer_1_1IOTypeLayer_1aae6d98cfb0888e7cb0a72fc553d3d619"></span>LayerBelowT <code class="sig-name descname">processOutgoing</code><span class="sig-paren">(</span>T <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer15processOutgoingE1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>apply all necessary changes to the incoming <code class="docutils literal notranslate"><span class="pre">T</span></code> so that it can be interpreted by the layer below <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>t in the type of the layer below </p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t</span></code>: that is about to be sent </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner11IOTypeLayer28checkNotLaunchedOrOnIOThreadEv">
+<span id="_CPPv3N5miner11IOTypeLayer28checkNotLaunchedOrOnIOThreadEv"></span><span id="_CPPv2N5miner11IOTypeLayer28checkNotLaunchedOrOnIOThreadEv"></span><span id="miner::IOTypeLayer::checkNotLaunchedOrOnIOThread"></span><span class="target" id="classminer_1_1IOTypeLayer_1ab61bdabcc9a3eb53c4b2c0d92b323420"></span>void <code class="sig-name descname">checkNotLaunchedOrOnIOThread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer28checkNotLaunchedOrOnIOThreadEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>shorthand for ensuring that it is ok to mutate the layer’s state </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Private Members</p>
+<dl class="member">
+<dt id="_CPPv4N5miner11IOTypeLayer17_incomingModifierE">
+<span id="_CPPv3N5miner11IOTypeLayer17_incomingModifierE"></span><span id="_CPPv2N5miner11IOTypeLayer17_incomingModifierE"></span><span id="miner::IOTypeLayer::_incomingModifier__ModifierFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a30bf837c305fb71d8e215ea2573a8cac"></span>ModifierFunc <code class="sig-name descname">_incomingModifier</code><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer17_incomingModifierE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5miner11IOTypeLayer17_outgoingModifierE">
+<span id="_CPPv3N5miner11IOTypeLayer17_outgoingModifierE"></span><span id="_CPPv2N5miner11IOTypeLayer17_outgoingModifierE"></span><span id="miner::IOTypeLayer::_outgoingModifier__ModifierFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a36d483ad2e0aabecf5bce3ded4e1ef7f"></span>ModifierFunc <code class="sig-name descname">_outgoingModifier</code><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer17_outgoingModifierE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="member">
+<dt id="_CPPv4N5miner11IOTypeLayer11_layerBelowE">
+<span id="_CPPv3N5miner11IOTypeLayer11_layerBelowE"></span><span id="_CPPv2N5miner11IOTypeLayer11_layerBelowE"></span><span id="miner::IOTypeLayer::_layerBelow__LayerBelow"></span><span class="target" id="classminer_1_1IOTypeLayer_1a0e8b20afea0113760b55fb89a2487e0d"></span>LayerBelow <code class="sig-name descname">_layerBelow</code><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer11_layerBelowE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Friends</p>
+<dl class="function">
+<dt>
+<span class="target" id="classminer_1_1IOTypeLayer_1a429d9213c8f830adf77f52529c29e481"></span><em class="property">friend </em><code class="sig-name descname">miner::IOTypeLayer::IOTypeLayer</code></dt>
 <dd></dd></dl>
 
 </div>
