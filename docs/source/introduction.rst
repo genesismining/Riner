@@ -22,7 +22,7 @@ Dependencies
 ------------
 In order to build Riner the following dependencies need to be installed:
 
-- OpenCL
+- `OpenCL <https://www.khronos.org/registry/OpenCL/specs/2.2/html/OpenCL_ICD_Installation.html>`_
 
 - `CMake <https://cmake.org/>`_
 
