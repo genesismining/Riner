@@ -37,9 +37,7 @@ first, clone the Riner repository and update submodules
 
 .. code::
 
-    git clone https://github.com/genesismining/Riner.git
-    cd Riner
-    git submodule update
+    git clone --recurse-submodules https://github.com/genesismining/Riner.git
 
 then build the project using :code:`cmake` and :code:`make` or configure CMake to output build files for your favourite IDE.
 
