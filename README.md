@@ -7,8 +7,6 @@
 
 Early development version of a multi-algorithm GPU miner written in C++14.
 
-Requires Cmake 3.9
-
 ## Getting Started/Documentation
 
 Please see the [documentation](https://genesismining.github.io/Riner "documentation")
