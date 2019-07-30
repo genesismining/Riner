@@ -19,53 +19,77 @@ namespace miner {
     };
 
     class IOConnection;
-    using CxnHandle = weak_ptr<IOConnection>; //Conntection Handle that is safe to be stored by the user and reused. If the corresponding connection no longer exists, the weak_ptr catches that behavior safely. a connection is dropped when no operation is happening on it (e.g. listen)
 
+    /**
+     * Conntection Handle that is safe to be stored by the user and reused.
+     * If the corresponding connection no longer exists, the weak_ptr deals with that behavior safely.
+     * A connection is dropped when no operation is happening on it (e.g. no async read/writes are queued)
+     */
+    using CxnHandle = weak_ptr<IOConnection>;
+
+    //function declarations that are used in IO related classes
     template<class T> using IOOnReceiveValueFunc = std::function<void(CxnHandle, const T &)>;
     using IOOnConnectedFunc = std::function<void(CxnHandle)>;
     using IOOnDisconnectedFunc = std::function<void()>;
 
+    //noop implementations of IO related functions, used for default arguments
     template<class T>
     inline void ioOnReceiveValueNoop(CxnHandle, const T &) {} //default argument for IOOnReceiveValueFunc<T>
     inline void ioOnConnectedNoop(CxnHandle) {} //default argument for IOOnConnectedFunc
     inline void ioOnDisconnectedNoop() {};
 
+    /**
+     * An IOConversionError should be thrown whenever an IOTypeLayer implementation fails to convert its argument in either its convertIncoming() or convertOutgoing() method.
+     * For more details see std::runtime_error
+     */
     struct IOConversionError : public std::runtime_error {
         using std::runtime_error::runtime_error;
     };
 
-    // IOTypeLayer
-    // used as a base class for network io abstractions that convert to/from certain types
-    // example:
-    //
-    // std::string <-> nl::json
-    //                 nl::json <-> JsonRpc
-    //
-    // could be implemented as:
-    //
-    // class StringLayer {...};
-    // class JsonLayer    : public IOTypeLayer<nl::json, StringLayer> {...};
-    // class JsonRpcLayer : public IOTypeLayer<JsonRpc, JsonLayer> {...};
-    //
-    // in this example StringLayer implements all the actual IO logic (which runs
-    // on strings). JsonLayer and JsonRpcLayer only provide conversion
-    // functions while still being able to expose the same functionality as
-    // StringLayer. In the end you only end up instantiating JsonRpcLayer, which
-    // internally instantiates the others in order to provide JsonRpc related
-    // functionality.
-    //
-    // this solution was chosen to make adding new generic features to all the
-    // IO type abstractions less tedious, they now only have to be added to the
-    // bottom most layer and the IOTypeLayer template.
-    //
-    // If you want to implement a new layer, just subclass from the IOTypeLayer
-    // you want to build on top of as shown above, and override these functions:
-    //    T           convertIncoming(LayerBelowT)
-    //    LayerBelowT convertOutgoing(T)
-    // in which you have to interpret the incoming messages from the layer below
-    // in terms of your layer's type, and translate them back upon sending.
-    // also you must call stopIOThread() in your subclasses' dtor to ensure that
-    // all async handlers are finished when you start destroying the object
+    /**
+     * IOTypeLayer
+     * used as a base class for network io abstractions that convert to/from certain types
+     *
+     * (for better formatting look at this documentation in the code (IOTypeLayer.h)
+     * example:
+     *    std::string <-> nl::json
+     *                    nl::json <-> JsonRpc
+     *
+     * The incoming byte stream is first interpreted as a std::string, once that
+     * was successful, the next layer tries to parse the std::string as a nl::json.
+     * after that, the next layer tries to parse the nl::json as a JsonRpc message.
+     * The core functionality is only implemented based on std::strings, and the
+     * json and JsonRpc layers only adds 2 functions each for forward and backward
+     * conversions. Adding a new layer is as easy as providing 2 such functions.
+     * The resulting IOTypeLayer subclass still provides the same public interface
+     * as the implementation on the std::string level.
+     *
+     * could be implemented as:
+     *
+     *    class LineIO {...}; //std::string
+     *    class JsonIO       : public IOTypeLayer<nl::json        , LineIO> {...};
+     *    class JsonRpcIO    : public IOTypeLayer<JsonRpc::Message, JsonIO> {...};
+     *
+     * in this example StringLayer implements all the actual IO logic (which runs
+     * on strings). JsonLayer and JsonRpcLayer only provide conversion
+     * functions while still being able to expose the same functionality as
+     * StringLayer. In the end you only end up instantiating JsonRpcLayer, which
+     * internally instantiates the others in order to provide JsonRpc related
+     * functionality.
+     *
+     * this solution was chosen to make adding new generic features to all the
+     * IO type abstractions less tedious, they now only have to be added to the
+     * bottom most layer and the IOTypeLayer template.
+     *
+     * If you want to implement a new layer, just subclass from the IOTypeLayer
+     * you want to build on top of as shown above, and override these functions:
+     *    T           convertIncoming(LayerBelowT)
+     *    LayerBelowT convertOutgoing(T)
+     * in which you have to interpret the incoming messages from the layer below
+     * in terms of your layer's type, and translate them back upon sending.
+     * also you must call stopIOThread() in your subclasses' dtor to ensure that
+     * all async handlers are finished when you start destroying the object
+     */
 
     template<class T, class LayerBelow>
     class IOTypeLayer {
@@ -79,20 +103,40 @@ namespace miner {
         using LayerBelowT = typename LayerBelow::value_type;
         using OnReceiveValueFunc = IOOnReceiveValueFunc<T>;
 
+        /**
+         * Function type passed to setIncomingModifier() and setOutgoingModifier()
+         */
         using ModifierFunc = std::function<void(T &t)>;
 
+        /**
+         * obtain the layer below, e.g. for setting modifier functions via setIncomingModifier() or setOutgoingModifier()
+         * for that specific layer's type. Usually chained to obtain the layer you want (io.layerBelow().layerBelow()...)
+         * @return the instance of LayerBelow that this layer builds upon
+         */
         LayerBelow &layerBelow() {
             return _layerBelow;
         }
 
-        //takes callback that is called whenever an incoming message was
-        //successfully converted to a T (e.g. if no exceptions were thrown) and
-        //also passes an IOConnection that can be used within that callback to send responses
+        /**
+         * Constructor of the IOTypeLayer does not establish any connection yet. Use launchClient* or launchServer functions
+         * @param mode not implemented yet
+         */
         IOTypeLayer(IOMode mode)
-        : _layerBelow(mode) {
+                : _layerBelow(mode) {
         }
 
+        /**
+         * converts the incoming type from the layer below to the current layer's type T.
+         * This function may throw an IOConversionError if the conversion failed.
+         * @return successfully converted instance of T
+         */
         virtual T convertIncoming(LayerBelowT) = 0; //e.g. json(string);
+
+        /**
+         * converts the outgoing type from this layer T to the type of the layer below.
+         * This function may throw an IOConversionError if the conversion failed.
+         * @return successfully converted instance of LayerBelowT
+         */
         virtual LayerBelowT convertOutgoing(T) = 0; //e.g. string(json);
 
         virtual ~IOTypeLayer() {
@@ -103,21 +147,46 @@ namespace miner {
         };
 
         //let the user define a function that modifies an incoming T before it is further processed
+
+        /**
+         * provide a ModifierFunc which can define custom modifications that will be applied to any incoming T object
+         * before it is exposed in any other way. This is useful e.g. if a specific pool protocol is implemented that
+         * has some minor quirks on the way it expects Json Rpcs to behave.
+         * @param func function that lets the user modify every incoming T before it gets exposed otherwise
+         */
         void setIncomingModifier(ModifierFunc &&func) {
             checkNotLaunchedOrOnIOThread();
             _incomingModifier = std::move(func);
         }
 
-        //let the user define a function that modifies an outgoing T before it is sent
+        /**
+         * provide a ModifierFunc that can define custom modifications that will be applied to any outgoing T object
+         * before it is converted to a LayerBelowT. This is useful e.g. if a specific pool protocol is implemented that
+         * has some minor quirks on the way it expects Json Rpcs to behave.
+         * @param func function that lets the user modify every outgoing T before it is sent
+         */
         void setOutgoingModifier(ModifierFunc &&func) {
             checkNotLaunchedOrOnIOThread();
             _outgoingModifier = std::move(func);
         }
 
+        /**
+         * Enqueues an async read operation on the provided cxn and keeps that cxn alive (if it hasn't disconnected yet).
+         * Once a read was queued and bytes were received that successfully went through the chain of IOTypeLayers, the
+         * optional OnReceiveValueFunc provided in setOnReceive() gets called with the resulting T instance. Otherwise
+         * (if no func was provided) the behavior is identical, but the default (noop) onReceiveValueFunc gets called.
+         * @param cxn the connection handle to queue a read operation on
+         */
         void readAsync(CxnHandle cxn) {
             _layerBelow.readAsync(cxn);
         }
 
+        /**
+         * Provide a function that gets called whenever an incoming message was
+         * successfully converted to a T (e.g. if no exceptions were thrown) and
+         * also passes an IOConnection that can be used within that callback to send responses/queue reads
+         * @param onRecv the function that is called upon receiving a T
+         */
         void setOnReceive(OnReceiveValueFunc &&onRecv) {
             checkNotLaunchedOrOnIOThread();
             _layerBelow.setOnReceive([this, onRecv = std::move(onRecv)] (CxnHandle cxn, LayerBelowT lbt) {
@@ -126,11 +195,18 @@ namespace miner {
                 }
                 catch(const IOConversionError &e) {
                     LOG(WARNING) << "IO conversion failed on receive in IOTypeLayer for "
-                    << typeid(value_type).name() << ": " << e.what();
+                                 << typeid(value_type).name() << ": " << e.what();
                 }
             });
         };
 
+        /**
+         * Enqueues an async write operation on the provided cxn and keeps that cxn alive (if it hasn't disconnected yet).
+         * The t object will get converted down to the base layer on the calling thread, then the actual async write is
+         * queued. For more details see boost::asio's async_write.
+         * @param cxn the connection handle to queue a write operation on
+         * @param t the object that gets first converted to the bottom most layer and then async-sent over the cxn
+         */
         void writeAsync(CxnHandle cxn, T t) {
             //forward this call to the layer below, but process t so it is compatible with that layer
             try {
@@ -142,27 +218,54 @@ namespace miner {
             }
         }
 
+        /**
+         * Enqueue an arbitrary function to run on the IO thread. For more details see asio::post.
+         * @tparam Func functor with operator() that takes no arguments and void return type
+         * @param func the function which is going to be executed on the io thread.
+         */
         template<class Func>
         void postAsync(Func &&func) {
             _layerBelow.postAsync(std::forward<Func>(func));
         }
 
-        //asynchronously call pred every retryInterval milliseconds until it returns true for the first time
-        //first call happens right away
-        //just like postAsync(...) this function is just a utility to make use of asio's thread pool and does
-        //not actually write anything to a connection
+        /**
+         * call an arbitrary predicate function every 'retryInterval' milliseconds until it succeeds (returns true) for
+         * the first time.
+         * @param retryInterval the time duration to wait between the individual tries
+         * @param pred the function that should be called repeatedly until it returns true for the first time
+         */
         void retryAsyncEvery(milliseconds retryInterval, std::function<bool()> &&pred) {
             _layerBelow.retryAsyncEvery(retryInterval, std::move(pred));
         }
 
+        /**
+         * launchClient makes a single connection to the given host,port.
+         * @param host host name or ip e.g. "localhost" or "127.0.0.1" to connect to
+         * @param port port to connect to
+         * @param onCxn function that gets called on the io thread when a successful connection was established. A CxnHandle is provided
+         * as a parameter to enqueue further operations on that connection.
+         * @param onDc function that gets called (not necessarily on the io thread!) when the connection was either closed on the other side, lost, or closed on this side
+         * by no longer enqueueing any async read/write operations on the CxnHandle after it was successfully connected.
+         */
         void launchClient(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
             _layerBelow.launchClient(std::move(host), port, std::move(onCxn), std::move(onDc));
         }
 
+        /**
+         * Same as launchClient, but it tries to reconnect whenever a connection was lost. The onCxn and onDc callbacks get called whenever that happens.
+         * @param onCxn function that gets called on the io thread whenever a successful connection was established.
+         * @param onDc function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side.
+         */
         void launchClientAutoReconnect(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
             _layerBelow.launchClientAutoReconnect(std::move(host), port, std::move(onCxn), std::move(onDc));
         }
 
+        /**
+         * launchServer listens on the provided port for incoming connections. For every connection, a CxnHandle is created and the onCxn callback is called with it.
+         * @param port the port to listen on for connections
+         * @param onCxn the function that is called on the IO thread on every successfully established connection
+         * @param onDc function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side.
+         */
         void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
             _layerBelow.launchServer(port, std::move(onCxn), std::move(onDc));
         }
@@ -171,39 +274,65 @@ namespace miner {
             return layerBelow().hasLaunched();
         }
 
+        /**
+         * check whether the calling thread is the io thread. this function is thread safe
+         * @return true if the calling thread is the io thread owned by this object, false otherwise
+         */
         bool isIoThread() {
             return layerBelow().isIoThread();
         }
 
     protected:
+        /**
+         * call this function in the dtor of your IOTypeLayer subclasses.
+         * You will get a runtime error message to remind you of this, in case you forgot.
+         * Stopping the io thread that early is necessary to ensure the io thread does not accidentially access
+         * members that have already been destroyed by the dtor of your IOTypeLayer subclass.
+         */
         void stopIOThread() { //blocks until io thread has joined
             _layerBelow.stopIOThread(); //calls BaseIO::stopIOThread();
         }
 
     private:
 
+        /**
+         * returns whether the io thread's dtor wasn't called yet.
+         * If this function returns true you should assume that handlers are being executed that access the layer's state
+         * @return whether the io thread's dtor wasn't called yet.
+         */
         bool ioThreadRunning() const {
             return _layerBelow.ioThreadRunning();
         }
 
+        /**
+         * apply all necessary changes to the incoming data so that it can be
+         * processed as a T
+         * @param lbt received data in the type of the layer below
+         * @return data converted to instance of t
+         */
         T processIncoming(LayerBelowT lbt) {
-            //apply all necessary changes to the incoming data so that it can be
-            //processed as a T
             auto t = convertIncoming(std::move(lbt));
             if (_incomingModifier) //user may have defined a custom modifier func
                 _incomingModifier(t);
             return t;
         }
 
+        /**
+         * apply all necessary changes to the incoming T so that it can be
+         * interpreted by the layer below
+         * @param t that is about to be sent
+         * @return t in the type of the layer below
+         */
         LayerBelowT processOutgoing(T t) {
-            //apply all necessary changes to the incoming T so that it can be
-            //interpreted by the layer below
             if (_outgoingModifier) //user may have defined a custom modifier func
                 _outgoingModifier(t);
             auto lbt = convertOutgoing(std::move(t));
             return lbt;
         }
 
+        /**
+         * shorthand for ensuring that it is ok to mutate the layer's state
+         */
         void checkNotLaunchedOrOnIOThread() {
             MI_EXPECTS(!hasLaunched() || isIoThread()); //mutating functions may only be called before calling launch, or from the IO Thread
         }
