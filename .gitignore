@@ -1,6 +1,16 @@
+# CLion paths
 cmake-build-debug
 .idea
+
+# Doxygen generated files
 docs/build/doctrees
 docs/html
 docs/latex
 docs/xml
+
+# Downloaded kernels
+src/kernel
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles
