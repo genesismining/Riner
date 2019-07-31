@@ -243,7 +243,7 @@ namespace miner {
         }
 
         /**
-         * `launchClient()` opens a single connection to the given host,port.
+         * `launchClient()` opens a single connection to the given host, port.
          * @param host host name or ip e.g. "localhost" or "127.0.0.1" to connect to
          * @param port port to connect to
          * @param onCxn function that gets called on the io thread when a successful connection was established. A `CxnHandle` is provided
@@ -256,7 +256,7 @@ namespace miner {
         }
 
         /**
-         * Same as `launchClient()`, but it tries to reconnect whenever a connection was lost. The `onCxn` and `onDc` callbacks also get called whenever that happens.
+         * Same as `launchClient()`, but it tries to reconnect whenever a connection was lost. The `onDc` and later `onCxn` callbacks also get called whenever that happens.
          * @param onCxn function that gets called on the io thread whenever a successful connection was established.
          * @param onDc function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side.
          */
@@ -302,7 +302,7 @@ namespace miner {
         /**
          * returns whether the io thread's dtor wasn't called yet.
          * If this function returns `true` you should assume that handlers are being executed that access the layer's state
-         * @return whether the io thread's dtor wasn't called yet.
+         * @return whether the io thread's dtor hasn't finished yet, and thus the io thread has not yet joined
          */
         bool ioThreadRunning() const {
             return _layerBelow.ioThreadRunning();

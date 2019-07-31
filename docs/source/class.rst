@@ -39,3 +39,19 @@ IOTypeLayer
 -----------
 .. doxygenclass:: miner::IOTypeLayer
    :project: Riner
+
+jrpc Primitives
+----------
+.. doxygentypedef:: miner::jrpc::Null
+   :project: Riner
+
+.. doxygentypedef:: miner::jrpc::String
+   :project: Riner
+
+.. doxygentypedef:: miner::jrpc::Number
+   :project: Riner
+
+jrpc::ErrorCode
+----------
+.. doxygenenum:: miner::jrpc::ErrorCode
+   :project: Riner

@@ -13,10 +13,24 @@
 namespace miner { namespace jrpc {
 
     //typedefs for mapping more directly to the Json Rpc spec
-    using Null   = std::nullptr_t;
+    /**
+     * use `jrpc::Null{}` to express the `Null` as mentioned in the [JSON-RPC 2.0 spec](https://www.jsonrpc.org/specification#conventions) for consistency, and to avoid confusion with c++'s `0`, `NULL`, `std::nullopt`, `nullptr`
+     */
+    using Null = std::nullptr_t;
+
+    /**
+      * use `jrpc::String` to express the `String` as mentioned in the [JSON-RPC 2.0 spec](https://www.jsonrpc.org/specification#conventions) for consistency, and to avoid confusion with c++'s `const char *`, `string_view`, `std::string`, etc...
+      */
     using String = std::string;
+
+    /**
+     * use `jrpc::Number` to express `Number`s as mentioned in the [JSON-RPC 2.0 spec](https://www.jsonrpc.org/specification#conventions) to avoid confusion with c++'s many int types.
+     */
     using Number = int64_t;
 
+    /**
+     * Error codes as described in the [JSON-RPC 2.0 spec](https://www.jsonrpc.org/specification#error_object).
+     */
     enum ErrorCode {
         error_code_unknown = 0,
 

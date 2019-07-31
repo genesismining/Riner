@@ -24,6 +24,10 @@ namespace miner {
         virtual ~IOConnection() = default;
     };
 
+    /**
+     * `BaseIO` is the bottom most IOTypeLayer (that doesn't actually derive from IOTypeLayer, as it has no successor).
+     * It implements the actual IO logic based on `std::string` lines (ending with a `'\n'` character)
+     */
     class BaseIO {
         template<class U, class V>
         friend class IOTypeLayer;
@@ -31,6 +35,11 @@ namespace miner {
         using value_type = std::string;
         using OnReceiveValueFunc = IOOnReceiveValueFunc<value_type>;
 
+        /**
+         * `BaseIO`'s constructor starts the IO thread but does not yet enqueue any handlers on it.
+         * Connections initiated only in the `launchClient()` and `launchServer()` functions.
+         * @param mode
+         */
         explicit BaseIO(IOMode mode);
         ~BaseIO();
 
