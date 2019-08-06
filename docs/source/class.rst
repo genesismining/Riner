@@ -8,6 +8,7 @@ Classes
 Work
 ----
 .. doxygenclass:: miner::Work
+   :private-members:
    :project: Riner
 
 WorkSolution
@@ -26,7 +27,7 @@ Algorithm
    :project: Riner
 
 LockGuarded
-----
+-----------
 .. doxygenclass:: miner::LockGuarded
    :project: Riner
 
@@ -41,7 +42,7 @@ IOTypeLayer
    :project: Riner
 
 jrpc Primitives
-----------
+---------------
 .. doxygentypedef:: miner::jrpc::Null
    :project: Riner
 
@@ -55,3 +56,16 @@ jrpc::ErrorCode
 ----------
 .. doxygenenum:: miner::jrpc::ErrorCode
    :project: Riner
+
+jrpc::Message
+-------------
+.. doxygenstruct:: miner::jrpc::Message
+   :project: Riner
+
+jrpc::RequestBuilder
+-------------
+.. doxygenclass:: miner::jrpc::RequestBuilder
+   :project: Riner
+
+
+   

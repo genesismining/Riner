@@ -1,4 +1,4 @@
-.. image:: ../assets/img_banner.jpg
+.. image:: ../assets/img_banner_white.jpg
 
 | 
 

@@ -39,7 +39,8 @@ extensions = [ 'breathe', 'sphinx.ext.autosectionlabel',
 breathe_projects = { "Riner": "../xml/" }
 
 breathe_default_project = "Riner"
-breathe_default_members = ('members', 'undoc-members', 'private-members')
+#breathe_default_members = ('members', 'undoc-members', 'private-members')
+breathe_default_members = ('members', 'private-members')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -67,6 +68,8 @@ html_logo = "../assets/img_logo_small.png"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 
+#html_css_files = ['css/custom.css']
+
 html_static_path = ['_static']
 
 html_theme_options = {
@@ -76,8 +79,8 @@ html_theme_options = {
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
-    'vcs_pageview_mode': '',
-    'style_nav_header_background': '#8E2838',
+    #'vcs_pageview_mode': '',
+    'style_nav_header_background': "#343131", #'343131' #'#8E2838'
     # Toc options
     #'github_url': 'https://github.com/genesismining/riner',
     'collapse_navigation': True,
