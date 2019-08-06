@@ -46,13 +46,16 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search"  style="background: #8E2838" >
+        <div class="wy-side-nav-search"  style="background: #343131" >
           
 
           
-            <a href="index.html" class="icon icon-home"> Riner
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/img_logo_small.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -95,6 +98,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#lockguarded">LockGuarded</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#autorefillqueue">AutoRefillQueue</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#iotypelayer">IOTypeLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jrpc-primitives">jrpc Primitives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jrpc-errorcode">jrpc::ErrorCode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jrpc-message">jrpc::Message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jrpc-requestbuilder">jrpc::RequestBuilder</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="function.html">Functions</a></li>
@@ -182,11 +189,6 @@
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
 <dl class="function">
-<dt id="_CPPv4N5miner4WorkD0Ev">
-<span id="_CPPv3N5miner4WorkD0Ev"></span><span id="_CPPv2N5miner4WorkD0Ev"></span><span id="miner::Work::~Work"></span><span class="target" id="classminer_1_1Work_1a323f5432d1ad2920dd035c1061b9b2f9"></span><em class="property">virtual</em> <code class="sig-name descname">~Work</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4WorkD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
 <dt id="_CPPv4NK5miner4Work7expiredEv">
 <span id="_CPPv3NK5miner4Work7expiredEv"></span><span id="_CPPv2NK5miner4Work7expiredEv"></span><span id="miner::Work::expiredC"></span><span class="target" id="classminer_1_1Work_1af9dd35288eac02d02ef2efec88d0aed8"></span>bool <code class="sig-name descname">expired</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4Work7expiredEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>checks whether a solution to this work will still be accepted by the pool protocol. <a class="reference internal" href="#classminer_1_1Work_1af9dd35288eac02d02ef2efec88d0aed8"><span class="std std-ref">expired()</span></a> may be used as a hint to the algorithm that calculating solutions to this work package is not beneficial anymore. Upon expiration it is expected (but not necessary) that an algorithm stops working on this work and acquires fresh work from the pool. </p>
@@ -211,14 +213,6 @@
 </dl>
 </p>
 </dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner4Work7powTypeE">
-<span id="_CPPv3N5miner4Work7powTypeE"></span><span id="_CPPv2N5miner4Work7powTypeE"></span><span id="miner::Work::powType__ssC"></span><span class="target" id="classminer_1_1Work_1ad1372e83d2e4c58ad39be43410ddf093"></span><em class="property">const</em> std::string <code class="sig-name descname">powType</code><a class="headerlink" href="#_CPPv4N5miner4Work7powTypeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
 
 </div>
 <div class="breathe-sectiondef docutils container">
@@ -266,27 +260,6 @@
 </p>
 </dd></dl>
 
-<dl class="function">
-<dt id="_CPPv4N5miner12WorkSolutionD0Ev">
-<span id="_CPPv3N5miner12WorkSolutionD0Ev"></span><span id="_CPPv2N5miner12WorkSolutionD0Ev"></span><span id="miner::WorkSolution::~WorkSolution"></span><span class="target" id="classminer_1_1WorkSolution_1ad203a1b4e585aec5b8e3f9702130e117"></span><em class="property">virtual</em> <code class="sig-name descname">~WorkSolution</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner12WorkSolutionD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner12WorkSolution7powTypeE">
-<span id="_CPPv3N5miner12WorkSolution7powTypeE"></span><span id="_CPPv2N5miner12WorkSolution7powTypeE"></span><span id="miner::WorkSolution::powType__ssC"></span><span class="target" id="classminer_1_1WorkSolution_1a9a3242f662d96d788a8f0544794ca576"></span><em class="property">const</em> std::string <code class="sig-name descname">powType</code><a class="headerlink" href="#_CPPv4N5miner12WorkSolution7powTypeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner12WorkSolution12protocolDataE">
-<span id="_CPPv3N5miner12WorkSolution12protocolDataE"></span><span id="_CPPv2N5miner12WorkSolution12protocolDataE"></span><span id="miner::WorkSolution::protocolData__std::weak_ptr:WorkProtocolData:"></span><span class="target" id="classminer_1_1WorkSolution_1a2d439aa0a77a793304de8c917ac222e3"></span>std::weak_ptr&lt;WorkProtocolData&gt; <code class="sig-name descname">protocolData</code><a class="headerlink" href="#_CPPv4N5miner12WorkSolution12protocolDataE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 </div>
 </dd></dl>
 
@@ -300,11 +273,6 @@
 <p>Subclassed by miner::PoolDummy, miner::PoolEthashStratum, miner::PoolGrinStratum, miner::PoolSwitcher</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt id="_CPPv4NK5miner4Pool7getNameEv">
-<span id="_CPPv3NK5miner4Pool7getNameEv"></span><span id="_CPPv2NK5miner4Pool7getNameEv"></span><span id="miner::Pool::getNameC"></span><span class="target" id="classminer_1_1Pool_1a6b17ffdb95ccd41aaceea58de49e18c9"></span><em class="property">virtual</em> cstring_span <code class="sig-name descname">getName</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK5miner4Pool7getNameEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 <dl class="function">
 <dt id="_CPPv4NK5miner4Pool10getPoolUidEv">
 <span id="_CPPv3NK5miner4Pool10getPoolUidEv"></span><span id="_CPPv2NK5miner4Pool10getPoolUidEv"></span><span id="miner::Pool::getPoolUidC"></span><span class="target" id="classminer_1_1Pool_1a1f9f6f2ff6d611b97960f5056be5570e"></span><em class="property">virtual</em> uint64_t <code class="sig-name descname">getPoolUid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK5miner4Pool10getPoolUidEv" title="Permalink to this definition">¶</a><br /></dt>
@@ -387,108 +355,11 @@
 </p>
 </dd></dl>
 
-<dl class="function">
-<dt id="_CPPv4N5miner4PoolD0Ev">
-<span id="_CPPv3N5miner4PoolD0Ev"></span><span id="_CPPv2N5miner4PoolD0Ev"></span><span id="miner::Pool::~Pool"></span><span class="target" id="classminer_1_1Pool_1a25ab94a6909eaf5307faddfbd09907a8"></span><em class="property">virtual</em> <code class="sig-name descname">~Pool</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4PoolD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool20DELETE_COPY_AND_MOVEE4Pool">
-<span id="_CPPv3N5miner4Pool20DELETE_COPY_AND_MOVEE4Pool"></span><span id="_CPPv2N5miner4Pool20DELETE_COPY_AND_MOVEE4Pool"></span><span id="miner::Pool::DELETE_COPY_AND_MOVE__Pool"></span><span class="target" id="classminer_1_1Pool_1a735bf8397167d74356ea1f0b3da2752e"></span><code class="sig-name descname">DELETE_COPY_AND_MOVE</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5miner4PoolE" title="miner::Pool">Pool</a><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool20DELETE_COPY_AND_MOVEE4Pool" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringE">
-<span id="_CPPv3N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringE"></span><span id="_CPPv2N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringE"></span><span id="miner::Pool::makePool__PoolConstructionArgs.ssCR"></span><span class="target" id="classminer_1_1Pool_1ab8f0834621d8f7766cd8395819eb627b"></span>unique_ptr&lt;<a class="reference internal" href="#_CPPv4N5miner4PoolE" title="miner::Pool">Pool</a>&gt; <code class="sig-name descname">makePool</code><span class="sig-paren">(</span>PoolConstructionArgs <em>args</em>, <em class="property">const</em> std::string &amp;<em>poolImplName</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringERKNSt6stringE"></span><span id="miner::Pool::makePool__PoolConstructionArgs.ssCR.ssCR"></span><span class="target" id="classminer_1_1Pool_1a97637159907e8b9799b4636c1fda757f"></span>unique_ptr&lt;<a class="reference internal" href="#_CPPv4N5miner4PoolE" title="miner::Pool">Pool</a>&gt; <code class="sig-name descname">makePool</code><span class="sig-paren">(</span>PoolConstructionArgs <em>args</em>, <em class="property">const</em> std::string &amp;<em>powType</em>, <em class="property">const</em> std::string &amp;<em>protocolType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool8makePoolE20PoolConstructionArgsRKNSt6stringERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool36getPoolImplNameForPowAndProtocolTypeERKNSt6stringERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool36getPoolImplNameForPowAndProtocolTypeERKNSt6stringERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool36getPoolImplNameForPowAndProtocolTypeERKNSt6stringERKNSt6stringE"></span><span id="miner::Pool::getPoolImplNameForPowAndProtocolType__ssCR.ssCR"></span><span class="target" id="classminer_1_1Pool_1a8f9a1e2a45f079059a4bdc9d55b783eb"></span>std::string <code class="sig-name descname">getPoolImplNameForPowAndProtocolType</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>powType</em>, <em class="property">const</em> std::string &amp;<em>protocolType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool36getPoolImplNameForPowAndProtocolTypeERKNSt6stringERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool25getPowTypeForPoolImplNameERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool25getPowTypeForPoolImplNameERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool25getPowTypeForPoolImplNameERKNSt6stringE"></span><span id="miner::Pool::getPowTypeForPoolImplName__ssCR"></span><span class="target" id="classminer_1_1Pool_1a8bfa8218f344d60285d79fbbfab2caba"></span>std::string <code class="sig-name descname">getPowTypeForPoolImplName</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>powType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool25getPowTypeForPoolImplNameERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool30getProtocolTypeForPoolImplNameERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool30getProtocolTypeForPoolImplNameERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool30getProtocolTypeForPoolImplNameERKNSt6stringE"></span><span id="miner::Pool::getProtocolTypeForPoolImplName__ssCR"></span><span class="target" id="classminer_1_1Pool_1aa8d36bb5f32216e8c6f127509158347c"></span>std::string <code class="sig-name descname">getProtocolTypeForPoolImplName</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>poolImplName</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool30getProtocolTypeForPoolImplNameERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool10hasPowTypeERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool10hasPowTypeERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool10hasPowTypeERKNSt6stringE"></span><span id="miner::Pool::hasPowType__ssCR"></span><span class="target" id="classminer_1_1Pool_1a90182e736d9e078e62ac46c4b29ba5b0"></span>bool <code class="sig-name descname">hasPowType</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>powType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool10hasPowTypeERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool15hasProtocolTypeERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool15hasProtocolTypeERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool15hasProtocolTypeERKNSt6stringE"></span><span id="miner::Pool::hasProtocolType__ssCR"></span><span class="target" id="classminer_1_1Pool_1a4af66b63bac1c0d8440dcd2795ddc15a"></span>bool <code class="sig-name descname">hasProtocolType</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>protocolType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool15hasProtocolTypeERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner4Pool4infoE">
-<span id="_CPPv3N5miner4Pool4infoE"></span><span id="_CPPv2N5miner4Pool4infoE"></span><span id="miner::Pool::info__EntryCP"></span><span class="target" id="classminer_1_1Pool_1a0897d74cfeb52ebbc312b5601b9f47c0"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5miner4Pool5EntryE" title="miner::Pool::Entry">Entry</a> *<code class="sig-name descname">info</code> = nullptr<a class="headerlink" href="#_CPPv4N5miner4Pool4infoE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Static Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool10getEntriesEv">
-<span id="_CPPv3N5miner4Pool10getEntriesEv"></span><span id="_CPPv2N5miner4Pool10getEntriesEv"></span><span id="miner::Pool::getEntries"></span><span class="target" id="classminer_1_1Pool_1ab2e01e4691aa4e2ed72c8b36b33ea7d5"></span><em class="property">static</em> std::list&lt;<a class="reference internal" href="#_CPPv4N5miner4Pool5EntryE" title="miner::Pool::Entry">Entry</a>&gt; &amp;<code class="sig-name descname">getEntries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool10getEntriesEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool13entryWithNameERKNSt6stringE">
-<span id="_CPPv3N5miner4Pool13entryWithNameERKNSt6stringE"></span><span id="_CPPv2N5miner4Pool13entryWithNameERKNSt6stringE"></span><span id="miner::Pool::entryWithName__ssCR"></span><span class="target" id="classminer_1_1Pool_1a8d0d4ae9c355e7845daa5808fb66a967"></span>auto <code class="sig-name descname">entryWithName</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>poolImplName</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool13entryWithNameERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 </div>
 <dl class="class">
 <dt id="_CPPv4N5miner4Pool5EntryE">
 <span id="_CPPv3N5miner4Pool5EntryE"></span><span id="_CPPv2N5miner4Pool5EntryE"></span><span id="miner::Pool::Entry"></span><span class="target" id="structminer_1_1Pool_1_1Entry"></span><em class="property">struct </em><code class="sig-name descname">Entry</code><a class="headerlink" href="#_CPPv4N5miner4Pool5EntryE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>Entry in the global registry of <a class="reference internal" href="#classminer_1_1Pool"><span class="std std-ref">Pool</span></a> subclasses (aka PoolImpls) it associates a makeFunc (a function that can instantiate a certain subclass) with runtime string arguments as they would come from the config </p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner4Pool5Entry12poolImplNameE">
-<span id="_CPPv3N5miner4Pool5Entry12poolImplNameE"></span><span id="_CPPv2N5miner4Pool5Entry12poolImplNameE"></span><span id="miner::Pool::Entry::poolImplName__ssC"></span><span class="target" id="structminer_1_1Pool_1_1Entry_1a63795edd6ab11b51c6a8f787efb1e27f"></span><em class="property">const</em> std::string <code class="sig-name descname">poolImplName</code><a class="headerlink" href="#_CPPv4N5miner4Pool5Entry12poolImplNameE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner4Pool5Entry7powTypeE">
-<span id="_CPPv3N5miner4Pool5Entry7powTypeE"></span><span id="_CPPv2N5miner4Pool5Entry7powTypeE"></span><span id="miner::Pool::Entry::powType__ssC"></span><span class="target" id="structminer_1_1Pool_1_1Entry_1ac30c784c5ba3324f17c60330e707a93f"></span><em class="property">const</em> std::string <code class="sig-name descname">powType</code><a class="headerlink" href="#_CPPv4N5miner4Pool5Entry7powTypeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner4Pool5Entry12protocolTypeE">
-<span id="_CPPv3N5miner4Pool5Entry12protocolTypeE"></span><span id="_CPPv2N5miner4Pool5Entry12protocolTypeE"></span><span id="miner::Pool::Entry::protocolType__ssC"></span><span class="target" id="structminer_1_1Pool_1_1Entry_1ac5d402facfcf36f8f7b0b8473c2a7b9e"></span><em class="property">const</em> std::string <code class="sig-name descname">protocolType</code><a class="headerlink" href="#_CPPv4N5miner4Pool5Entry12protocolTypeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner4Pool5Entry17protocolTypeAliasE">
-<span id="_CPPv3N5miner4Pool5Entry17protocolTypeAliasE"></span><span id="_CPPv2N5miner4Pool5Entry17protocolTypeAliasE"></span><span id="miner::Pool::Entry::protocolTypeAlias__ssC"></span><span class="target" id="structminer_1_1Pool_1_1Entry_1a1c8a0c5dfe3c59939c807d8e35e30dc2"></span><em class="property">const</em> std::string <code class="sig-name descname">protocolTypeAlias</code><a class="headerlink" href="#_CPPv4N5miner4Pool5Entry17protocolTypeAliasE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt>
-<span class="target" id="structminer_1_1Pool_1_1Entry_1a731b3e01befb3a807ce4d1fe8d0ee724"></span><code class="sig-name descname">std::function&lt;unique_ptr&lt;Pool&gt;PoolConstructionArgs)&gt; miner::Pool::Entry::makeFunc</code></dt>
-<dd></dd></dl>
-
-</div>
 </dd></dl>
 
 <dl class="class">
@@ -512,16 +383,6 @@
 </p>
 </dd></dl>
 
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool8Registry8RegistryEv">
-<span id="_CPPv3N5miner4Pool8Registry8RegistryEv"></span><span id="_CPPv2N5miner4Pool8Registry8RegistryEv"></span><span id="miner::Pool::Registry::Registry"></span><span class="target" id="structminer_1_1Pool_1_1Registry_1a7d26cac842e5a8fed11fa88bfd97e4ee"></span><code class="sig-name descname">Registry</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool8Registry8RegistryEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner4Pool8Registry20DELETE_COPY_AND_MOVEE8Registry">
-<span id="_CPPv3N5miner4Pool8Registry20DELETE_COPY_AND_MOVEE8Registry"></span><span id="_CPPv2N5miner4Pool8Registry20DELETE_COPY_AND_MOVEE8Registry"></span><span id="miner::Pool::Registry::DELETE_COPY_AND_MOVE__Registry"></span><span class="target" id="structminer_1_1Pool_1_1Registry_1ac80e6c11ac139a87a07511bcd6a98304"></span><code class="sig-name descname">DELETE_COPY_AND_MOVE</code><span class="sig-paren">(</span>Registry<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4Pool8Registry20DELETE_COPY_AND_MOVEE8Registry" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 </div>
 </dd></dl>
 
@@ -535,19 +396,6 @@
 <span id="_CPPv3N5miner9AlgorithmE"></span><span id="_CPPv2N5miner9AlgorithmE"></span><span id="miner::Algorithm"></span><span class="target" id="classminer_1_1Algorithm"></span><em class="property">class </em><code class="sig-name descname">Algorithm</code><a class="headerlink" href="#_CPPv4N5miner9AlgorithmE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>common base class for all AlgoImpls contains facilities for registering AlgoImpls in a global list, so that the appropriate AlgoImpl class can be selected and instantiated based on a name string when subclassing <a class="reference internal" href="#classminer_1_1Algorithm"><span class="std std-ref">Algorithm</span></a>, do not forget to add your algorithm to the registry in ‘Algorithm.cpp’ </p>
 <p>Subclassed by miner::AlgoCuckatoo31Cl, miner::AlgoDummy, miner::AlgoEthashCL</p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner9AlgorithmD0Ev">
-<span id="_CPPv3N5miner9AlgorithmD0Ev"></span><span id="_CPPv2N5miner9AlgorithmD0Ev"></span><span id="miner::Algorithm::~Algorithm"></span><span class="target" id="classminer_1_1Algorithm_1a5e3bd9883d67cb24e127a8ad75508e96"></span><em class="property">virtual</em> <code class="sig-name descname">~Algorithm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9AlgorithmD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm20DELETE_COPY_AND_MOVEE9Algorithm">
-<span id="_CPPv3N5miner9Algorithm20DELETE_COPY_AND_MOVEE9Algorithm"></span><span id="_CPPv2N5miner9Algorithm20DELETE_COPY_AND_MOVEE9Algorithm"></span><span id="miner::Algorithm::DELETE_COPY_AND_MOVE__Algorithm"></span><span class="target" id="classminer_1_1Algorithm_1a791f33f6e238e63ecf09304fa78841ed"></span><code class="sig-name descname">DELETE_COPY_AND_MOVE</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5miner9AlgorithmE" title="miner::Algorithm">Algorithm</a><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm20DELETE_COPY_AND_MOVEE9Algorithm" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Static Functions</p>
 <dl class="function">
@@ -566,55 +414,11 @@
 </p>
 </dd></dl>
 
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm22powTypeForAlgoImplNameERKNSt6stringE">
-<span id="_CPPv3N5miner9Algorithm22powTypeForAlgoImplNameERKNSt6stringE"></span><span id="_CPPv2N5miner9Algorithm22powTypeForAlgoImplNameERKNSt6stringE"></span><span id="miner::Algorithm::powTypeForAlgoImplName__ssCR"></span><span class="target" id="classminer_1_1Algorithm_1a5c680495132e326032293b4532db47f6"></span>std::string <code class="sig-name descname">powTypeForAlgoImplName</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>algoImplName</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm22powTypeForAlgoImplNameERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner9Algorithm4infoE">
-<span id="_CPPv3N5miner9Algorithm4infoE"></span><span id="_CPPv2N5miner9Algorithm4infoE"></span><span id="miner::Algorithm::info__EntryCP"></span><span class="target" id="classminer_1_1Algorithm_1a38fc6851a9c6b76cf42840a50c6b6f36"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5miner9Algorithm5EntryE" title="miner::Algorithm::Entry">Entry</a> *<code class="sig-name descname">info</code> = nullptr<a class="headerlink" href="#_CPPv4N5miner9Algorithm4infoE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Static Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm10getEntriesEv">
-<span id="_CPPv3N5miner9Algorithm10getEntriesEv"></span><span id="_CPPv2N5miner9Algorithm10getEntriesEv"></span><span id="miner::Algorithm::getEntries"></span><span class="target" id="classminer_1_1Algorithm_1a422a1acdc16c2448faae0839df66e10a"></span><em class="property">static</em> std::list&lt;<a class="reference internal" href="#_CPPv4N5miner9Algorithm5EntryE" title="miner::Algorithm::Entry">Entry</a>&gt; &amp;<code class="sig-name descname">getEntries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm10getEntriesEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm13entryWithNameERKNSt6stringE">
-<span id="_CPPv3N5miner9Algorithm13entryWithNameERKNSt6stringE"></span><span id="_CPPv2N5miner9Algorithm13entryWithNameERKNSt6stringE"></span><span id="miner::Algorithm::entryWithName__ssCR"></span><span class="target" id="classminer_1_1Algorithm_1a335d550db9fea44abfddf11e97ee1c1e"></span>auto <code class="sig-name descname">entryWithName</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>algoImplName</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm13entryWithNameERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 </div>
 <dl class="class">
 <dt id="_CPPv4N5miner9Algorithm5EntryE">
 <span id="_CPPv3N5miner9Algorithm5EntryE"></span><span id="_CPPv2N5miner9Algorithm5EntryE"></span><span id="miner::Algorithm::Entry"></span><span class="target" id="structminer_1_1Algorithm_1_1Entry"></span><em class="property">struct </em><code class="sig-name descname">Entry</code><a class="headerlink" href="#_CPPv4N5miner9Algorithm5EntryE" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>necessary information for instantiating AlgoImpls based on name string </p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner9Algorithm5Entry12algoImplNameE">
-<span id="_CPPv3N5miner9Algorithm5Entry12algoImplNameE"></span><span id="_CPPv2N5miner9Algorithm5Entry12algoImplNameE"></span><span id="miner::Algorithm::Entry::algoImplName__ssC"></span><span class="target" id="structminer_1_1Algorithm_1_1Entry_1a89b3da164271397f556a1ff00b5ae98a"></span><em class="property">const</em> std::string <code class="sig-name descname">algoImplName</code><a class="headerlink" href="#_CPPv4N5miner9Algorithm5Entry12algoImplNameE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner9Algorithm5Entry7powTypeE">
-<span id="_CPPv3N5miner9Algorithm5Entry7powTypeE"></span><span id="_CPPv2N5miner9Algorithm5Entry7powTypeE"></span><span id="miner::Algorithm::Entry::powType__ssC"></span><span class="target" id="structminer_1_1Algorithm_1_1Entry_1aa37b4ffa81286ff2c275fda3982e1914"></span><em class="property">const</em> std::string <code class="sig-name descname">powType</code><a class="headerlink" href="#_CPPv4N5miner9Algorithm5Entry7powTypeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt>
-<span class="target" id="structminer_1_1Algorithm_1_1Entry_1a79a1f37010bb5718a4b7eb6b4ccf4324"></span><code class="sig-name descname">std::function&lt;unique_ptr&lt;Algorithm&gt;AlgoConstructionArgs)&gt; miner::Algorithm::Entry::makeFunc</code></dt>
-<dd></dd></dl>
-
-</div>
 </dd></dl>
 
 <dl class="class">
@@ -627,24 +431,6 @@
 </dd>
 </dl>
 </p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm8Registry8RegistryERKNSt6stringERKNSt6stringE">
-<span id="_CPPv3N5miner9Algorithm8Registry8RegistryERKNSt6stringERKNSt6stringE"></span><span id="_CPPv2N5miner9Algorithm8Registry8RegistryERKNSt6stringERKNSt6stringE"></span><span id="miner::Algorithm::Registry::Registry__ssCR.ssCR"></span><span class="target" id="structminer_1_1Algorithm_1_1Registry_1adba6dd672800ecad79b558aabf0828c2"></span><code class="sig-name descname">Registry</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>algoImplName</em>, <em class="property">const</em> std::string &amp;<em>powType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm8Registry8RegistryERKNSt6stringERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm8Registry8RegistryEv">
-<span id="_CPPv3N5miner9Algorithm8Registry8RegistryEv"></span><span id="_CPPv2N5miner9Algorithm8Registry8RegistryEv"></span><span id="miner::Algorithm::Registry::Registry"></span><span class="target" id="structminer_1_1Algorithm_1_1Registry_1afb2fb9633249b72132dc9b3093092f25"></span><code class="sig-name descname">Registry</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm8Registry8RegistryEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner9Algorithm8Registry20DELETE_COPY_AND_MOVEE8Registry">
-<span id="_CPPv3N5miner9Algorithm8Registry20DELETE_COPY_AND_MOVEE8Registry"></span><span id="_CPPv2N5miner9Algorithm8Registry20DELETE_COPY_AND_MOVEE8Registry"></span><span id="miner::Algorithm::Registry::DELETE_COPY_AND_MOVE__Registry"></span><span class="target" id="structminer_1_1Algorithm_1_1Registry_1a2de6e944d2643d52498b110096b97bd4"></span><code class="sig-name descname">DELETE_COPY_AND_MOVE</code><span class="sig-paren">(</span>Registry<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner9Algorithm8Registry20DELETE_COPY_AND_MOVEE8Registry" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
 </dd></dl>
 
 </dd></dl>
@@ -664,30 +450,7 @@
 </dl>
 </p>
 <div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Types</p>
-<dl class="type">
-<dt id="_CPPv4IEN5miner11LockGuardedI1T5MutexE10value_typeE">
-<span id="_CPPv3IEN5miner11LockGuardedI1T5MutexE10value_typeE"></span><span id="_CPPv2IEN5miner11LockGuardedI1T5MutexE10value_typeE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1LockGuarded_1a6034c406baca2dc04fcaae5b3d0fb1ef"></span><em class="property">using </em><code class="sig-name descname">value_type</code> = T<a class="headerlink" href="#_CPPv4IEN5miner11LockGuardedI1T5MutexE10value_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="type">
-<dt id="_CPPv4IEN5miner11LockGuardedI1T5MutexE10mutex_typeE">
-<span id="_CPPv3IEN5miner11LockGuardedI1T5MutexE10mutex_typeE"></span><span id="_CPPv2IEN5miner11LockGuardedI1T5MutexE10mutex_typeE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1LockGuarded_1a16cab10a6758b542b6cd3991facccedd"></span><em class="property">using </em><code class="sig-name descname">mutex_type</code> = Mutex<a class="headerlink" href="#_CPPv4IEN5miner11LockGuardedI1T5MutexE10mutex_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner11LockGuarded20DELETE_COPY_AND_MOVEE11LockGuarded">
-<span id="_CPPv3N5miner11LockGuarded20DELETE_COPY_AND_MOVEE11LockGuarded"></span><span id="_CPPv2N5miner11LockGuarded20DELETE_COPY_AND_MOVEE11LockGuarded"></span><span id="miner::LockGuarded::DELETE_COPY_AND_MOVE__LockGuarded"></span><span class="target" id="classminer_1_1LockGuarded_1a3d57789d6fb7a202ce18903c8bc256a2"></span><code class="sig-name descname">DELETE_COPY_AND_MOVE</code><span class="sig-paren">(</span>LockGuarded<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11LockGuarded20DELETE_COPY_AND_MOVEE11LockGuarded" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4IDpEN5miner11LockGuarded11LockGuardedEDpRR4Args">
-<span id="_CPPv3IDpEN5miner11LockGuarded11LockGuardedEDpRR4Args"></span><span id="_CPPv2IDpEN5miner11LockGuarded11LockGuardedEDpRR4Args"></span><span class="target" id="classminer_1_1LockGuarded_1ad342e5d4f58d5ea70a332d8a64516948"></span>template&lt;class ...<code class="sig-name descname">Args</code>&gt;<br /><code class="sig-name descname">LockGuarded</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4IDpEN5miner11LockGuarded11LockGuardedEDpRR4Args" title="miner::LockGuarded::LockGuarded::Args">Args</a>&amp;&amp;... <em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5miner11LockGuarded11LockGuardedEDpRR4Args" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 <dl class="function">
 <dt id="_CPPv4NK5miner11LockGuarded4lockEv">
 <span id="_CPPv3NK5miner11LockGuarded4lockEv"></span><span id="_CPPv2NK5miner11LockGuarded4lockEv"></span><span id="miner::LockGuarded::lockC"></span><span class="target" id="classminer_1_1LockGuarded_1a2e1927e56328e8f097fb69322fc67cad"></span>auto <code class="sig-name descname">lock</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner11LockGuarded4lockEv" title="Permalink to this definition">¶</a><br /></dt>
@@ -708,19 +471,6 @@
 </p>
 </dd></dl>
 
-<dl class="function">
-<dt id="_CPPv4N5miner11LockGuardedD0Ev">
-<span id="_CPPv3N5miner11LockGuardedD0Ev"></span><span id="_CPPv2N5miner11LockGuardedD0Ev"></span><span id="miner::LockGuarded::~LockGuarded"></span><span class="target" id="classminer_1_1LockGuarded_1a06718c7e584e3afb77b6123f24d4200e"></span><code class="sig-name descname">~LockGuarded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11LockGuardedD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Friends</p>
-<dl class="function">
-<dt>
-<span class="target" id="classminer_1_1LockGuarded_1a3356b99d5b34407b33b7ccd9b144d8b7"></span><em class="property">friend </em><code class="sig-name descname">miner::LockGuarded::Locked</code></dt>
-<dd></dd></dl>
-
 </div>
 </dd></dl>
 
@@ -730,86 +480,7 @@
 <dl class="class">
 <dt id="_CPPv4I0EN5miner15AutoRefillQueueE">
 <span id="_CPPv3I0EN5miner15AutoRefillQueueE"></span><span id="_CPPv2I0EN5miner15AutoRefillQueueE"></span><span class="target" id="classminer_1_1AutoRefillQueue"></span>template&lt;class <code class="sig-name descname">T</code>&gt;<br /><em class="property">class </em><code class="sig-name descname">AutoRefillQueue</code><a class="headerlink" href="#_CPPv4I0EN5miner15AutoRefillQueueE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Types</p>
-<dl class="type">
-<dt id="_CPPv4IEN5miner15AutoRefillQueueI1TE10RefillFuncE">
-<span id="_CPPv3IEN5miner15AutoRefillQueueI1TE10RefillFuncE"></span><span id="_CPPv2IEN5miner15AutoRefillQueueI1TE10RefillFuncE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1AutoRefillQueue_1acbb27f40bc8be82bb052bf7ce3746036"></span><em class="property">using </em><code class="sig-name descname">RefillFunc</code> = std::function&lt;void<span class="sig-paren">(</span>std::vector&lt;T&gt; &amp;out, T &amp;master, size_t currentSize<span class="sig-paren">)</span>&gt;<a class="headerlink" href="#_CPPv4IEN5miner15AutoRefillQueueI1TE10RefillFuncE" title="Permalink to this definition">¶</a><br /></dt>
 <dd></dd></dl>
-
-<dl class="type">
-<dt id="_CPPv4IEN5miner15AutoRefillQueueI1TE10value_typeE">
-<span id="_CPPv3IEN5miner15AutoRefillQueueI1TE10value_typeE"></span><span id="_CPPv2IEN5miner15AutoRefillQueueI1TE10value_typeE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1AutoRefillQueue_1ae25d621b4ec307e8b1878e43b0d866c8"></span><em class="property">using </em><code class="sig-name descname">value_type</code> = T<a class="headerlink" href="#_CPPv4IEN5miner15AutoRefillQueueI1TE10value_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Public Functions</p>
-<dl class="function">
-<dt id="_CPPv4N5miner15AutoRefillQueue15AutoRefillQueueE6size_tRR10RefillFunc">
-<span id="_CPPv3N5miner15AutoRefillQueue15AutoRefillQueueE6size_tRR10RefillFunc"></span><span id="_CPPv2N5miner15AutoRefillQueue15AutoRefillQueueE6size_tRR10RefillFunc"></span><span id="miner::AutoRefillQueue::AutoRefillQueue__s.RefillFuncRR"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a99e639e2308f9595bb13dbda46bb0475"></span><code class="sig-name descname">AutoRefillQueue</code><span class="sig-paren">(</span>size_t <em>refillThreshold</em>, RefillFunc &amp;&amp;<em>refillFunc</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue15AutoRefillQueueE6size_tRR10RefillFunc" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner15AutoRefillQueueD0Ev">
-<span id="_CPPv3N5miner15AutoRefillQueueD0Ev"></span><span id="_CPPv2N5miner15AutoRefillQueueD0Ev"></span><span id="miner::AutoRefillQueue::~AutoRefillQueue"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a328503de14d103a8f2be3d6de74ecdbd"></span><code class="sig-name descname">~AutoRefillQueue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueueD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner15AutoRefillQueue9setMasterERR1Tb">
-<span id="_CPPv3N5miner15AutoRefillQueue9setMasterERR1Tb"></span><span id="_CPPv2N5miner15AutoRefillQueue9setMasterERR1Tb"></span><span id="miner::AutoRefillQueue::setMaster__TRR.b"></span><span class="target" id="classminer_1_1AutoRefillQueue_1ab512e6266626be0dfff29576f0d27216"></span>void <code class="sig-name descname">setMaster</code><span class="sig-paren">(</span>T &amp;&amp;<em>newMaster</em>, bool <em>shouldClearQueue</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue9setMasterERR1Tb" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner15AutoRefillQueue14popWithTimeoutENSt6chrono12steady_clock8durationE">
-<span id="_CPPv3N5miner15AutoRefillQueue14popWithTimeoutENSt6chrono12steady_clock8durationE"></span><span id="_CPPv2N5miner15AutoRefillQueue14popWithTimeoutENSt6chrono12steady_clock8durationE"></span><span id="miner::AutoRefillQueue::popWithTimeout__std::chrono::steady_clock::duration"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a9542d363c6d6b428341fe0bd5db54e10"></span>optional&lt;T&gt; <code class="sig-name descname">popWithTimeout</code><span class="sig-paren">(</span>std::chrono::steady_clock::duration <em>timeoutDur</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue14popWithTimeoutENSt6chrono12steady_clock8durationE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue5mutexE">
-<span id="_CPPv3N5miner15AutoRefillQueue5mutexE"></span><span id="_CPPv2N5miner15AutoRefillQueue5mutexE"></span><span id="miner::AutoRefillQueue::mutex__std::mutex"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a9ea0debbee1a9e002d7bb34ee3084147"></span>std::mutex <code class="sig-name descname">mutex</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue5mutexE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue21notifyNotEmptyAnymoreE">
-<span id="_CPPv3N5miner15AutoRefillQueue21notifyNotEmptyAnymoreE"></span><span id="_CPPv2N5miner15AutoRefillQueue21notifyNotEmptyAnymoreE"></span><span id="miner::AutoRefillQueue::notifyNotEmptyAnymore__std::condition_variable"></span><span class="target" id="classminer_1_1AutoRefillQueue_1adf133b0693a6ee4d468e48b96d782be9"></span>std::condition_variable <code class="sig-name descname">notifyNotEmptyAnymore</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue21notifyNotEmptyAnymoreE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue17notifyNeedsRefillE">
-<span id="_CPPv3N5miner15AutoRefillQueue17notifyNeedsRefillE"></span><span id="_CPPv2N5miner15AutoRefillQueue17notifyNeedsRefillE"></span><span id="miner::AutoRefillQueue::notifyNeedsRefill__std::condition_variable"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a8ef338e2b7c298442bcba269dfa99f9b"></span>std::condition_variable <code class="sig-name descname">notifyNeedsRefill</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue17notifyNeedsRefillE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue6bufferE">
-<span id="_CPPv3N5miner15AutoRefillQueue6bufferE"></span><span id="_CPPv2N5miner15AutoRefillQueue6bufferE"></span><span id="miner::AutoRefillQueue::buffer__std::deque:T:"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a4171cde080a7536a1c2a04f5c01cc6b6"></span>std::deque&lt;T&gt; <code class="sig-name descname">buffer</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue6bufferE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue6masterE">
-<span id="_CPPv3N5miner15AutoRefillQueue6masterE"></span><span id="_CPPv2N5miner15AutoRefillQueue6masterE"></span><span id="miner::AutoRefillQueue::master__unique_ptr:T:"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a85cbd7227d347ad10ec52e6e69e1780a"></span>unique_ptr&lt;T&gt; <code class="sig-name descname">master</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue6masterE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue15refillThresholdE">
-<span id="_CPPv3N5miner15AutoRefillQueue15refillThresholdE"></span><span id="_CPPv2N5miner15AutoRefillQueue15refillThresholdE"></span><span id="miner::AutoRefillQueue::refillThreshold__s"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a14fa037e87a0942b28157f8e3d21872b"></span>size_t <code class="sig-name descname">refillThreshold</code> = 1<a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue15refillThresholdE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue8shutdownE">
-<span id="_CPPv3N5miner15AutoRefillQueue8shutdownE"></span><span id="_CPPv2N5miner15AutoRefillQueue8shutdownE"></span><span id="miner::AutoRefillQueue::shutdown__b"></span><span class="target" id="classminer_1_1AutoRefillQueue_1a268a8057fddb2346c192783d8dcedc6e"></span>bool <code class="sig-name descname">shutdown</code> = false<a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue8shutdownE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="member">
-<dt id="_CPPv4N5miner15AutoRefillQueue10refillTaskE">
-<span id="_CPPv3N5miner15AutoRefillQueue10refillTaskE"></span><span id="_CPPv2N5miner15AutoRefillQueue10refillTaskE"></span><span id="miner::AutoRefillQueue::refillTask__std::future:void:"></span><span class="target" id="classminer_1_1AutoRefillQueue_1af0c8e83f57cf82d410fc4f667a8c6dc6"></span>std::future&lt;void&gt; <code class="sig-name descname">refillTask</code><a class="headerlink" href="#_CPPv4N5miner15AutoRefillQueue10refillTaskE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-</div>
-</dd></dl>
 
 </div>
 <div class="section" id="iotypelayer">
@@ -840,21 +511,6 @@
  in which you have to interpret the incoming messages from the layer below in terms of your layer’s type and translate them back upon sending. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric">Public Types</p>
-<dl class="type">
-<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE">
-<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1a39f8d8ea148607a62a4cee5b86d7a131"></span><em class="property">using </em><code class="sig-name descname">value_type</code> = T<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE10value_typeE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="type">
-<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE">
-<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1ae2997d2c1779d7fb87d73a99f594e4fe"></span><em class="property">using </em><code class="sig-name descname">LayerBelowT</code> = <em class="property">typename</em> LayerBelow::value_type<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE11LayerBelowTE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="type">
-<dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE">
-<span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1a2c59afaeeb1355e0f91add9d102e5992"></span><em class="property">using </em><code class="sig-name descname">OnReceiveValueFunc</code> = IOOnReceiveValueFunc&lt;T&gt;<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE18OnReceiveValueFuncE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
 <dl class="type">
 <dt id="_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE">
 <span id="_CPPv3IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE"></span><span id="_CPPv2IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE"></span>template&lt;&gt;<br /><span class="target" id="classminer_1_1IOTypeLayer_1a19da205399e36563238257a1da42511f"></span><em class="property">using </em><code class="sig-name descname">ModifierFunc</code> = std::function&lt;void<span class="sig-paren">(</span>T &amp;t<span class="sig-paren">)</span>&gt;<a class="headerlink" href="#_CPPv4IEN5miner11IOTypeLayerI1T10LayerBelowE12ModifierFuncE" title="Permalink to this definition">¶</a><br /></dt>
@@ -905,11 +561,6 @@
 </dl>
 </p>
 </dd></dl>
-
-<dl class="function">
-<dt id="_CPPv4N5miner11IOTypeLayerD0Ev">
-<span id="_CPPv3N5miner11IOTypeLayerD0Ev"></span><span id="_CPPv2N5miner11IOTypeLayerD0Ev"></span><span id="miner::IOTypeLayer::~IOTypeLayer"></span><span class="target" id="classminer_1_1IOTypeLayer_1a7089a6e3ac52238f930956b8618929af"></span><em class="property">virtual</em> <code class="sig-name descname">~IOTypeLayer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayerD0Ev" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="_CPPv4N5miner11IOTypeLayer19setIncomingModifierERR12ModifierFunc">
@@ -1004,7 +655,7 @@
 <dl class="function">
 <dt id="_CPPv4N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc">
 <span id="_CPPv3N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="_CPPv2N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="miner::IOTypeLayer::launchClient__ss.uint16_t.IOOnConnectedFunc.IOOnDisconnectedFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"></span>void <code class="sig-name descname">launchClient</code><span class="sig-paren">(</span>std::string <em>host</em>, uint16_t <em>port</em>, IOOnConnectedFunc <em>onCxn</em> = ioOnConnectedNoop, IOOnDisconnectedFunc <em>onDc</em> = ioOnDisconnectedNoop<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer12launchClientENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p><code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"><span class="std std-ref"><span class="pre">launchClient()</span></span></a></code> opens a single connection to the given host,port. <dl class="simple">
+<dd><p><code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"><span class="std std-ref"><span class="pre">launchClient()</span></span></a></code> opens a single connection to the given host, port. <dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">host</span></code>: host name or ip e.g. “localhost” or “127.0.0.1” to connect to </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">port</span></code>: port to connect to </p></li>
@@ -1019,7 +670,7 @@
 <dl class="function">
 <dt id="_CPPv4N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc">
 <span id="_CPPv3N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="_CPPv2N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc"></span><span id="miner::IOTypeLayer::launchClientAutoReconnect__ss.uint16_t.IOOnConnectedFunc.IOOnDisconnectedFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a24bc932e5f90499384e8880f2711d51e"></span>void <code class="sig-name descname">launchClientAutoReconnect</code><span class="sig-paren">(</span>std::string <em>host</em>, uint16_t <em>port</em>, IOOnConnectedFunc <em>onCxn</em> = ioOnConnectedNoop, IOOnDisconnectedFunc <em>onDc</em> = ioOnDisconnectedNoop<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer25launchClientAutoReconnectENSt6stringE8uint16_t17IOOnConnectedFunc20IOOnDisconnectedFunc" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Same as <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"><span class="std std-ref"><span class="pre">launchClient()</span></span></a></code>, but it tries to reconnect whenever a connection was lost. The <code class="docutils literal notranslate"><span class="pre">onCxn</span></code> and <code class="docutils literal notranslate"><span class="pre">onDc</span></code> callbacks also get called whenever that happens. <dl class="simple">
+<dd><p>Same as <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1IOTypeLayer_1a9c509fd23b603b1d1bbed40347c33fab"><span class="std std-ref"><span class="pre">launchClient()</span></span></a></code>, but it tries to reconnect whenever a connection was lost. The <code class="docutils literal notranslate"><span class="pre">onDc</span></code> and later <code class="docutils literal notranslate"><span class="pre">onCxn</span></code> callbacks also get called whenever that happens. <dl class="simple">
 <dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">onCxn</span></code>: function that gets called on the io thread whenever a successful connection was established. </p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">onDc</span></code>: function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side. </p></li>
@@ -1044,11 +695,6 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="_CPPv4N5miner11IOTypeLayer11hasLaunchedEv">
-<span id="_CPPv3N5miner11IOTypeLayer11hasLaunchedEv"></span><span id="_CPPv2N5miner11IOTypeLayer11hasLaunchedEv"></span><span id="miner::IOTypeLayer::hasLaunched"></span><span class="target" id="classminer_1_1IOTypeLayer_1ae63885b59812c48828335de7af285b2a"></span>bool <code class="sig-name descname">hasLaunched</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer11hasLaunchedEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="function">
 <dt id="_CPPv4N5miner11IOTypeLayer10isIoThreadEv">
 <span id="_CPPv3N5miner11IOTypeLayer10isIoThreadEv"></span><span id="_CPPv2N5miner11IOTypeLayer10isIoThreadEv"></span><span id="miner::IOTypeLayer::isIoThread"></span><span class="target" id="classminer_1_1IOTypeLayer_1ab02b5f9183069e90e6bcdb75b4861c3e"></span>bool <code class="sig-name descname">isIoThread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer10isIoThreadEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>check whether the calling thread is the io thread. this function can be called from any thread <dl class="simple">
@@ -1065,7 +711,7 @@
 <dt id="_CPPv4NK5miner11IOTypeLayer15ioThreadRunningEv">
 <span id="_CPPv3NK5miner11IOTypeLayer15ioThreadRunningEv"></span><span id="_CPPv2NK5miner11IOTypeLayer15ioThreadRunningEv"></span><span id="miner::IOTypeLayer::ioThreadRunningC"></span><span class="target" id="classminer_1_1IOTypeLayer_1ad95b74a1e282ebee37d8626485513f64"></span>bool <code class="sig-name descname">ioThreadRunning</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner11IOTypeLayer15ioThreadRunningEv" title="Permalink to this definition">¶</a><br /></dt>
 <dd><p>returns whether the io thread’s dtor wasn’t called yet. If this function returns <code class="docutils literal notranslate"><span class="pre">true</span></code> you should assume that handlers are being executed that access the layer’s state <dl class="simple">
-<dt><strong>Return</strong></dt><dd><p>whether the io thread’s dtor wasn’t called yet. </p>
+<dt><strong>Return</strong></dt><dd><p>whether the io thread’s dtor hasn’t finished yet, and thus the io thread has not yet joined </p>
 </dd>
 </dl>
 </p>
@@ -1106,30 +752,281 @@
 </dd></dl>
 
 </div>
+</dd></dl>
+
+</div>
+<div class="section" id="jrpc-primitives">
+<h2>jrpc Primitives<a class="headerlink" href="#jrpc-primitives" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="_CPPv4N5miner4jrpc4NullE">
+<span id="_CPPv3N5miner4jrpc4NullE"></span><span id="_CPPv2N5miner4jrpc4NullE"></span><span class="target" id="JsonRpcMessage_8h_1a708f0dc7a95d05140fec76177c2e8ce9"></span><em class="property">using </em><code class="sig-prename descclassname">miner::jrpc<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">Null</code> = std::nullptr_t<a class="headerlink" href="#_CPPv4N5miner4jrpc4NullE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>use <code class="docutils literal notranslate"><span class="pre">jrpc::Null{}</span></code> to express the <code class="docutils literal notranslate"><span class="pre">Null</span></code> as mentioned in the <a class="reference external" href="https://www.jsonrpc.org/specification#conventions">JSON-RPC 2.0 spec</a> for consistency, and to avoid confusion with c++’s <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>, <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> </p>
+</dd></dl>
+
+<dl class="type">
+<dt id="_CPPv4N5miner4jrpc6StringE">
+<span id="_CPPv3N5miner4jrpc6StringE"></span><span id="_CPPv2N5miner4jrpc6StringE"></span><span class="target" id="JsonRpcMessage_8h_1a237fcca8c45b65def71c13da5e1fca93"></span><em class="property">using </em><code class="sig-prename descclassname">miner::jrpc<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">String</code> = std::string<a class="headerlink" href="#_CPPv4N5miner4jrpc6StringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>use <code class="docutils literal notranslate"><span class="pre">jrpc::String</span></code> to express the <code class="docutils literal notranslate"><span class="pre">String</span></code> as mentioned in the <a class="reference external" href="https://www.jsonrpc.org/specification#conventions">JSON-RPC 2.0 spec</a> for consistency, and to avoid confusion with c++’s <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string</span></code>, etc… </p>
+</dd></dl>
+
+<dl class="type">
+<dt id="_CPPv4N5miner4jrpc6NumberE">
+<span id="_CPPv3N5miner4jrpc6NumberE"></span><span id="_CPPv2N5miner4jrpc6NumberE"></span><span class="target" id="JsonRpcMessage_8h_1a36e5af579559947ada933e723cb2dec8"></span><em class="property">using </em><code class="sig-prename descclassname">miner::jrpc<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">Number</code> = int64_t<a class="headerlink" href="#_CPPv4N5miner4jrpc6NumberE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>use <code class="docutils literal notranslate"><span class="pre">jrpc::Number</span></code> to express <code class="docutils literal notranslate"><span class="pre">Number</span></code>s as mentioned in the <a class="reference external" href="https://www.jsonrpc.org/specification#conventions">JSON-RPC 2.0 spec</a> to avoid confusion with c++’s many int types. </p>
+</dd></dl>
+
+</div>
+<div class="section" id="jrpc-errorcode">
+<h2>jrpc::ErrorCode<a class="headerlink" href="#jrpc-errorcode" title="Permalink to this headline">¶</a></h2>
+<dl class="enum">
+<dt id="_CPPv4N5miner4jrpc9ErrorCodeE">
+<span id="_CPPv3N5miner4jrpc9ErrorCodeE"></span><span id="_CPPv2N5miner4jrpc9ErrorCodeE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0"></span><em class="property">enum </em><code class="sig-prename descclassname">miner::jrpc<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">ErrorCode</code><a class="headerlink" href="#_CPPv4N5miner4jrpc9ErrorCodeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Error codes as described in the <a class="reference external" href="https://www.jsonrpc.org/specification#error_object">JSON-RPC 2.0 spec</a>. </p>
+<p><em>Values:</em></p>
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc18error_code_unknownE">
+<span id="_CPPv3N5miner4jrpc18error_code_unknownE"></span><span id="_CPPv2N5miner4jrpc18error_code_unknownE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a34b0307a600083401c3ddb138724fb8e"></span><code class="sig-name descname">error_code_unknown</code> = 0<a class="headerlink" href="#_CPPv4N5miner4jrpc18error_code_unknownE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc11parse_errorE">
+<span id="_CPPv3N5miner4jrpc11parse_errorE"></span><span id="_CPPv2N5miner4jrpc11parse_errorE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0aa667f230cc73cba33bf5b01fb13d4c9b"></span><code class="sig-name descname">parse_error</code> = -32700<a class="headerlink" href="#_CPPv4N5miner4jrpc11parse_errorE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc15invalid_requestE">
+<span id="_CPPv3N5miner4jrpc15invalid_requestE"></span><span id="_CPPv2N5miner4jrpc15invalid_requestE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a259aab9204f49258fa52bf456cdc69cc"></span><code class="sig-name descname">invalid_request</code> = -32600<a class="headerlink" href="#_CPPv4N5miner4jrpc15invalid_requestE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc16method_not_foundE">
+<span id="_CPPv3N5miner4jrpc16method_not_foundE"></span><span id="_CPPv2N5miner4jrpc16method_not_foundE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a2415b4e40a7a46be4ba326133566ac38"></span><code class="sig-name descname">method_not_found</code> = -32601<a class="headerlink" href="#_CPPv4N5miner4jrpc16method_not_foundE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc14invalid_paramsE">
+<span id="_CPPv3N5miner4jrpc14invalid_paramsE"></span><span id="_CPPv2N5miner4jrpc14invalid_paramsE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a08037ae8cc1cd15a8ae2e73c677de11a"></span><code class="sig-name descname">invalid_params</code> = -32602<a class="headerlink" href="#_CPPv4N5miner4jrpc14invalid_paramsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc14internal_errorE">
+<span id="_CPPv3N5miner4jrpc14internal_errorE"></span><span id="_CPPv2N5miner4jrpc14internal_errorE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a42e278c3e681c74a3b9255dbd79473c5"></span><code class="sig-name descname">internal_error</code> = -32603<a class="headerlink" href="#_CPPv4N5miner4jrpc14internal_errorE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc24server_error_range_firstE">
+<span id="_CPPv3N5miner4jrpc24server_error_range_firstE"></span><span id="_CPPv2N5miner4jrpc24server_error_range_firstE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a0a13e23f0f0bfc57d568df1a253a89f5"></span><code class="sig-name descname">server_error_range_first</code> = -32099<a class="headerlink" href="#_CPPv4N5miner4jrpc24server_error_range_firstE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="enumerator">
+<dt id="_CPPv4N5miner4jrpc23server_error_range_lastE">
+<span id="_CPPv3N5miner4jrpc23server_error_range_lastE"></span><span id="_CPPv2N5miner4jrpc23server_error_range_lastE"></span><span class="target" id="JsonRpcMessage_8h_1a196f3d7b2781b89d77ab66ace9aad7a0a7720c568a03394abdf7f1c4e2aa66291"></span><code class="sig-name descname">server_error_range_last</code> = -32000<a class="headerlink" href="#_CPPv4N5miner4jrpc23server_error_range_lastE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="jrpc-message">
+<h2>jrpc::Message<a class="headerlink" href="#jrpc-message" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="_CPPv4N5miner4jrpc7MessageE">
+<span id="_CPPv3N5miner4jrpc7MessageE"></span><span id="_CPPv2N5miner4jrpc7MessageE"></span><span id="miner::jrpc::Message"></span><span class="target" id="structminer_1_1jrpc_1_1Message"></span><em class="property">struct </em><code class="sig-name descname">Message</code><a class="headerlink" href="#_CPPv4N5miner4jrpc7MessageE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> class that is used to represent either a jrpc Request or Response </p>
 <div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Private Members</p>
-<dl class="member">
-<dt id="_CPPv4N5miner11IOTypeLayer17_incomingModifierE">
-<span id="_CPPv3N5miner11IOTypeLayer17_incomingModifierE"></span><span id="_CPPv2N5miner11IOTypeLayer17_incomingModifierE"></span><span id="miner::IOTypeLayer::_incomingModifier__ModifierFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a30bf837c305fb71d8e215ea2573a8cac"></span>ModifierFunc <code class="sig-name descname">_incomingModifier</code><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer17_incomingModifierE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc7Message7MessageEN2nl4jsonE">
+<span id="_CPPv3N5miner4jrpc7Message7MessageEN2nl4jsonE"></span><span id="_CPPv2N5miner4jrpc7Message7MessageEN2nl4jsonE"></span><span id="miner::jrpc::Message::Message__nl::json"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a0c659adeae367bc9bf5eb96e395ac3e6"></span><code class="sig-name descname">Message</code><span class="sig-paren">(</span>nl::json <em>j</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc7Message7MessageEN2nl4jsonE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>creates a <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> by parsing an <code class="docutils literal notranslate"><span class="pre">nl::json</span></code>. Throws the <a class="reference external" href="https://nlohmann.github.io/json/classnlohmann_1_1basic__json_acac9d438c9bb12740dcdb01069293a34.html">exceptions of nlohmann::json::at</a> on parsing failure. </p>
+</dd></dl>
 
-<dl class="member">
-<dt id="_CPPv4N5miner11IOTypeLayer17_outgoingModifierE">
-<span id="_CPPv3N5miner11IOTypeLayer17_outgoingModifierE"></span><span id="_CPPv2N5miner11IOTypeLayer17_outgoingModifierE"></span><span id="miner::IOTypeLayer::_outgoingModifier__ModifierFunc"></span><span class="target" id="classminer_1_1IOTypeLayer_1a36d483ad2e0aabecf5bce3ded4e1ef7f"></span>ModifierFunc <code class="sig-name descname">_outgoingModifier</code><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer17_outgoingModifierE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc7Message7MessageERK8ResponseN2nl4jsonE">
+<span id="_CPPv3N5miner4jrpc7Message7MessageERK8ResponseN2nl4jsonE"></span><span id="_CPPv2N5miner4jrpc7Message7MessageERK8ResponseN2nl4jsonE"></span><span id="miner::jrpc::Message::Message__ResponseCR.nl::json"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a4e6f4026b115e2516b9cb230dff852a2"></span><code class="sig-name descname">Message</code><span class="sig-paren">(</span><em class="property">const</em> Response &amp;<em>response</em>, nl::json <em>id</em> = {}<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc7Message7MessageERK8ResponseN2nl4jsonE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>convenience ctor for creating a response <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">jrpc::Response</span></code> and optionally an <code class="docutils literal notranslate"><span class="pre">id</span></code>. <dl class="simple">
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: empty by default, sets the <code class="docutils literal notranslate"><span class="pre">id</span></code> member of the constructed <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
 
-<dl class="member">
-<dt id="_CPPv4N5miner11IOTypeLayer11_layerBelowE">
-<span id="_CPPv3N5miner11IOTypeLayer11_layerBelowE"></span><span id="_CPPv2N5miner11IOTypeLayer11_layerBelowE"></span><span id="miner::IOTypeLayer::_layerBelow__LayerBelow"></span><span class="target" id="classminer_1_1IOTypeLayer_1a0e8b20afea0113760b55fb89a2487e0d"></span>LayerBelow <code class="sig-name descname">_layerBelow</code><a class="headerlink" href="#_CPPv4N5miner11IOTypeLayer11_layerBelowE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message6toJsonEv">
+<span id="_CPPv3NK5miner4jrpc7Message6toJsonEv"></span><span id="_CPPv2NK5miner4jrpc7Message6toJsonEv"></span><span id="miner::jrpc::Message::toJsonC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a89bad15452a7ac85cd38343d70980065"></span>nl::json <code class="sig-name descname">toJson</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message6toJsonEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>creates a <code class="docutils literal notranslate"><span class="pre">nl::json</span></code> that corresponds to this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> object. Use <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message_1a3b0bc815a4888546478a0fcd0f31b479"><span class="std std-ref"><span class="pre">jrpc::Message::str()</span></span></a></code> instead if you want to directly convert the object to <code class="docutils literal notranslate"><span class="pre">std::string</span></code> </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message14isNotificationEv">
+<span id="_CPPv3NK5miner4jrpc7Message14isNotificationEv"></span><span id="_CPPv2NK5miner4jrpc7Message14isNotificationEv"></span><span id="miner::jrpc::Message::isNotificationC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a06c8ee7d8a135abe5d7aae901c2cd4aa"></span>bool <code class="sig-name descname">isNotification</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message14isNotificationEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a notification, that is, a <code class="docutils literal notranslate"><span class="pre">Response</span></code> with no <code class="docutils literal notranslate"><span class="pre">id</span></code> (<code class="docutils literal notranslate"><span class="pre">id</span> <span class="pre">==</span> <span class="pre">nl::json{}</span></code>) </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message9isRequestEv">
+<span id="_CPPv3NK5miner4jrpc7Message9isRequestEv"></span><span id="_CPPv2NK5miner4jrpc7Message9isRequestEv"></span><span id="miner::jrpc::Message::isRequestC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a9182615792ee4cf105254a4e9cf300aa"></span>bool <code class="sig-name descname">isRequest</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message9isRequestEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Request</span></code> as opposed to being a <code class="docutils literal notranslate"><span class="pre">Response</span></code> </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message10isResponseEv">
+<span id="_CPPv3NK5miner4jrpc7Message10isResponseEv"></span><span id="_CPPv2NK5miner4jrpc7Message10isResponseEv"></span><span id="miner::jrpc::Message::isResponseC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1afe42e38306201a3b0c94d664299bc8ff"></span>bool <code class="sig-name descname">isResponse</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message10isResponseEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Response</span></code> as opposed to being a <code class="docutils literal notranslate"><span class="pre">Request</span></code> </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message10getIfErrorEv">
+<span id="_CPPv3NK5miner4jrpc7Message10getIfErrorEv"></span><span id="_CPPv2NK5miner4jrpc7Message10getIfErrorEv"></span><span id="miner::jrpc::Message::getIfErrorC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a0d3954d458e23addcc4ebd8f49cafa42"></span>optional_ref&lt;<em class="property">const</em> Error&gt; <code class="sig-name descname">getIfError</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message10getIfErrorEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>convenience function for quick access to the <code class="docutils literal notranslate"><span class="pre">jrpc::Error</span></code>. checks if this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">jrpc::Response</span></code>, then checks whether it is a <code class="docutils literal notranslate"><span class="pre">jrpc::Error</span></code>. If it is, returns the ref to that <code class="docutils literal notranslate"><span class="pre">jrpc::Error</span></code> <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>ref to the underlying <code class="docutils literal notranslate"><span class="pre">jrpc::Error</span></code> or <code class="docutils literal notranslate"><span class="pre">nullopt</span></code> </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc7Message11getIfResultEv">
+<span id="_CPPv3N5miner4jrpc7Message11getIfResultEv"></span><span id="_CPPv2N5miner4jrpc7Message11getIfResultEv"></span><span id="miner::jrpc::Message::getIfResult"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a93507e6cb45b681b8efa51a80d48cbbc"></span>optional_ref&lt;nl::json&gt; <code class="sig-name descname">getIfResult</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc7Message11getIfResultEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>convenience function for quick access to the result <code class="docutils literal notranslate"><span class="pre">nl::json</span></code> object, if this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Request</span></code> that is not an <code class="docutils literal notranslate"><span class="pre">Error</span></code>. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>ref to underlying result <code class="docutils literal notranslate"><span class="pre">nl::json</span></code> object, or <code class="docutils literal notranslate"><span class="pre">nullopt</span></code> </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc7Message12getIfRequestEv">
+<span id="_CPPv3N5miner4jrpc7Message12getIfRequestEv"></span><span id="_CPPv2N5miner4jrpc7Message12getIfRequestEv"></span><span id="miner::jrpc::Message::getIfRequest"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1ae232578f0e0616715a1ffed7e4ea10ea"></span>optional_ref&lt;Request&gt; <code class="sig-name descname">getIfRequest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc7Message12getIfRequestEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>convenience function for quick access to the <code class="docutils literal notranslate"><span class="pre">Request</span></code> object. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>ref to this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code>’s <code class="docutils literal notranslate"><span class="pre">jrpc::Request</span></code> object if it is a request, <code class="docutils literal notranslate"><span class="pre">nullopt</span></code> otherwise. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4I0EN5miner4jrpc7Message8resultAsE8optionalI1TEv">
+<span id="_CPPv3I0EN5miner4jrpc7Message8resultAsEv"></span><span id="_CPPv2I0EN5miner4jrpc7Message8resultAsEv"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a667f97395c67931b46ffdae02d6f93b6"></span>template&lt;class <code class="sig-name descname">T</code>&gt;<br />optional&lt;<a class="reference internal" href="#_CPPv4I0EN5miner4jrpc7Message8resultAsE8optionalI1TEv" title="miner::jrpc::Message::resultAs::T">T</a>&gt; <code class="sig-name descname">resultAs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN5miner4jrpc7Message8resultAsE8optionalI1TEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>convenience function that checks whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Response</span></code> that is not an <code class="docutils literal notranslate"><span class="pre">Error</span></code>. If so, tries to convert the <code class="docutils literal notranslate"><span class="pre">&quot;result&quot;</span></code> object to <code class="docutils literal notranslate"><span class="pre">T</span></code> and return it. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p>the <code class="docutils literal notranslate"><span class="pre">jrpc::Response</span></code>s <code class="docutils literal notranslate"><span class="pre">&quot;result&quot;</span></code> as a <code class="docutils literal notranslate"><span class="pre">T</span></code>, or <code class="docutils literal notranslate"><span class="pre">nullopt</span></code> </p>
+</dd>
+<dt><strong>Template Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">T</span></code>: the type that the <code class="docutils literal notranslate"><span class="pre">&quot;result&quot;</span></code> should be converted to </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc7Message12isResultTrueEv">
+<span id="_CPPv3N5miner4jrpc7Message12isResultTrueEv"></span><span id="_CPPv2N5miner4jrpc7Message12isResultTrueEv"></span><span id="miner::jrpc::Message::isResultTrue"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a51d015f4827ced5dd95f3e620d07ef21"></span>bool <code class="sig-name descname">isResultTrue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc7Message12isResultTrueEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>returns whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Response</span></code> with a <code class="docutils literal notranslate"><span class="pre">&quot;result&quot;</span> <span class="pre">=</span> <span class="pre">True</span></code> entry. this is needed so often that it deserves its own convenience function. This function is safe to be called even if this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is no <code class="docutils literal notranslate"><span class="pre">Response</span></code> or does not have a <code class="docutils literal notranslate"><span class="pre">&quot;result&quot;</span></code> key. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Response</span></code> with a <code class="docutils literal notranslate"><span class="pre">&quot;result&quot;</span> <span class="pre">=</span> <span class="pre">True</span></code> entry, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message7isErrorEv">
+<span id="_CPPv3NK5miner4jrpc7Message7isErrorEv"></span><span id="_CPPv2NK5miner4jrpc7Message7isErrorEv"></span><span id="miner::jrpc::Message::isErrorC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1ad94dace4c8a6a33ac28629a4979dde55"></span>bool <code class="sig-name descname">isError</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message7isErrorEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>returns whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Response</span></code> that is an <code class="docutils literal notranslate"><span class="pre">Error</span></code> </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message13hasMethodNameEPKc">
+<span id="_CPPv3NK5miner4jrpc7Message13hasMethodNameEPKc"></span><span id="_CPPv2NK5miner4jrpc7Message13hasMethodNameEPKc"></span><span id="miner::jrpc::Message::hasMethodName__cCPC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1aa5072f6a193ceff9d196cc7b93e7979d"></span>bool <code class="sig-name descname">hasMethodName</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>name</em><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message13hasMethodNameEPKc" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>returns whether this <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a <code class="docutils literal notranslate"><span class="pre">Requeset</span></code> that has the same <code class="docutils literal notranslate"><span class="pre">method</span></code> name as the provided <code class="docutils literal notranslate"><span class="pre">name</span></code> argument. </p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4NK5miner4jrpc7Message3strEv">
+<span id="_CPPv3NK5miner4jrpc7Message3strEv"></span><span id="_CPPv2NK5miner4jrpc7Message3strEv"></span><span id="miner::jrpc::Message::strC"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a3b0bc815a4888546478a0fcd0f31b479"></span>std::string <code class="sig-name descname">str</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5miner4jrpc7Message3strEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>convert the <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> object to a single-line <code class="docutils literal notranslate"><span class="pre">std::string</span></code> ready to be sent. For nicer formatting use <code class="docutils literal notranslate"><span class="pre">nlohmann::json::dump()</span></code> functionality and call <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message_1a89bad15452a7ac85cd38343d70980065"><span class="std std-ref"><span class="pre">jrpc::Message::toJson()</span></span></a><span class="pre">.dump(4)</span></code> instead. <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p></p>
+</dd>
+</dl>
+</p>
+</dd></dl>
 
 </div>
 <div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric">Friends</p>
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="member">
+<dt id="_CPPv4N5miner4jrpc7Message2idE">
+<span id="_CPPv3N5miner4jrpc7Message2idE"></span><span id="_CPPv2N5miner4jrpc7Message2idE"></span><span id="miner::jrpc::Message::id__nl::json"></span><span class="target" id="structminer_1_1jrpc_1_1Message_1a46d64b994fd5bbed72339cf259169570"></span>nl::json <code class="sig-name descname">id</code><a class="headerlink" href="#_CPPv4N5miner4jrpc7Message2idE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">id</span></code>, ideally <code class="docutils literal notranslate"><span class="pre">Null</span></code>, <code class="docutils literal notranslate"><span class="pre">String</span></code>, <code class="docutils literal notranslate"><span class="pre">Number</span></code> or empty (=<code class="docutils literal notranslate"><span class="pre">nl::json{}</span></code>). Empty means that no <code class="docutils literal notranslate"><span class="pre">id</span></code> member is present altogether and therefore the <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">Message</span></span></a></code> is a notification (see <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message_1a06c8ee7d8a135abe5d7aae901c2cd4aa"><span class="std std-ref"><span class="pre">isNotification()</span></span></a></code>) </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="jrpc-requestbuilder">
+<h2>jrpc::RequestBuilder<a class="headerlink" href="#jrpc-requestbuilder" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="_CPPv4N5miner4jrpc14RequestBuilderE">
+<span id="_CPPv3N5miner4jrpc14RequestBuilderE"></span><span id="_CPPv2N5miner4jrpc14RequestBuilderE"></span><span id="miner::jrpc::RequestBuilder"></span><span class="target" id="classminer_1_1jrpc_1_1RequestBuilder"></span><em class="property">class </em><code class="sig-name descname">RequestBuilder</code><a class="headerlink" href="#_CPPv4N5miner4jrpc14RequestBuilderE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Builder pattern convenience class for creating a <code class="docutils literal notranslate"><span class="pre">jrpc::Request</span></code> </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
 <dl class="function">
-<dt>
-<span class="target" id="classminer_1_1IOTypeLayer_1a429d9213c8f830adf77f52529c29e481"></span><em class="property">friend </em><code class="sig-name descname">miner::IOTypeLayer::IOTypeLayer</code></dt>
-<dd></dd></dl>
+<dt id="_CPPv4N5miner4jrpc14RequestBuilder2idEN2nl4jsonE">
+<span id="_CPPv3N5miner4jrpc14RequestBuilder2idEN2nl4jsonE"></span><span id="_CPPv2N5miner4jrpc14RequestBuilder2idEN2nl4jsonE"></span><span id="miner::jrpc::RequestBuilder::id__nl::json"></span><span class="target" id="classminer_1_1jrpc_1_1RequestBuilder_1af9fb14054056ccbeabaa35c87f1d1a96"></span><a class="reference internal" href="#_CPPv4N5miner4jrpc14RequestBuilderE" title="miner::jrpc::RequestBuilder">RequestBuilder</a> &amp;<code class="sig-name descname">id</code><span class="sig-paren">(</span>nl::json <em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc14RequestBuilder2idEN2nl4jsonE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>set <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message_1a46d64b994fd5bbed72339cf259169570"><span class="std std-ref"><span class="pre">Message::id</span></span></a></code> <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">*this</span></code> (builder pattern) </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc14RequestBuilder6methodE6String">
+<span id="_CPPv3N5miner4jrpc14RequestBuilder6methodE6String"></span><span id="_CPPv2N5miner4jrpc14RequestBuilder6methodE6String"></span><span id="miner::jrpc::RequestBuilder::method__String"></span><span class="target" id="classminer_1_1jrpc_1_1RequestBuilder_1a3079dc0d7748495c875669cac06631bf"></span><a class="reference internal" href="#_CPPv4N5miner4jrpc14RequestBuilderE" title="miner::jrpc::RequestBuilder">RequestBuilder</a> &amp;<code class="sig-name descname">method</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5miner4jrpc6StringE" title="miner::jrpc::String">String</a> <em>methodName</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc14RequestBuilder6methodE6String" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>set <code class="docutils literal notranslate"><span class="pre">Request::method</span></code> <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">*this</span></code> (builder pattern) </p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc14RequestBuilder5paramEPKcN2nl4jsonE">
+<span id="_CPPv3N5miner4jrpc14RequestBuilder5paramEPKcN2nl4jsonE"></span><span id="_CPPv2N5miner4jrpc14RequestBuilder5paramEPKcN2nl4jsonE"></span><span id="miner::jrpc::RequestBuilder::param__cCP.nl::json"></span><span class="target" id="classminer_1_1jrpc_1_1RequestBuilder_1a02c8efcb8fdb5e70477692f34c2ab021"></span><a class="reference internal" href="#_CPPv4N5miner4jrpc14RequestBuilderE" title="miner::jrpc::RequestBuilder">RequestBuilder</a> &amp;<code class="sig-name descname">param</code><span class="sig-paren">(</span><em class="property">const</em> char *<em>key</em>, nl::json <em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc14RequestBuilder5paramEPKcN2nl4jsonE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>add a named param. It is not valid to add a named param if unnamed params were added before to the same <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1jrpc_1_1RequestBuilder"><span class="std std-ref"><span class="pre">RequestBuilder</span></span></a></code> <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">*this</span></code> (builder pattern) </p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: name of the param </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">val</span></code>: value of the param </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc14RequestBuilder5paramEN2nl4jsonE">
+<span id="_CPPv3N5miner4jrpc14RequestBuilder5paramEN2nl4jsonE"></span><span id="_CPPv2N5miner4jrpc14RequestBuilder5paramEN2nl4jsonE"></span><span id="miner::jrpc::RequestBuilder::param__nl::json"></span><span class="target" id="classminer_1_1jrpc_1_1RequestBuilder_1a2ea4c03a71f2c415df235d64f94bcd40"></span><a class="reference internal" href="#_CPPv4N5miner4jrpc14RequestBuilderE" title="miner::jrpc::RequestBuilder">RequestBuilder</a> &amp;<code class="sig-name descname">param</code><span class="sig-paren">(</span>nl::json <em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc14RequestBuilder5paramEN2nl4jsonE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>add an unnamed param. It is not valid to add an unnamed param if named params were added before to the same <code class="docutils literal notranslate"><a class="reference internal" href="#classminer_1_1jrpc_1_1RequestBuilder"><span class="std std-ref"><span class="pre">RequestBuilder</span></span></a></code> <dl class="simple">
+<dt><strong>Return</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">*this</span></code> (builder pattern) </p>
+</dd>
+<dt><strong>Parameters</strong></dt><dd><ul class="breatheparameterlist simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">val</span></code>: value of the param </p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="_CPPv4N5miner4jrpc14RequestBuilder4doneEv">
+<span id="_CPPv3N5miner4jrpc14RequestBuilder4doneEv"></span><span id="_CPPv2N5miner4jrpc14RequestBuilder4doneEv"></span><span id="miner::jrpc::RequestBuilder::done"></span><span class="target" id="classminer_1_1jrpc_1_1RequestBuilder_1a808360183ac2a36d351f6819090d35ab"></span><a class="reference internal" href="#_CPPv4N5miner4jrpc7MessageE" title="miner::jrpc::Message">Message</a> <code class="sig-name descname">done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5miner4jrpc14RequestBuilder4doneEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>call this function to end the building process and <code class="docutils literal notranslate"><span class="pre">std::move</span></code> the internal <code class="docutils literal notranslate"><a class="reference internal" href="#structminer_1_1jrpc_1_1Message"><span class="std std-ref"><span class="pre">jrpc::Message</span></span></a></code> out. Afterwards, this object is in a <a class="reference external" href="https://en.cppreference.com/w/cpp/utility/move">‘valid but unspecified state’</a>. </p>
+</dd></dl>
 
 </div>
 </dd></dl>

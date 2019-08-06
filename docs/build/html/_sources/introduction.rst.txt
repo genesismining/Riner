@@ -1,4 +1,4 @@
-.. image:: ../assets/img_banner.jpg
+.. image:: ../assets/img_banner_white.jpg
 
 | 
 
@@ -22,7 +22,7 @@ Dependencies
 ------------
 In order to build Riner the following dependencies need to be installed:
 
-- OpenCL
+- `OpenCL <https://www.khronos.org/registry/OpenCL/specs/2.2/html/OpenCL_ICD_Installation.html>`_
 
 - `CMake <https://cmake.org/>`_
 
@@ -37,9 +37,7 @@ first, clone the Riner repository and update submodules
 
 .. code::
 
-    git clone https://github.com/genesismining/Riner.git
-    cd Riner
-    git submodule update
+    git clone --recurse-submodules https://github.com/genesismining/Riner.git
 
 then build the project using :code:`cmake` and :code:`make` or configure CMake to output build files for your favourite IDE.
 
