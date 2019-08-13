@@ -2,6 +2,7 @@
 //
 
 #include "PoolSwitcher.h"
+#include "PoolWithWorkQueue.h"
 #include <src/common/Assert.h>
 #include <src/algorithm/Algorithm.h>
 
@@ -82,12 +83,12 @@ namespace miner {
         return type_safe::opt_ref(*poolData.pool);
     }
 
-    optional<unique_ptr<Work>> PoolSwitcher::tryGetWork() {
+    optional<unique_ptr<Work>> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
         auto pool = activePool();
         if (pool) {
             LOG(INFO) << "getting work from " << gsl::to_string(pool.value().getName());
-            return pool.value().tryGetWork();
+            return pool.value().tryGetWorkImpl();
         }
 
         LOG(INFO) << "PoolSwitcher cannot provide work since there is no active pool";
@@ -97,15 +98,20 @@ namespace miner {
         return nullopt;
     }
 
-    void PoolSwitcher::submitWorkImpl(unique_ptr<WorkSolution> result) {
-        std::shared_ptr<WorkProtocolData> data = result->getProtocolData().lock();
-        if (!data) {
-            LOG(INFO) << "work result cannot be submitted because it has expired";
+    void PoolSwitcher::submitSolutionImpl(unique_ptr<WorkSolution> solution) {
+        std::shared_ptr<const PoolJob> job = solution->getJob();
+        if (!job) {
+            LOG(INFO) << "work solution cannot be submitted because it has expired";
+            return;
+        }
+        std::shared_ptr<PoolImpl> pool = job->pool.lock();
+        if (!pool) {
+            LOG(INFO) << "work solution cannot be submitted because its pool does not exist anymore";
             return;
         }
         
-        auto resultPoolUid = data->getPoolUid();
-        auto activePoolUid = std::numeric_limits<decltype(resultPoolUid)>::max();
+        auto solutionPoolUid = pool->poolUid;
+        auto activePoolUid = std::numeric_limits<decltype(solutionPoolUid)>::max();
         bool sameUid = true;
 
         {
@@ -113,11 +119,11 @@ namespace miner {
 
             if (auto pool = activePool()) {
 
-                activePoolUid = pool.value().getPoolUid();
+                activePoolUid = pool.value().poolUid;
 
-                sameUid = activePoolUid == resultPoolUid;
+                sameUid = activePoolUid == solutionPoolUid;
                 if (sameUid) {
-                    return pool.value().submitWorkImpl(std::move(result));
+                    return pool.value().submitSolutionImpl(std::move(solution));
                 }
             }
         } //unlock
@@ -125,11 +131,7 @@ namespace miner {
         if (sameUid)
             LOG(INFO) << "solution could not be submitted, since there is no active pool";
         else
-            LOG(INFO) << "solution belongs to another pool (uid " << resultPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
-    }
-
-    uint64_t PoolSwitcher::getPoolUid() const {
-        return uid;
+            LOG(INFO) << "solution belongs to another pool (uid " << solutionPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
     }
 
     cstring_span PoolSwitcher::getName() const {

@@ -11,13 +11,10 @@ namespace miner {
      * because only Pool is referenced by another compilation unit.
      */
     static const Pool::Registry<PoolEthashStratum> registryPoolEthashStratum {"EthashStratum2", HasPowTypeEthash::getPowType(), "stratum2"};
-    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"Cuckatoo31Stratum"  , HasPowTypeCuckatoo31::getPowType(), "GrinStratum", "stratum"};
+    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"Cuckatoo31Stratum", HasPowTypeCuckatoo31::getPowType(), "GrinStratum", "stratum"};
 
 
-    uint64_t Pool::createNewPoolUid() {
-        static std::atomic<uint64_t> uid = {1};
-        return uid.fetch_add(1);
-    }
+    std::atomic_uint64_t Pool::poolCounter {0};
 
     void StillAliveTrackable::onStillAlive() {
         lastKnownAliveTime = clock::now();
@@ -32,13 +29,13 @@ namespace miner {
         lastKnownAliveTime = time;
     }
 
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &poolImplName) {
+    shared_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &poolImplName) {
         if (auto entry = entryWithName(poolImplName))
             return entry.value().makeFunc(std::move(args));
         return nullptr;
     }
 
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType) {
+    shared_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType) {
         for (const auto &entry : getEntries()) {
             bool hasMatchingName =
                     protocolType == entry.protocolType ||

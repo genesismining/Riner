@@ -18,12 +18,11 @@ struct HasPowTypeCuckatoo31 {
 template<class PowTypeT>
 class WorkCuckoo : public Work, public PowTypeT {
 public:
-    WorkCuckoo(std::shared_ptr<WorkProtocolData> data) :
-            Work(make_weak(data), PowTypeT::getPowType()) {
+    WorkCuckoo() :
+            Work(PowTypeT::getPowType()) {
     }
 
     int64_t difficulty = 1;
-    int64_t height = 0;
     std::vector<uint8_t> prePow;
 
     uint64_t nonce = 0;
@@ -32,11 +31,12 @@ public:
 template<class PowTypeT>
 class WorkSolutionCuckoo : public WorkSolution, public PowTypeT {
 public:
-    WorkSolutionCuckoo(std::weak_ptr<WorkProtocolData> data) :
-            WorkSolution(std::move(data), PowTypeT::getPowType()) {
+    using work_type = WorkCuckoo<PowTypeT>;
+
+    WorkSolutionCuckoo(const WorkCuckoo<PowTypeT> &work) :
+            WorkSolution(static_cast<const Work&>(work)) {
     }
 
-    int64_t height = 0;
     uint64_t nonce = 0;
     std::vector<uint32_t> pow;
 };

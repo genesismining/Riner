@@ -1,7 +1,6 @@
 
 #include "PoolEthash.h"
 #include <src/pool/WorkEthash.h>
-#include <src/pool/AutoRefillQueue.h>
 #include <src/util/Logging.h>
 #include <src/util/HexString.h>
 #include <src/common/Json.h>
@@ -15,7 +14,7 @@
 
 namespace miner {
 
-    const uint32_t WorkEthash::uniqueNonce{static_cast<uint32_t>(std::random_device()())};
+    const uint32_t EthashStratumJob::uniqueNonce{static_cast<uint32_t>(std::random_device()())};
 
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
         LOG(DEBUG) << "onConnected";
@@ -76,28 +75,18 @@ namespace miner {
 
     void PoolEthashStratum::onMiningNotify(const nl::json &jparams) {
         bool cleanFlag = jparams.at(4);
-        cleanFlag = true;
-        if (cleanFlag)
-            protocolDatas.clear(); //invalidates all gpu work that links to them
+        auto job = std::make_unique<EthashStratumJob>(jparams.at(0).get<std::string>());
 
-        //create work package
-        protocolDatas.emplace_back(std::make_shared<EthashStratumProtocolData>(getPoolUid()));
-        auto &sharedProtoData = protocolDatas.back();
-        auto weakProtoData = make_weak(sharedProtoData);
-
-        auto work = std::make_unique<WorkEthash>(weakProtoData);
-
-        sharedProtoData->jobId = jparams.at(0);
-        HexString(jparams[1]).getBytes(work->header);
-        HexString(jparams[2]).getBytes(work->seedHash);
-        HexString(jparams[3]).swapByteOrder().getBytes(work->target);
+        HexString(jparams[1]).getBytes(job->workTemplate.header);
+        HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
+        HexString(jparams[3]).swapByteOrder().getBytes(job->workTemplate.target);
 
         //work->epoch is calculated in the refill thread
 
-        workQueue->setMaster(std::move(work), cleanFlag);
+        setMaster(std::move(job), cleanFlag);
     }
 
-    void PoolEthashStratum::submitWorkImpl(unique_ptr<WorkSolution> resultBase) {
+    void PoolEthashStratum::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {
 
         auto result = static_unique_ptr_cast<WorkSolutionEthash>(std::move(resultBase));
 
@@ -105,8 +94,8 @@ namespace miner {
 
         io.postAsync([this, result = std::move(result)] {
 
-            auto protoData = result->tryGetProtocolDataAs<EthashStratumProtocolData>();
-            if (!protoData) {
+            auto job = result->getCastedJob<EthashStratumJob>();
+            if (!job) {
                 LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
             }
@@ -117,7 +106,7 @@ namespace miner {
                 .id(shareId)
                 .method("mining.submit")
                 .param(args.username)
-                .param(protoData->jobId)
+                .param(job->jobId)
                 .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
                 .param("0x" + HexString(result->header).str())
                 .param("0x" + HexString(result->mixHash).str())
@@ -139,24 +128,8 @@ namespace miner {
     }
 
     PoolEthashStratum::PoolEthashStratum(PoolConstructionArgs args)
-    : args(args) {
-        //initialize workQueue
-        auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
-
-        auto refillFunc = [] (auto &out, auto &workMaster, size_t currentSize) {
-
-            workMaster->setEpoch();
-
-            for (auto i = currentSize; i < 16; ++i) {
-                ++workMaster->extraNonce;
-                auto newWork = std::make_unique<WorkEthash>(*workMaster);
-                out.push_back(std::move(newWork));
-            }
-            LOG(INFO) << "workQueue got refilled from " << currentSize << " to " << currentSize + out.size() << " items";
-        };
-
-        workQueue = std::make_unique<WorkQueueType>(refillThreshold, refillFunc);
-
+            : PoolWithWorkQueue()
+            , args(args) {
 
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
             onConnected(cxn);
@@ -166,16 +139,6 @@ namespace miner {
 
     PoolEthashStratum::~PoolEthashStratum() {
         shutdown = true;
-    }
-
-    optional<unique_ptr<Work>> PoolEthashStratum::tryGetWork() {
-        if (auto work = workQueue->popWithTimeout(std::chrono::milliseconds(100)))
-            return std::move(work.value()); //implicit unique_ptr upcast
-        return nullopt; //timeout
-    }
-
-    uint64_t PoolEthashStratum::getPoolUid() const {
-        return uid;
     }
 
     cstring_span PoolEthashStratum::getName() const {

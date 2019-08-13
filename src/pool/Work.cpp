@@ -1,18 +1,27 @@
 
 #include "Work.h"
+#include "PoolWithWorkQueue.h"
 
 namespace miner {
 
-    WorkSolution::WorkSolution(std::weak_ptr<WorkProtocolData> protocolData, const std::string &powType)
-    : protocolData(std::move(protocolData)), powType(powType) {
+    bool PoolJob::expired() const {
+        bool expired = true;
+        if (auto sharedPtr = pool.lock()) {
+            expired = sharedPtr->latestJobId.load(std::memory_order_relaxed) != id;
+        }
+        return expired;
     }
 
-    std::weak_ptr<WorkProtocolData> WorkSolution::getProtocolData() const {
-        return protocolData;
+    bool PoolJob::valid() const {
+        return !pool.expired();
     }
 
-    Work::Work(std::weak_ptr<WorkProtocolData> protocolData, const std::string &powType)
-            : protocolData(std::move(protocolData)), powType(powType) {
+    WorkSolution::WorkSolution(const Work &work)
+            : job(work.job), powType(work.powType) {
+    }
+
+    Work::Work(const std::string &powType)
+            : powType(powType) {
     }
 
 }

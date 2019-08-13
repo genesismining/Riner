@@ -191,7 +191,7 @@ namespace miner {
             bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->target);
 
             if (isValidSolution)
-                pool.submitWork(std::move(result));
+                pool.submitSolution(std::move(result));
             else {
                 LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
             }

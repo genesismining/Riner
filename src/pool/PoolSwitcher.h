@@ -25,7 +25,7 @@ namespace miner {
         ~PoolSwitcher() override;
 
         //the provided pool records will get connected to the total records of this PoolSwitcher
-        Pool &push(unique_ptr<Pool> pool, unique_ptr<PoolRecords> records, PoolConstructionArgs args) {
+        Pool &push(shared_ptr<Pool> pool, unique_ptr<PoolRecords> records, PoolConstructionArgs args) {
             std::lock_guard<std::mutex> lock(mut);
             pools.emplace_back(PoolData{std::move(records), std::move(args), std::move(pool)});
 
@@ -36,13 +36,11 @@ namespace miner {
             return *pools.back().pool;
         }
 
-        optional<unique_ptr<Work>> tryGetWork() override;
+        optional<unique_ptr<Work>> tryGetWorkImpl() override;
 
-        void submitWorkImpl(unique_ptr<WorkSolution>) override;
+        void submitSolutionImpl(unique_ptr<WorkSolution>) override;
 
         size_t poolCount() const;
-
-        uint64_t getPoolUid() const override;
 
         cstring_span getName() const override;
 
@@ -79,7 +77,7 @@ namespace miner {
         struct PoolData {
             unique_ptr<PoolRecords> records;
             PoolConstructionArgs args;
-            unique_ptr<Pool> pool;
+            shared_ptr<Pool> pool;
         };
 
         //TODO: replace unique_ptr with shared_ptr so that lock doesn't need to be held the entire time in tryGetWork();
@@ -89,8 +87,6 @@ namespace miner {
         optional_ref<Pool> activePool();
 
         void aliveCheckAndMaybeSwitch();
-
-        uint64_t uid = createNewPoolUid();
     };
 
 }

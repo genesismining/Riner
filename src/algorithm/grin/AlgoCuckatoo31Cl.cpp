@@ -70,10 +70,9 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
         // TODO sha pow and compare to difficulty
         for (auto& cycle : cycles) {
             auto pow = work->makeWorkSolution<WorkSolutionCuckatoo31>();
-            pow->height = work->height;
             pow->nonce = work->nonce;
             pow->pow = std::move(cycle.edges);
-            args_.workProvider.submitWork(std::move(pow));
+            args_.workProvider.submitSolution(std::move(pow));
         }
     }
 }

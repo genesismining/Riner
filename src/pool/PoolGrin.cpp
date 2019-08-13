@@ -96,40 +96,30 @@ namespace miner {
     void PoolGrinStratum::onMiningNotify(const nl::json &jparams) {
         int64_t height = jparams.at("height");
         bool cleanFlag = (currentHeight != height);
-        if (cleanFlag) {
-            LOG(INFO) << "Clearing pending work.";
-            protocolDatas.clear(); //invalidates all gpu work that links to them
-        }
         currentHeight = height;
 
-        //create work package
-        protocolDatas.emplace_back(std::make_shared<GrinStratumProtocolData>(getPoolUid()));
-        auto& sharedProtoData = protocolDatas.back();
+        auto jobId = jparams.at("job_id").get<int64_t>();
+        auto job = std::make_unique<GrinStratumJob>(jobId, height);
 
-        auto work = std::make_unique<WorkCuckatoo31>(sharedProtoData);
-
-        int id = jparams.at("job_id");
-        sharedProtoData->jobId = std::to_string(id);
-        work->difficulty = jparams.at("difficulty");
-        work->height = height;
-        work->nonce = random_.getUniform<uint64_t>();
+        job->workTemplate.difficulty = jparams.at("difficulty");
+        job->workTemplate.nonce = random_.getUniform<uint64_t>();
 
         HexString powHex(jparams.at("pre_pow"));
-        work->prePow.resize(powHex.sizeBytes());
-        powHex.getBytes(work->prePow);
+        job->workTemplate.prePow.resize(powHex.sizeBytes());
+        powHex.getBytes(job->workTemplate.prePow);
 
-        workQueue->setMaster(std::move(work), true);
+        setMaster(std::move(job), cleanFlag);
     }
 
-    void PoolGrinStratum::submitWorkImpl(unique_ptr<WorkSolution> resultBase) {
+    void PoolGrinStratum::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {
         auto result = static_unique_ptr_cast<WorkSolutionCuckatoo31>(std::move(resultBase));
 
         //build and send submitMessage on the tcp thread
 
         io.postAsync([this, result = std::move(result)] {
 
-            std::shared_ptr<GrinStratumProtocolData> protoData = result->tryGetProtocolDataAs<GrinStratumProtocolData>();
-            if (!protoData) {
+            auto job = result->getCastedJob<GrinStratumJob>();
+            if (!job) {
                 LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
             }
@@ -140,9 +130,9 @@ namespace miner {
             }
 
             jrpc::Message submit = jrpc::RequestBuilder{}.id(io.nextId++)
-                    .param("edge_bits", 31)
-                    .param("height", result->height)
-                    .param("job_id", std::stoll(protoData->jobId))
+                    .param("edge_bits", result->pow.size())
+                    .param("height", job->height)
+                    .param("job_id", job->jobId)
                     .param("nonce", result->nonce)
                     .param("pow", pow)
                     .done();
@@ -178,22 +168,9 @@ namespace miner {
     }
 
     PoolGrinStratum::PoolGrinStratum(PoolConstructionArgs args)
-    : args_(std::move(args))
-    , uid(createNewPoolUid())
-    //, jrpc(args_.host, args_.port)
-    , io(IOMode::Tcp) {
-        //initialize workQueue
-        auto refillThreshold = 8; //once the queue size goes below this, lambda gets called
-
-        auto refillFunc = [] (std::vector<QueueItem>& out, QueueItem& workMaster, size_t currentSize) {
-            for (auto i = currentSize; i < 16; ++i) {
-                ++workMaster->nonce;
-                out.push_back(std::make_unique<WorkCuckatoo31>(*workMaster));
-            }
-            LOG(INFO) << "workQueue got refilled from " << currentSize << " to " << currentSize + out.size() << " items";
-        };
-
-        workQueue = std::make_unique<WorkQueue>(refillThreshold, refillFunc);
+            : PoolWithoutWorkQueue()
+            , args_(std::move(args))
+            , io(IOMode::Tcp) {
 
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
         //jrpc.setOnRestart([this] {
@@ -222,17 +199,6 @@ namespace miner {
 
     PoolGrinStratum::~PoolGrinStratum() {
         shutdown = true;
-    }
-
-    optional<unique_ptr<Work>> PoolGrinStratum::tryGetWork() {
-        if (auto work = workQueue->popWithTimeout(std::chrono::milliseconds(100))) {
-            return std::move(work.value()); //implicit unique_ptr upcast
-        }
-        return nullopt; //timeout
-    }
-
-    uint64_t PoolGrinStratum::getPoolUid() const {
-        return uid;
     }
 
     cstring_span PoolGrinStratum::getName() const {
