@@ -82,7 +82,7 @@ namespace miner {
                 return nullopt;
             }
         }
-        else if (deviceVendor == "NVIDIA") {
+        else if (deviceVendor.substr(0, 6) == "NVIDIA") {
             vendorEnum = kNvidia;
 #ifndef CL_DEVICE_PCI_BUS_ID_NV
 #define CL_DEVICE_PCI_BUS_ID_NV                     0x4008
@@ -106,7 +106,7 @@ namespace miner {
                 return nullopt;
             }
         }
-        else if (deviceVendor == "Intel") {
+        else if (deviceVendor.substr(0, 5) == "Intel") {
             vendorEnum = kIntel;
             auto id = device.getInfo<CL_DEVICE_VENDOR_ID>();
             idVariant = id; // TODO: use unique identifier
