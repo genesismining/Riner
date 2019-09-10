@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "PoolWithWorkQueue.h"
+#include "WorkQueue.h"
 #include "WorkCuckoo.h"
 
 #include <src/pool/WorkEthash.h>
@@ -26,14 +26,15 @@ namespace miner {
             return std::make_unique<WorkCuckatoo31>(workTemplate);
         }
 
-        explicit GrinStratumJob(int64_t id, int64_t height)
-                : jobId(id)
+        explicit GrinStratumJob(const std::weak_ptr<Pool> &pool, int64_t id, int64_t height)
+                : PoolJob(pool)
+                , jobId(id)
                 , height(height)
                 , workTemplate() {
         }
     };
 
-    class PoolGrinStratum : public PoolWithoutWorkQueue {
+    class PoolGrinStratum : public Pool {
     public:
         explicit PoolGrinStratum(PoolConstructionArgs);
         ~PoolGrinStratum() override;
@@ -41,17 +42,18 @@ namespace miner {
         cstring_span getName() const override;
 
         // Pool interface
+        bool isExpiredJob(const PoolJob &job) override;
+        optional<unique_ptr<Work>> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution> result) override;
     private:
 
         void onMiningNotify (const nl::json &jparams);
-        void restart();
         void onConnected(CxnHandle);
 
         const PoolConstructionArgs args_;
+        LazyWorkQueue queue;
 
         Random random_;
-        std::atomic<bool> shutdown {false};
         jrpc::JsonRpcUtil io;
         CxnHandle _cxn; //connection to submit shares to (set on mining notify)
 

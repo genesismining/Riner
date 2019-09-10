@@ -9,16 +9,16 @@
 namespace miner {
 
     class Work;
-    class PoolImpl;
-    class PoolWithWorkQueue;
-    class PoolWithoutWorkQueue;
+    class Pool;
+    class WorkQueue;
+    class LazyWorkQueue;
 
 
     /**
      * @brief Subclasses save all necessary pool and protocol related data
      */
     struct PoolJob {
-        std::weak_ptr<PoolImpl> pool;
+        std::weak_ptr<Pool> pool;
         int64_t id;
 
         bool expired() const;
@@ -26,6 +26,9 @@ namespace miner {
 
         virtual std::unique_ptr<Work> makeWork() = 0;
         virtual ~PoolJob() = default;
+
+        PoolJob() = delete;
+        PoolJob(std::weak_ptr<Pool> pool);
     };
 
 
@@ -65,6 +68,33 @@ namespace miner {
             static_assert(std::is_base_of<WorkSolution, T>::value, "");
             return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
         }
+
+        /**
+         * @brief checks whether solution belongs to the most recent work available to the pool protocol.
+         * Usually, an expired solution should be accepted by the pool protocol implementation, too.
+         *
+         * @return whether the solution has been marked expired by the pool protocol implementation
+         */
+        bool expired() const { //thread safe
+            bool expired = true;
+            if (auto sharedPtr = job.lock())
+                expired = sharedPtr->expired();
+            return expired;
+        }
+
+        /**
+         * @brief checks whether solution would be still accepted by the pool protocol.
+         * if valid() returns false, then the solution will be rejected by the pool protocol implementation.
+         *
+         * @return whether solution would be accepted by the pool protocol implementation
+         */
+        bool valid() const {
+            //checks whether associated shared_ptrs are still alive
+            bool valid = false;
+            if (auto sharedPtr = job.lock())
+                valid = sharedPtr->valid();
+            return valid;
+        }
     };
 
 
@@ -77,8 +107,8 @@ namespace miner {
     class Work {
 
         std::weak_ptr<const PoolJob> job;
-        friend class PoolWithWorkQueue;
-        friend class PoolWithoutWorkQueue;
+        friend class WorkQueue;
+        friend class LazyWorkQueue;
         friend class WorkSolution;
 
     protected:
@@ -100,19 +130,33 @@ namespace miner {
             return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
         }
 
-        /** @brief checks whether a solution to this work will still be accepted by the pool protocol.
-         * expired() may be used as a hint to the algorithm that calculating solutions to this work package is not
-         * beneficial anymore. Upon expiration it is expected (but not necessary) that an algorithm stops working on this work and
-         * acquires fresh work from the pool.
+        /**
+         * @brief checks whether work is the most recent work available to the pool protocol.
+         * expired() can be used as hint for algorithms whether new work shall be requested from the pool.
+         * Upon expiration it is expected (but not necessary) that an algorithm stops working on this work,
+         * if fresh work can be acquired from the pool.
          *
          * @return whether the work has been marked expired by the pool protocol implementation
          */
         bool expired() const { //thread safe
-            //checks whether associated shared_ptr is still alive
             bool expired = true;
             if (auto sharedPtr = job.lock())
                 expired = sharedPtr->expired();
             return expired;
+        }
+
+        /**
+         * @brief checks whether solutions of this work would be still accepted by the pool protocol.
+         * if valid() returns false, then it does not make sense to continue finding solutions for this work.
+         *
+         * @return whether a solution for this work would be accepted by the pool protocol implementation
+         */
+        bool valid() const {
+            //checks whether associated shared_ptrs are still alive
+            bool valid = false;
+            if (auto sharedPtr = job.lock())
+                valid = sharedPtr->valid();
+            return valid;
         }
 
 

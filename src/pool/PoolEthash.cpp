@@ -75,7 +75,7 @@ namespace miner {
 
     void PoolEthashStratum::onMiningNotify(const nl::json &jparams) {
         bool cleanFlag = jparams.at(4);
-        auto job = std::make_unique<EthashStratumJob>(jparams.at(0).get<std::string>());
+        auto job = std::make_unique<EthashStratumJob>(_this, jparams.at(0).get<std::string>());
 
         HexString(jparams[1]).getBytes(job->workTemplate.header);
         HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
@@ -83,7 +83,15 @@ namespace miner {
 
         //work->epoch is calculated in the refill thread
 
-        setMaster(std::move(job), cleanFlag);
+        queue.setMaster(std::move(job), cleanFlag);
+    }
+
+    bool PoolEthashStratum::isExpiredJob(const PoolJob &job) {
+        return queue.isExpiredJob(job);
+    }
+
+    optional<unique_ptr<Work>> PoolEthashStratum::tryGetWorkImpl() {
+        return queue.popWithTimeout();
     }
 
     void PoolEthashStratum::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {
@@ -128,8 +136,7 @@ namespace miner {
     }
 
     PoolEthashStratum::PoolEthashStratum(PoolConstructionArgs args)
-            : PoolWithWorkQueue()
-            , args(args) {
+            : args(args) {
 
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
             onConnected(cxn);
@@ -138,7 +145,6 @@ namespace miner {
     }
 
     PoolEthashStratum::~PoolEthashStratum() {
-        shutdown = true;
     }
 
     cstring_span PoolEthashStratum::getName() const {

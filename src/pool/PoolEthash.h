@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <src/pool/PoolWithWorkQueue.h>
+#include <src/pool/WorkQueue.h>
 #include <src/pool/WorkEthash.h>
 #include <src/application/Config.h>
 #include <src/util/LockUtils.h>
@@ -27,8 +27,9 @@ namespace miner {
 
         ~EthashStratumJob() override = default;
 
-        explicit EthashStratumJob(std::string id)
-                : jobId(std::move(id))
+        explicit EthashStratumJob(const std::weak_ptr<Pool> &pool, std::string id)
+                : PoolJob(pool)
+                , jobId(std::move(id))
                 , workTemplate(uniqueNonce) {
         }
 
@@ -37,7 +38,7 @@ namespace miner {
     };
 
 
-    class PoolEthashStratum : public PoolWithWorkQueue {
+    class PoolEthashStratum : public Pool {
     public:
         explicit PoolEthashStratum(PoolConstructionArgs);
         ~PoolEthashStratum() override;
@@ -46,10 +47,12 @@ namespace miner {
 
     private:
         PoolConstructionArgs args;
+        WorkQueue queue;
 
         // Pool interface
+        bool isExpiredJob(const PoolJob &job) override;
+        optional<unique_ptr<Work>> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution> resultBase) override;
-
 
         void onConnected(CxnHandle);
         jrpc::JsonRpcUtil io {IOMode::Tcp};

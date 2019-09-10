@@ -13,19 +13,22 @@
 #include <list>
 #include <atomic>
 #include <src/network/JsonRpcUtil.h>
-#include "PoolWithWorkQueue.h"
+#include "WorkQueue.h"
 
 namespace miner {
 
-    class PoolDummy : public PoolWithWorkQueue {
+    class PoolDummy : public Pool {
     public:
         explicit PoolDummy(PoolConstructionArgs);
         ~PoolDummy() override;
 
     private:
         PoolConstructionArgs args;
+        WorkQueue queue;
 
         // Pool interface
+        bool isExpiredJob(const PoolJob &job) override;
+        optional<unique_ptr<Work>> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution>) override;
 
         jrpc::JsonRpcUtil io; //io utility object

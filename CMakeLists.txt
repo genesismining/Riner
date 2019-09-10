@@ -58,6 +58,7 @@ add_library(LibMiner
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkCuckoo.h
         src/pool/WorkEthash.h
+        src/pool/WorkQueue.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
         src/pool/PoolDummy.cpp src/pool/PoolDummy.h
@@ -155,7 +156,7 @@ find_package(GTest REQUIRED)
 add_executable(tests
     src/algorithm/grin/CuckatooTest.cpp
     src/algorithm/grin/GraphTest.cpp
-    src/pool/WorkTest.cpp
+    src/pool/WorkCuckatoo31Test.cpp
     src/network/JrpcTest.cpp
 )
 target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})

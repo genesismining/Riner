@@ -6,8 +6,7 @@
 namespace miner {
 
     PoolDummy::PoolDummy(PoolConstructionArgs argsMoved)
-            : PoolWithWorkQueue()
-            , args(std::move(argsMoved))
+            : args(std::move(argsMoved))
             , io(IOMode::Tcp) {
 
         //launch the json rpc 2.0 client
@@ -100,6 +99,14 @@ namespace miner {
 
         //since the io object keeps calling readAsync now, the connection will always be kept alive (unless closed from the other side), to close the
         //connection from this side, a setReadAsyncLoopEnabled(false) is necessary
+    }
+
+    bool PoolDummy::isExpiredJob(const PoolJob &job) {
+        return queue.isExpiredJob(job);
+    }
+
+    optional<unique_ptr<Work>> PoolDummy::tryGetWorkImpl() {
+        return queue.popWithTimeout();
     }
 
     void PoolDummy::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {

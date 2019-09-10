@@ -51,47 +51,7 @@ namespace miner {
             onStillAlive();
         });
     }
-//
-//    void PoolGrinStratum::restart() {
-//        auto login = std::make_shared<JrpcBuilder>();
-//        auto getjobtemplate = std::make_shared<JrpcBuilder>();
-//
-//        login->method("login")
-//            .param("agent", "grin-miner")
-//            .param("login", args_.username)
-//            .param("pass", args_.password);
-//
-//        login->onResponse([this, getjobtemplate] (const JrpcResponse& ret) {
-//            if (ret.error()) {
-//                restart();
-//                return;
-//            }
-//            jrpc.call(*getjobtemplate);
-//        });
-//
-//        getjobtemplate->method("getjobtemplate");
-//        getjobtemplate->onResponse([this] (auto &ret) {
-//            if (!ret.error()) {
-//                onMiningNotify(ret.getJson().at("result"));
-//            }
-//        });
-//
-//        //set handler for receiving incoming messages that are not responses to sent rpcs
-//        jrpc.setOnReceiveUnhandled([this] (const JrpcResponse& ret) {
-//            if (ret.atEquals("method", "job")) {
-//                onMiningNotify(ret.getJson().at("params"));
-//            } else {
-//                LOG(WARNING) << "Ignoring unexpected message from server: " << ret.getJson().dump();
-//            }
-//        });
-//
-//        //set handler that gets called on any received response, before the other handlers are called
-//        jrpc.setOnReceive([this] (auto &ret) {
-//            onStillAlive(); //set latest still-alive timestamp to now
-//        });
-//
-//        jrpc.call(*login);
-//    }
+
 
     void PoolGrinStratum::onMiningNotify(const nl::json &jparams) {
         int64_t height = jparams.at("height");
@@ -99,7 +59,7 @@ namespace miner {
         currentHeight = height;
 
         auto jobId = jparams.at("job_id").get<int64_t>();
-        auto job = std::make_unique<GrinStratumJob>(jobId, height);
+        auto job = std::make_unique<GrinStratumJob>(_this, jobId, height);
 
         job->workTemplate.difficulty = jparams.at("difficulty");
         job->workTemplate.nonce = random_.getUniform<uint64_t>();
@@ -108,32 +68,38 @@ namespace miner {
         job->workTemplate.prePow.resize(powHex.sizeBytes());
         powHex.getBytes(job->workTemplate.prePow);
 
-        setMaster(std::move(job), cleanFlag);
+        queue.setMaster(std::move(job), cleanFlag);
     }
 
-    void PoolGrinStratum::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {
-        auto result = static_unique_ptr_cast<WorkSolutionCuckatoo31>(std::move(resultBase));
+    bool PoolGrinStratum::isExpiredJob(const PoolJob &job) {
+        return queue.isExpiredJob(job);
+    }
 
+    optional<unique_ptr<Work>> PoolGrinStratum::tryGetWorkImpl() {
+        return queue.tryGetWork();
+    }
+
+    void PoolGrinStratum::submitSolutionImpl(unique_ptr<WorkSolution> solutionBase) {
         //build and send submitMessage on the tcp thread
 
-        io.postAsync([this, result = std::move(result)] {
+        io.postAsync([this, solution = static_unique_ptr_cast<WorkSolutionCuckatoo31>(std::move(solutionBase))] {
 
-            auto job = result->getCastedJob<GrinStratumJob>();
+            auto job = solution->getCastedJob<GrinStratumJob>();
             if (!job) {
                 LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
             }
 
             nl::json pow;
-            for(uint32_t i: result->pow) {
+            for(uint32_t i: solution->pow) {
                 pow.push_back(i);
             }
 
             jrpc::Message submit = jrpc::RequestBuilder{}.id(io.nextId++)
-                    .param("edge_bits", result->pow.size())
+                    .param("edge_bits", solution->pow.size())
                     .param("height", job->height)
                     .param("job_id", job->jobId)
-                    .param("nonce", result->nonce)
+                    .param("nonce", solution->nonce)
                     .param("pow", pow)
                     .done();
 
@@ -168,20 +134,13 @@ namespace miner {
     }
 
     PoolGrinStratum::PoolGrinStratum(PoolConstructionArgs args)
-            : PoolWithoutWorkQueue()
-            , args_(std::move(args))
+            : args_(std::move(args))
             , io(IOMode::Tcp) {
 
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
         //jrpc.setOnRestart([this] {
         //    restart();
         //});
-
-        io.launchClientAutoReconnect(args_.host, args_.port, [this] (CxnHandle cxn) {
-            onConnected(cxn);
-            io.setReadAsyncLoopEnabled(true);
-            io.readAsync(cxn);//start listening
-        });
 
         io.io().layerBelow().setIncomingModifier([] (nl::json &json) {
             try {
@@ -195,10 +154,15 @@ namespace miner {
         jsonLayer.setOutgoingModifier([] (nl::json &json) { //plug in a modifier func to change its id to string right before any json gets send
             json["id"] = std::to_string(json.at("id").get<jrpc::JsonRpcUtil::IdType>());
         });
+
+        io.launchClientAutoReconnect(args_.host, args_.port, [this] (CxnHandle cxn) {
+            onConnected(cxn);
+            io.setReadAsyncLoopEnabled(true);
+            io.readAsync(cxn);//start listening
+        });
     }
 
     PoolGrinStratum::~PoolGrinStratum() {
-        shutdown = true;
     }
 
     cstring_span PoolGrinStratum::getName() const {

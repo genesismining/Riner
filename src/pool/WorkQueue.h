@@ -14,24 +14,17 @@
 #include <chrono>
 #include <future>
 
+
 namespace miner {
 
+    class LazyWorkQueue {
 
-    /**
-     * @brief Abstract class to represent a Pool with a job queue that is able to track and generate new work
-     */
-    class PoolImpl : public Pool {
         friend struct PoolJob;
 
     protected:
         std::atomic_int64_t latestJobId {0};
         std::mutex mutex;
         std::deque<std::shared_ptr<PoolJob>> jobQueue;
-
-    };
-
-
-    class PoolWithoutWorkQueue : public PoolImpl {
 
     public:
 
@@ -45,13 +38,12 @@ namespace miner {
                 //limit the max. size of the jobQueue so that really old jobs are dropped
                 jobQueue.resize(std::min(jobQueue.size(), size_t(7)));
             }
-            newMaster->pool = std::static_pointer_cast<PoolImpl>(_this.lock());
-            newMaster->id = latestJobId.fetch_add(1, std::memory_order_relaxed);
-            jobQueue.push_front(std::move(newMaster));
+            newMaster->id = latestJobId.fetch_add(1, std::memory_order_relaxed) + 1;
+            jobQueue.emplace_front(std::move(newMaster));
 
         }
 
-        optional<unique_ptr<Work>> tryGetWorkImpl() override {
+        optional<unique_ptr<Work>> tryGetWork() {
             std::unique_lock<std::mutex> lock(mutex);
             if (jobQueue.empty())
                 return nullopt;
@@ -60,13 +52,24 @@ namespace miner {
             return work;
         }
 
+        inline bool isExpiredJob(const PoolJob &job) {
+            return latestJobId.load(std::memory_order_relaxed) != job.id;
+        }
     };
 
 
-    class PoolWithWorkQueue : public PoolImpl {
+    class WorkQueue {
+
+        friend struct PoolJob;
+
+    protected:
+        std::atomic_int64_t latestJobId {0};
+        std::mutex mutex;
+        std::deque<std::shared_ptr<PoolJob>> jobQueue;
+
     public:
 
-        PoolWithWorkQueue(size_t refillThreshold = 8, size_t maxWorkQueueLength = 16)
+        WorkQueue(size_t refillThreshold = 8, size_t maxWorkQueueLength = 16)
                 : refillThreshold(refillThreshold) {
 
             refillTask = std::async(std::launch::async, [this, refillThreshold, maxWorkQueueLength] {
@@ -126,7 +129,7 @@ namespace miner {
             });
         }
 
-        ~PoolWithWorkQueue() override {
+        ~WorkQueue() {
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 shutdown = true;
@@ -148,15 +151,14 @@ namespace miner {
                     //limit the max. size of the jobQueue so that really old jobs are dropped
                     jobQueue.resize(std::min(jobQueue.size(), size_t(7)));
                 }
-                newMaster->pool = std::static_pointer_cast<PoolImpl>(_this.lock());
-                newMaster->id = currentId++;
-                jobQueue.push_front(std::move(newMaster));
+                newMaster->id = ++currentId;
+                jobQueue.emplace_front(std::move(newMaster));
             }
 
             notifyNeedsRefill.notify_one();
         }
 
-        optional<unique_ptr<Work>> tryGetWorkImpl() override {
+        optional<unique_ptr<Work>> popWithTimeout(std::chrono::steady_clock::duration timeoutDuration = std::chrono::milliseconds(100)) {
             size_t currentSize = 0;
             bool hasMaster = false;
             optional<unique_ptr<Work>> result;
@@ -185,9 +187,12 @@ namespace miner {
             return result;
         }
 
+        inline bool isExpiredJob(const PoolJob &job) {
+            return latestJobId.load(std::memory_order_relaxed) != job.id;
+        }
+
     protected:
 
-        std::chrono::steady_clock::duration timeoutDuration = std::chrono::milliseconds(100);
         bool shutdown {false};
 
     private:
@@ -197,7 +202,7 @@ namespace miner {
 
         std::deque<std::unique_ptr<Work>> buffer;
 
-        size_t refillThreshold {1}; //once buffer.size() goes below this value, needs refill is notified
+        size_t refillThreshold; //once buffer.size() goes below this value, needs refill is notified
 
         std::future<void> refillTask;
     };

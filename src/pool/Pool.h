@@ -110,6 +110,10 @@ namespace miner {
 
         virtual cstring_span getName() const = 0;
 
+        virtual bool isExpiredJob(const PoolJob &job) {
+            return true;
+        }
+
         /**
          * @brief tryGetWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)
          *

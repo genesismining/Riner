@@ -2,7 +2,7 @@
 //
 
 #include "PoolSwitcher.h"
-#include "PoolWithWorkQueue.h"
+#include "WorkQueue.h"
 #include <src/common/Assert.h>
 #include <src/algorithm/Algorithm.h>
 
@@ -104,7 +104,7 @@ namespace miner {
             LOG(INFO) << "work solution cannot be submitted because it has expired";
             return;
         }
-        std::shared_ptr<PoolImpl> pool = job->pool.lock();
+        std::shared_ptr<Pool> pool = job->pool.lock();
         if (!pool) {
             LOG(INFO) << "work solution cannot be submitted because its pool does not exist anymore";
             return;

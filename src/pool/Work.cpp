@@ -1,13 +1,17 @@
 
 #include "Work.h"
-#include "PoolWithWorkQueue.h"
+#include "WorkQueue.h"
 
 namespace miner {
+
+    PoolJob::PoolJob(std::weak_ptr<Pool> pool)
+        : pool(std::move(pool)) {
+    }
 
     bool PoolJob::expired() const {
         bool expired = true;
         if (auto sharedPtr = pool.lock()) {
-            expired = sharedPtr->latestJobId.load(std::memory_order_relaxed) != id;
+            expired = sharedPtr->isExpiredJob(*this);
         }
         return expired;
     }
