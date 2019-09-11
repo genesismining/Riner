@@ -15,12 +15,8 @@ namespace miner {
     class StatisticNode {
 
         struct Node {
-            shared_ptr<LockGuarded<T>> _content;
+            LockGuarded<T> _content;
             LockGuarded<std::list<weak_ptr<Node>>> _listeners;
-
-            Node()
-            : _content(make_shared<LockGuarded<T>>()) {
-            }
 
             void addListener(shared_ptr<Node> &listener) {
                 _listeners.lock()->emplace_back(make_weak(listener));
@@ -44,8 +40,7 @@ namespace miner {
             std::function<void(T &)> &&lockedForEach(std::function<void(T &)> &&func) {
 
                 { // content lock scope
-                    MI_EXPECTS(_content);
-                    auto content = _content->lock();
+                    auto content = _content.lock();
                     func(*content);
                 } // unlock content
 
@@ -109,13 +104,13 @@ namespace miner {
         template<class Func>
         void lockedRead(Func &&func) {
             MI_EXPECTS(_node);
-            auto content = _node->_content->lock();
+            auto content = _node->_content.lock();
             func(*content);
         }
 
         //get a copy of the T instance of this node
         T getValue() const {
-            auto locked = _node->_content->lock();
+            auto locked = _node->_content.lock();
             T copy = *locked;
             return copy;
         }
