@@ -36,7 +36,7 @@ namespace miner {
         EXPECT_FALSE(req.isResponse());
         EXPECT_FALSE(req.isResultTrue());
 
-        EXPECT_EQ(req.str(), R"({"id":0,"jsonrpc":"2.0","method":"methodName","params":["abc",1,2.718,null]})");
+        EXPECT_EQ(req.toJson(), R"({"id":0,"jsonrpc":"2.0","method":"methodName","params":["abc",1,2.718,null]})"_json);
     }
 
     TEST(JsonRpcUtil, ConnectDisconnect) {
