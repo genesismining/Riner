@@ -18,8 +18,8 @@ namespace miner {
             .id(io.nextId++)
             .method("login")
             .param("agent", "grin-miner")
-            .param("login", args_.username)
-            .param("pass", args_.password)
+            .param("login", constructionArgs.username)
+            .param("pass", constructionArgs.password)
             .done();
 
         io.callAsync(cxn, login, [this] (CxnHandle cxn, jrpc::Message response) {
@@ -103,7 +103,7 @@ namespace miner {
                     .param("pow", pow)
                     .done();
 
-            auto onResponse = [] (CxnHandle cxn, jrpc::Message res) {
+            auto onResponse = [this] (CxnHandle cxn, jrpc::Message res) {
                 auto idStr = res.id.empty() ? res.id.get<std::string>() : "<no id>";
                 bool accepted = false;
                 if (auto result = res.getIfResult()) {
@@ -111,6 +111,8 @@ namespace miner {
                         accepted = true;
                 }
 
+                // TODO: check whether difficulty of submitted share is 1
+                records.reportShare(1., accepted, false);
                 std::string acceptedStr = accepted ? "accepted" : "rejected";
                 LOG(INFO) << "share with id " << idStr << " got " << acceptedStr;
 
@@ -133,8 +135,8 @@ namespace miner {
         });
     }
 
-    PoolGrinStratum::PoolGrinStratum(PoolConstructionArgs args)
-            : args_(std::move(args))
+    PoolGrinStratum::PoolGrinStratum(const PoolConstructionArgs &args)
+            : Pool(args)
             , io(IOMode::Tcp) {
 
         //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
@@ -155,7 +157,7 @@ namespace miner {
             json["id"] = std::to_string(json.at("id").get<jrpc::JsonRpcUtil::IdType>());
         });
 
-        io.launchClientAutoReconnect(args_.host, args_.port, [this] (CxnHandle cxn) {
+        io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
             onConnected(cxn);
             io.setReadAsyncLoopEnabled(true);
             io.readAsync(cxn);//start listening
@@ -166,6 +168,6 @@ namespace miner {
     }
 
     cstring_span PoolGrinStratum::getName() const {
-        return args_.host;
+        return constructionArgs.host;
     }
 }

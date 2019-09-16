@@ -5,6 +5,7 @@
 #include <src/util/HexString.h>
 #include <src/common/Json.h>
 #include <src/common/Endian.h>
+#include <src/common/portable_endian.h>
 #include <chrono>
 #include <random>
 #include <functional>
@@ -39,14 +40,17 @@ namespace miner {
             jrpc::Message authorize = jrpc::RequestBuilder{}
                 .id(io.nextId++)
                 .method("mining.authorize")
-                .param(args.username)
-                .param(args.password)
+                .param(constructionArgs.username)
+                .param(constructionArgs.password)
                 .done();
 
             io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {
                 acceptMiningNotify = true;
                 _cxn = cxn; //store connection for submit
             });
+
+            records.resetInterval();
+            connected.store(true, std::memory_order_relaxed);
         });
 
         io.addMethod("mining.notify", [this] (nl::json params) {
@@ -75,11 +79,15 @@ namespace miner {
 
     void PoolEthashStratum::onMiningNotify(const nl::json &jparams) {
         bool cleanFlag = jparams.at(4);
-        auto job = std::make_unique<EthashStratumJob>(_this, jparams.at(0).get<std::string>());
+        Bytes<32> jobTarget;
+        const auto &jobId = jparams.at(0).get<std::string>();
+        auto job = std::make_unique<EthashStratumJob>(_this, jobId);
 
         HexString(jparams[1]).getBytes(job->workTemplate.header);
         HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
-        HexString(jparams[3]).swapByteOrder().getBytes(job->workTemplate.target);
+        HexString(jparams[3]).swapByteOrder().getBytes(jobTarget);
+
+        job->workTemplate.setJobDifficultyAndTarget(jobTarget);
 
         //work->epoch is calculated in the refill thread
 
@@ -113,20 +121,22 @@ namespace miner {
             jrpc::Message submit = jrpc::RequestBuilder{}
                 .id(shareId)
                 .method("mining.submit")
-                .param(args.username)
+                .param(constructionArgs.username)
                 .param(job->jobId)
                 .param("0x" + HexString(toBytesWithBigEndian(result->nonce)).str()) //nonce must be big endian
                 .param("0x" + HexString(result->header).str())
                 .param("0x" + HexString(result->mixHash).str())
                 .done();
 
-            auto onResponse = [] (CxnHandle cxn, jrpc::Message response) {
+            auto onResponse = [this, difficulty = result->jobDifficulty] (CxnHandle cxn, jrpc::Message response) {
+                records.reportShare(difficulty, response.isResultTrue(), false);
                 std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
                 LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
             };
 
             //this handler gets called if there was no response after the last try
             auto onNeverResponded = [shareId] () {
+                // TODO: Shall we add dedicated statistics for this?
                 LOG(INFO) << "share with id " << shareId << " got discarded after pool did not respond multiple times";
             };
 
@@ -135,11 +145,13 @@ namespace miner {
         });
     }
 
-    PoolEthashStratum::PoolEthashStratum(PoolConstructionArgs args)
-            : args(args) {
+    PoolEthashStratum::PoolEthashStratum(const PoolConstructionArgs &args)
+            : Pool(args) {
 
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
             onConnected(cxn);
+        }, [this] () {
+            connected.store(false, std::memory_order_relaxed);
         });
 
     }
@@ -148,7 +160,7 @@ namespace miner {
     }
 
     cstring_span PoolEthashStratum::getName() const {
-        return args.host;
+        return constructionArgs.host;
     }
 
 }

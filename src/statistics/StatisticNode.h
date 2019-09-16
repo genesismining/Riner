@@ -99,10 +99,17 @@ namespace miner {
             _node->lockedForEach(std::move(func));
         }
 
+        //use this function in case you want to modify the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
+        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+        void lockedApply(std::function<void(T &)> &&func) {
+            MI_EXPECTS(_node);
+            auto content = _node->_content.lock();
+            func(*content);
+        }
+
         //use this function in case you want to read the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
         //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
-        template<class Func>
-        void lockedRead(Func &&func) {
+        void lockedApply(std::function<void(const T &)> &&func) const {
             MI_EXPECTS(_node);
             auto content = _node->_content.lock();
             func(*content);

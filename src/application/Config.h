@@ -31,7 +31,7 @@ namespace miner {
 
         struct Pool {
             std::string powType; //proof of work type: e.g. "ethash"
-            std::string protocolType; //e.g. "EthashStratum3", can also be an alias as defined in Pool::Entry
+            std::string protocolType; //e.g. "EthashStratum2", can also be an alias as defined in Pool::Entry
 
             std::string host;
             uint16_t port;

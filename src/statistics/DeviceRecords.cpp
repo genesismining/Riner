@@ -11,14 +11,15 @@ namespace miner {
         });
     }
 
-    void DeviceRecords::reportFailedShareVerification() {
-        _node.lockedForEach([] (Data &data) {
-            data.failedShareVerifications.addRecord(1);
+    void DeviceRecords::reportShare(double difficulty, bool valid) {
+        _node.lockedForEach([=] (Data &data) {
+            if (valid) {
+                data.validShares.addRecord(difficulty);
+            }
+            else {
+                data.invalidShares.addRecord(difficulty);
+            }
         });
-    }
-
-    uint64_t DeviceRecords::getVerificationDifficulty() const {
-        return 0;
     }
 
     DeviceRecords::Data DeviceRecords::read() const {

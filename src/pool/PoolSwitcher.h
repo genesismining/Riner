@@ -4,7 +4,6 @@
 #include "Pool.h"
 #include <future>
 #include <list>
-#include <src/statistics/PoolRecords.h>
 #include <src/application/Config.h>
 
 namespace miner {
@@ -19,21 +18,26 @@ namespace miner {
     public:
         using clock = StillAliveTrackable::clock;
 
-        explicit PoolSwitcher(clock::duration checkInterval = std::chrono::seconds(20),
+        explicit PoolSwitcher(std::string powType,
+                clock::duration checkInterval = std::chrono::seconds(20),
                 clock::duration durUntilDeclaredDead = std::chrono::seconds(60));
 
         ~PoolSwitcher() override;
 
         //the provided pool records will get connected to the total records of this PoolSwitcher
-        Pool &push(shared_ptr<Pool> pool, unique_ptr<PoolRecords> records, PoolConstructionArgs args) {
+        std::shared_ptr<Pool> tryAddPool(const PoolConstructionArgs &args, const std::string &poolImplName) {
+            std::shared_ptr<Pool> pool = Pool::makePool(args, poolImplName);
+            MI_EXPECTS(pool != nullptr);
+
+            pool->addRecordsListener(records);
             std::lock_guard<std::mutex> lock(mut);
-            pools.emplace_back(PoolData{std::move(records), std::move(args), std::move(pool)});
+            pools.emplace_back(pool);
 
             if (pools.size() == 1) {//if first pool was added, treat it as if it was alive (TODO: is this really desired behavior?)
-                pools.back().pool->onStillAlive();
+                pools.back()->onStillAlive();
             }
 
-            return *pools.back().pool;
+            return pool;
         }
 
         optional<unique_ptr<Work>> tryGetWorkImpl() override;
@@ -44,25 +48,18 @@ namespace miner {
 
         cstring_span getName() const override;
 
-        struct ApiInfo {
-            PoolRecords::Data totalRecords;
-            struct Pool {
-                std::string host;
-                uint16_t port;
-                std::string username;
-                std::string password;
-                PoolRecords::Data records;
-            };
-            std::vector<Pool> pools;
-        };
-
-        ApiInfo gatherApiInfo() const;
+        std::vector<std::shared_ptr<const Pool>> getPoolsData() const {
+            std::lock_guard<std::mutex> lock(mut);
+            std::vector<std::shared_ptr<const Pool>> constPools(pools.size());
+            for (size_t i = 0; i < pools.size(); i++) {
+                constPools[i] = pools[i];
+            }
+            return constPools;
+        }
 
     private:
         //shutdown related variables
         bool shutdown = false;
-
-        PoolRecords _totalRecords;
 
         mutable std::mutex mut;
         std::condition_variable notifyOnShutdown;
@@ -74,17 +71,10 @@ namespace miner {
         clock::duration checkInterval;
         clock::duration durUntilDeclaredDead;
 
-        struct PoolData {
-            unique_ptr<PoolRecords> records;
-            PoolConstructionArgs args;
-            shared_ptr<Pool> pool;
-        };
-
-        //TODO: replace unique_ptr with shared_ptr so that lock doesn't need to be held the entire time in tryGetWork();
-        std::vector<PoolData> pools;
+        std::vector<shared_ptr<Pool>> pools;
         size_t activePoolIndex = 0; //if > pools.size(), no pool is active
 
-        optional_ref<Pool> activePool();
+        std::shared_ptr<Pool> activePool();
 
         void aliveCheckAndMaybeSwitch();
     };

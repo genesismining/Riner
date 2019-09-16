@@ -161,8 +161,8 @@ namespace miner {
 
                     auto sTask = submitTask.lock();
 
-                    asyncAppend(*sTask, launch::async, [this, work, resultNonces = std::move(resultNonces)] () {
-                        submitShareTask(work, std::move(resultNonces));
+                    asyncAppend(*sTask, launch::async, [this, work, resultNonces = std::move(resultNonces), &device] () {
+                        submitShareTask(work, resultNonces, device);
                     });
                 }
                 device.records.reportAmtTraversedNonces(raw_intensity);
@@ -175,7 +175,8 @@ namespace miner {
         }
     }
 
-    void AlgoEthashCL::submitShareTask(std::shared_ptr<const WorkEthash> work, std::vector<uint64_t> resultNonces) {
+    void AlgoEthashCL::submitShareTask(std::shared_ptr<const WorkEthash> work,
+                                       const std::vector<uint64_t> &resultNonces, Device &device) {
 
         for (auto nonce : resultNonces) {//for each possible solution
 
@@ -188,11 +189,12 @@ namespace miner {
             result->header = work->header;
             result->mixHash = hashes.mixHash;
 
-            bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->target);
-
-            if (isValidSolution)
+            if (lessThanLittleEndian(hashes.proofOfWorkHash, work->jobTarget))
                 pool.submitSolution(std::move(result));
-            else {
+
+            bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->deviceTarget);
+            device.records.reportShare(work->deviceDifficulty, isValidSolution);
+            if (!isValidSolution) {
                 LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
             }
         }
@@ -206,8 +208,8 @@ namespace miner {
         cl_uint size = dag.getSize();
         cl_uint isolate = UINT32_MAX;
         uint64_t target64 = 0;
-        MI_EXPECTS(work.target.size() - 24 == sizeof(target64));
-        memcpy(&target64, work.target.data() + 24, work.target.size() - 24);
+        MI_EXPECTS(work.deviceTarget.size() - 24 == sizeof(target64));
+        memcpy(&target64, work.deviceTarget.data() + 24, work.deviceTarget.size() - 24);
 
         err = state.cmdQueue.enqueueWriteBuffer(state.header, CL_FALSE, 0, work.header.size(), work.header.data());
         if (err) {

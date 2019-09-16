@@ -64,11 +64,13 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
         }
 
         std::vector<CuckatooSolver::Cycle> cycles = solver.solve(calculateKeys(*work), [&work]() {
-            return work->expired();
+            return !work->valid();
         });
+        solver.getDevice().records.reportAmtTraversedNonces(1);
         LOG(INFO)<< "Found " << cycles.size() << " cycles of target length.";
         // TODO sha pow and compare to difficulty
         for (auto& cycle : cycles) {
+            solver.getDevice().records.reportShare(1., true);
             auto pow = work->makeWorkSolution<WorkSolutionCuckatoo31>();
             pow->nonce = work->nonce;
             pow->pow = std::move(cycle.edges);

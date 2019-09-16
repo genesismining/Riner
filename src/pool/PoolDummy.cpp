@@ -5,8 +5,8 @@
 
 namespace miner {
 
-    PoolDummy::PoolDummy(PoolConstructionArgs argsMoved)
-            : args(std::move(argsMoved))
+    PoolDummy::PoolDummy(const PoolConstructionArgs &args)
+            : Pool(args)
             , io(IOMode::Tcp) {
 
         //launch the json rpc 2.0 client
@@ -62,8 +62,8 @@ namespace miner {
             jrpc::Message authorize = jrpc::RequestBuilder{}
                     .id(io.nextId++)
                     .method("mining.authorize")
-                    .param(args.username)
-                    .param(args.password)
+                    .param(constructionArgs.username)
+                    .param(constructionArgs.password)
                     .done();
 
             io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {

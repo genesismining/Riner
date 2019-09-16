@@ -40,13 +40,12 @@ namespace miner {
 
     class PoolEthashStratum : public Pool {
     public:
-        explicit PoolEthashStratum(PoolConstructionArgs);
+        explicit PoolEthashStratum(const PoolConstructionArgs &);
         ~PoolEthashStratum() override;
 
         cstring_span getName() const override;
 
     private:
-        PoolConstructionArgs args;
         WorkQueue queue;
 
         // Pool interface

@@ -5,6 +5,7 @@
 #include <src/common/Assert.h>
 #include <src/util/Copy.h>
 #include <src/pool/Work.h>
+#include <src/statistics/PoolRecords.h>
 #include <src/common/StringSpan.h>
 #include <string>
 #include <list>
@@ -12,7 +13,6 @@
 #include <chrono>
 
 namespace miner {
-    class PoolRecords;
 
     /**
      * @brief Args passed into every Pool subclass ctor
@@ -26,7 +26,6 @@ namespace miner {
         uint16_t port;
         std::string username;
         std::string password;
-        PoolRecords &poolRecords;
     };
 
     /**
@@ -85,7 +84,7 @@ namespace miner {
             const std::string powType;
             const std::string protocolType;
             const std::string protocolTypeAlias;
-            std::function<shared_ptr<Pool>(PoolConstructionArgs)> makeFunc;
+            std::function<shared_ptr<Pool>(const PoolConstructionArgs &)> makeFunc;
         };
 
         static std::list<Entry> &getEntries() {
@@ -101,12 +100,26 @@ namespace miner {
 
     protected:
 
-        Pool() = default;
+        explicit Pool(PoolConstructionArgs args);
         std::weak_ptr<Pool> _this;
+        std::atomic_bool connected {false};
+        PoolRecords records;
 
     public:
 
+        Pool() = delete;
+
+        const PoolConstructionArgs constructionArgs;
+
         const uint64_t poolUid {poolCounter.fetch_add(1, std::memory_order_relaxed)};
+
+        inline auto readRecords() const {
+            return records.read();
+        }
+
+        inline void addRecordsListener(PoolRecords &parent) {
+            records.addListener(parent);
+        }
 
         virtual cstring_span getName() const = 0;
 
@@ -175,6 +188,13 @@ namespace miner {
         }
 
         /**
+         * @return whether a connection is established
+         */
+        inline bool isConnected() const {
+            return connected.load(std::memory_order_relaxed);
+        }
+
+        /**
          * @return string name of the Pool subclass (aka PoolImpl) as it can be passed to makePool
          */
         inline std::string getPoolImplName() const {
@@ -208,8 +228,8 @@ namespace miner {
 
                 auto *entry = &getEntries().back();
                 //create type erased creation function
-                entry->makeFunc = [entry] (PoolConstructionArgs args) {
-                    auto pool = std::make_shared<T>(std::move(args));
+                entry->makeFunc = [entry] (const PoolConstructionArgs &args) {
+                    auto pool = std::make_shared<T>(args);
                     pool->info = entry;
                     pool->_this = pool;
                     return pool;
@@ -221,9 +241,7 @@ namespace miner {
         };
 
         //returns nullptr if no matching PoolImpl subclass was found
-        static shared_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &poolImplName);
-        static shared_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType);
-
+        static shared_ptr<Pool> makePool(const PoolConstructionArgs &args, const std::string &poolImplName);
         //returns emptyString if no matching poolImplName was found
         static std::string getPoolImplNameForPowAndProtocolType(const std::string &powType, const std::string &protocolType);
 

@@ -36,7 +36,7 @@ namespace miner {
 
     class PoolGrinStratum : public Pool {
     public:
-        explicit PoolGrinStratum(PoolConstructionArgs);
+        explicit PoolGrinStratum(const PoolConstructionArgs &);
         ~PoolGrinStratum() override;
 
         cstring_span getName() const override;
@@ -50,7 +50,6 @@ namespace miner {
         void onMiningNotify (const nl::json &jparams);
         void onConnected(CxnHandle);
 
-        const PoolConstructionArgs args_;
         LazyWorkQueue queue;
 
         Random random_;

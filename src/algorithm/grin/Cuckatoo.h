@@ -40,6 +40,10 @@ public:
 
     DELETE_COPY(CuckatooSolver);
 
+    inline Device &getDevice() {
+        return opts_.deviceInfo;
+    }
+
     std::vector<Cycle> solve(const SiphashKeys& keys, AbortFn abortFn);
 
     static bool isValidCycle(uint32_t n, uint32_t cycleLength, const SiphashKeys& keys, const Cycle& cycle);

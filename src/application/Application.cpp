@@ -65,38 +65,34 @@ namespace miner {
         for (auto &implName : allRequiredImplNames) {
 
             auto powType = Algorithm::powTypeForAlgoImplName(implName);
-            auto configPools = getConfigPoolsForAlgoName(config, powType);
+            auto configPools = getConfigPoolsForPowType(config, powType);
 
-            auto poolSwitcher = std::make_unique<PoolSwitcher>();
+            auto &poolSwitcher = lockedPoolSwitchers->emplace(
+                    std::make_pair(powType, std::make_unique<PoolSwitcher>(powType))
+                    ).first->second;
 
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
 
-                auto poolRecords = make_unique<PoolRecords>();
+                PoolConstructionArgs args {p.host, p.port, p.username, p.password};
 
-                PoolConstructionArgs args {
-                    p.host, p.port, p.username, p.password, *poolRecords
-                };
-
-                auto pool = Pool::makePool(args, powType, p.protocolType);
-
-                if (!pool) {
+                const std::string &poolImplName = Pool::getPoolImplNameForPowAndProtocolType(powType, p.protocolType);
+                if (poolImplName.empty()) {
                     LOG(ERROR) << "no pool implementation available for algo type "
                                << powType << " in combination with protocol type "
                                << p.protocolType;
                     continue;
                 }
 
-                LOG(INFO) << "launching pool '" << pool->getPoolImplName() << "' to connect to " << p.host << " on port " << p.port;
+                LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host << " on port " << p.port;
 
-                poolSwitcher->push(std::move(pool), std::move(poolRecords), args);
+                poolSwitcher->tryAddPool(args, poolImplName);
             }
 
             if (poolSwitcher->poolCount() == 0) {
                 LOG(ERROR) << "no pools available for algoType of " << implName << ". Cannot launch algorithm";
             }
 
-            lockedPoolSwitchers->emplace(powType, std::move(poolSwitcher));
             MI_ENSURES(lockedPoolSwitchers->count(powType));
 
             decltype(AlgoConstructionArgs::assignedDevices) assignedDeviceRefs;

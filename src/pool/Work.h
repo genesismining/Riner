@@ -130,6 +130,10 @@ namespace miner {
             return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
         }
 
+        inline std::shared_ptr<const PoolJob> getJob() const {
+            return job.lock();
+        }
+
         /**
          * @brief checks whether work is the most recent work available to the pool protocol.
          * expired() can be used as hint for algorithms whether new work shall be requested from the pool.

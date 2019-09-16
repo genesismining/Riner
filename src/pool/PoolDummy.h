@@ -19,11 +19,10 @@ namespace miner {
 
     class PoolDummy : public Pool {
     public:
-        explicit PoolDummy(PoolConstructionArgs);
+        explicit PoolDummy(const PoolConstructionArgs &);
         ~PoolDummy() override;
 
     private:
-        PoolConstructionArgs args;
         WorkQueue queue;
 
         // Pool interface

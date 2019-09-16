@@ -18,8 +18,7 @@ namespace {
 class GrinJobs : public testing::Test {
 
 private:
-    PoolRecords records;
-    PoolConstructionArgs args{"", 0, "", "", records};
+    PoolConstructionArgs args{"", 0, "", ""};
 
 protected:
     std::shared_ptr<PoolGrinStratum> pool;
@@ -54,7 +53,12 @@ protected:
 
 TEST_F(GrinJobs, ExpiryWorks) {
 
-    EXPECT_TRUE(pool != nullptr);
+    using limits = std::numeric_limits<double>;
+    EXPECT_EQ(2. + limits::epsilon(), 2.);
+    EXPECT_NE(1. + limits::epsilon(), 1.);
+    EXPECT_NE(1. - limits::epsilon() / limits::radix, 1.);
+
+    EXPECT_NE(pool, nullptr);
 
     EXPECT_FALSE(latestWork->expired());
     EXPECT_FALSE(latestSolution->expired());
