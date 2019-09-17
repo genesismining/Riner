@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include "AutoRefillQueue.h"
-#include "Pool.h"
+#include "WorkQueue.h"
 #include "WorkCuckoo.h"
 
 #include <src/pool/WorkEthash.h>
@@ -16,39 +15,44 @@
 
 namespace miner {
 
-    struct GrinStratumProtocolData : public WorkProtocolData {
-        GrinStratumProtocolData(uint64_t poolUid) : WorkProtocolData(poolUid) {}
+    struct GrinStratumJob : public PoolJob {
 
-        std::string jobId;
+        int64_t jobId;
+        int64_t height;
+        WorkCuckatoo31 workTemplate;
+
+        std::unique_ptr<Work> makeWork() override {
+            workTemplate.nonce++;
+            return std::make_unique<WorkCuckatoo31>(workTemplate);
+        }
+
+        explicit GrinStratumJob(const std::weak_ptr<Pool> &pool, int64_t id, int64_t height)
+                : PoolJob(pool)
+                , jobId(id)
+                , height(height)
+                , workTemplate() {
+        }
     };
 
     class PoolGrinStratum : public Pool {
     public:
-        explicit PoolGrinStratum(PoolConstructionArgs);
+        explicit PoolGrinStratum(const PoolConstructionArgs &);
         ~PoolGrinStratum() override;
 
         cstring_span getName() const override;
 
         // Pool interface
-        optional<unique_ptr<Work>> tryGetWork() override;
-
-        void submitWorkImpl(unique_ptr<WorkSolution> result) override;
+        bool isExpiredJob(const PoolJob &job) override;
+        optional<unique_ptr<Work>> tryGetWorkImpl() override;
+        void submitSolutionImpl(unique_ptr<WorkSolution> result) override;
     private:
-        using QueueItem = std::unique_ptr<WorkCuckatoo31>;
-        using WorkQueue = AutoRefillQueue<QueueItem>;
 
-        uint64_t getPoolUid() const override;
         void onMiningNotify (const nl::json &jparams);
-        void restart();
         void onConnected(CxnHandle);
 
-        const PoolConstructionArgs args_;
-        const uint64_t uid;
+        LazyWorkQueue queue;
 
         Random random_;
-        std::unique_ptr<WorkQueue> workQueue;
-        std::atomic<bool> shutdown {false};
-        std::vector<std::shared_ptr<GrinStratumProtocolData>> protocolDatas;
         jrpc::JsonRpcUtil io;
         CxnHandle _cxn; //connection to submit shares to (set on mining notify)
 

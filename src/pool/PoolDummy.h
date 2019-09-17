@@ -13,41 +13,22 @@
 #include <list>
 #include <atomic>
 #include <src/network/JsonRpcUtil.h>
-#include "AutoRefillQueue.h"
+#include "WorkQueue.h"
 
 namespace miner {
 
-    struct EthashDummyProtocolData : public WorkProtocolData {
-        using WorkProtocolData::WorkProtocolData;
-
-        std::string jobId;
-        std::string someExtraData;
-    };
-
     class PoolDummy : public Pool {
     public:
-        explicit PoolDummy(PoolConstructionArgs);
+        explicit PoolDummy(const PoolConstructionArgs &);
         ~PoolDummy() override;
 
     private:
-        std::atomic_bool shutdown {false};
-        PoolConstructionArgs args;
+        WorkQueue queue;
 
         // Pool interface
-        optional<unique_ptr<Work>> tryGetWork() override;
-        void submitWorkImpl(unique_ptr<WorkSolution>) override;
-
-        // Work Queue
-        using WorkQueue = AutoRefillQueue<unique_ptr<WorkEthash>>;
-        unique_ptr<WorkQueue> workQueue;
-
-        // Pool Uid
-        const uint64_t uid = createNewPoolUid();
-        uint64_t getPoolUid() const override {
-            return uid;
-        }
-
-        std::vector<shared_ptr<EthashDummyProtocolData>> protocolDatas;
+        bool isExpiredJob(const PoolJob &job) override;
+        optional<unique_ptr<Work>> tryGetWorkImpl() override;
+        void submitSolutionImpl(unique_ptr<WorkSolution>) override;
 
         jrpc::JsonRpcUtil io; //io utility object
         CxnHandle _cxn; //io connection to pool

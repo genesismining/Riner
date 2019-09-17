@@ -67,7 +67,7 @@ namespace miner {
             device.records.reportAmtTraversedNonces(rawIntensity);
             sleep_for(1s);
 
-            device.records.reportFailedShareVerification();
+            device.records.reportShare(workOr->deviceDifficulty, true);
             sleep_for(1s);
 
             //once you notice work has expired you may abort calculation and get fresh work

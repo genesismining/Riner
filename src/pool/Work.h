@@ -3,66 +3,100 @@
 
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
+#include <atomic>
 #include <string>
 
 namespace miner {
 
-    /** @brief base class for pool protocol implementation specific data, e.g. stratum job id for stratum
-     *  WorkProtocolData is attached to every Work object. Pool protocol implementations can subclass it to store
-     *  any additional data that is not necessary for the POW algorithm but necessary for identifying which pool/work-package/etc. the work belongs to.
-     *  When WorkSolutions are submitted to a Pool, they carry a weak_ptr to that same WorkProtocolData, allowing the pool to immediately read
-     *  the necessary information for submission of the share.
-     */
-    class WorkProtocolData {
-        uint64_t poolUid = 0; //used to determine whether a WorkResult is
-        // returned to the same pool that created the work to begin with.
-    public:
-        WorkProtocolData(uint64_t poolUid) : poolUid(poolUid) {
-        };
+    class Work;
+    class Pool;
+    class WorkQueue;
+    class LazyWorkQueue;
 
-        /**
-         * get the pool uid used for routing the Work to the correct pool protocol impl in case multiple pool connections of the same POWtype are open simultaneously
-         * @return the runtime uid of a pool protocol impl
-         */
-        uint64_t getPoolUid() {
-            return poolUid;
-        }
+
+    /**
+     * @brief Subclasses save all necessary pool and protocol related data
+     */
+    struct PoolJob {
+        std::weak_ptr<Pool> pool;
+        int64_t id;
+
+        bool expired() const;
+        bool valid() const;
+
+        virtual std::unique_ptr<Work> makeWork() = 0;
+        virtual ~PoolJob() = default;
+
+        PoolJob() = delete;
+        PoolJob(std::weak_ptr<Pool> pool);
     };
+
 
     /** @brief Solution counterpart of the Work class.
      * Every Work subclass is expected to have a corresponding WorkSolution subclass for a given POWtype.
      * WorkSolutions should be created via a Work's makeWorkSolution<T>() method, filled with the actual proof of work data and then submitted to the Pool
      */
     class WorkSolution {
-        std::weak_ptr<WorkProtocolData> protocolData;
+        std::weak_ptr<const PoolJob> job;
 
     protected:
-        WorkSolution(std::weak_ptr<WorkProtocolData>, const std::string &powType);
+        WorkSolution(const Work &work);
 
     public:
-        const std::string powType;
-
-        /**
-         * access type erased protocol data (use tryGetProtocolDataAs<T>() instead if you want to upcast it anyways)
-         * @return type erased pool protocol specific data (such as stratum job id for stratum)
-         */
-        std::weak_ptr<WorkProtocolData> getProtocolData() const;
-
-        /**
-         * convenience function for getting the upcasted protocol data in the pool protocol implementation code
-         * @tparam T type that the protocolData is supposed to be upcasted to
-         * @return protocol data as T or nullptr iff work has expired
-         */
         template<class T>
-        std::shared_ptr<T> tryGetProtocolDataAs() const {
-            if (auto pdata = protocolData.lock()) {
-                return std::static_pointer_cast<T>(pdata);
-            }
-            return nullptr;
+        std::shared_ptr<const T> getCastedJob() const {
+            static_assert(std::is_base_of<PoolJob, T>::value, "");
+            return std::static_pointer_cast<const T>(job.lock()); //T::getPowType() == powType ? std::static_pointer_cast<const T>(job.lock()) : nullptr;
         }
 
+        shared_ptr<const PoolJob> getJob() const {
+            return job.lock();
+        }
+
+        const std::string powType;
+
         virtual ~WorkSolution() = default;
+
+        template<class T>
+        T *downCast() {
+            static_assert(std::is_base_of<WorkSolution, T>::value, "");
+            return T::getPowType() == powType ? static_cast<T*>(this) : nullptr;
+        }
+
+        template<class T>
+        const T *downCast() const {
+            static_assert(std::is_base_of<WorkSolution, T>::value, "");
+            return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
+        }
+
+        /**
+         * @brief checks whether solution belongs to the most recent work available to the pool protocol.
+         * Usually, an expired solution should be accepted by the pool protocol implementation, too.
+         *
+         * @return whether the solution has been marked expired by the pool protocol implementation
+         */
+        bool expired() const { //thread safe
+            bool expired = true;
+            if (auto sharedPtr = job.lock())
+                expired = sharedPtr->expired();
+            return expired;
+        }
+
+        /**
+         * @brief checks whether solution would be still accepted by the pool protocol.
+         * if valid() returns false, then the solution will be rejected by the pool protocol implementation.
+         *
+         * @return whether solution would be accepted by the pool protocol implementation
+         */
+        bool valid() const {
+            //checks whether associated shared_ptrs are still alive
+            bool valid = false;
+            if (auto sharedPtr = job.lock())
+                valid = sharedPtr->valid();
+            return valid;
+        }
     };
+
 
     /** @brief base class for all classes representing a unit of work of a POWtype as provided by the pool protocol (e.g. see WorkEthash)
      * this unit of work does not necessarily correspond to e.g. a stratum job, it may be a work representation of smaller granularity.
@@ -71,28 +105,62 @@ namespace miner {
      * Data that is specific to Pool protocol implementations may not be added to a Work subclass, but rather to a WorkProtocolData subclass
      */
     class Work {
-        /**
-         * type erased protocol data which also works for finding out whether work has expired via weak_ptr's expired() functionality
-         */
-        std::weak_ptr<WorkProtocolData> protocolData;
+
+        std::weak_ptr<const PoolJob> job;
+        friend class WorkQueue;
+        friend class LazyWorkQueue;
+        friend class WorkSolution;
 
     protected:
-        Work(std::weak_ptr<WorkProtocolData>, const std::string &powType);
+        Work(const std::string &powType);
 
     public:
         const std::string powType;
         virtual ~Work() = default;
 
-        /** @brief checks whether a solution to this work will still be accepted by the pool protocol.
-         * expired() may be used as a hint to the algorithm that calculating solutions to this work package is not
-         * beneficial anymore. Upon expiration it is expected (but not necessary) that an algorithm stops working on this work and
-         * acquires fresh work from the pool.
+        template<class T>
+        T *downCast() {
+            static_assert(std::is_base_of<Work, T>::value, "");
+            return T::getPowType() == powType ? static_cast<T*>(this) : nullptr;
+        }
+
+        template<class T>
+        const T *downCast() const {
+            static_assert(std::is_base_of<Work, T>::value, "");
+            return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
+        }
+
+        inline std::shared_ptr<const PoolJob> getJob() const {
+            return job.lock();
+        }
+
+        /**
+         * @brief checks whether work is the most recent work available to the pool protocol.
+         * expired() can be used as hint for algorithms whether new work shall be requested from the pool.
+         * Upon expiration it is expected (but not necessary) that an algorithm stops working on this work,
+         * if fresh work can be acquired from the pool.
          *
          * @return whether the work has been marked expired by the pool protocol implementation
          */
         bool expired() const { //thread safe
-            //checks whether associated shared_ptr is still alive
-            return protocolData.expired();
+            bool expired = true;
+            if (auto sharedPtr = job.lock())
+                expired = sharedPtr->expired();
+            return expired;
+        }
+
+        /**
+         * @brief checks whether solutions of this work would be still accepted by the pool protocol.
+         * if valid() returns false, then it does not make sense to continue finding solutions for this work.
+         *
+         * @return whether a solution for this work would be accepted by the pool protocol implementation
+         */
+        bool valid() const {
+            //checks whether associated shared_ptrs are still alive
+            bool valid = false;
+            if (auto sharedPtr = job.lock())
+                valid = sharedPtr->valid();
+            return valid;
         }
 
 
@@ -113,7 +181,7 @@ namespace miner {
          */
         template<class WorkSolutionT>
         unique_ptr<WorkSolutionT> makeWorkSolution() const {
-            return std::make_unique<WorkSolutionT>(protocolData);
+            return std::make_unique<WorkSolutionT>(*downCast<const typename WorkSolutionT::work_type>());
         }
     };
 }

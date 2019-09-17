@@ -36,7 +36,7 @@ namespace miner {
         EXPECT_FALSE(req.isResponse());
         EXPECT_FALSE(req.isResultTrue());
 
-        EXPECT_EQ(req.str(), R"({"id":0,"jsonrpc":"2.0","method":"methodName","params":["abc",1,2.718,null]})");
+        EXPECT_EQ(req.toJson(), R"({"id":0,"jsonrpc":"2.0","method":"methodName","params":["abc",1,2.718,null]})"_json);
     }
 
     TEST(JsonRpcUtil, ConnectDisconnect) {
@@ -62,7 +62,7 @@ namespace miner {
             JsonRpcUtil server{IOMode::Tcp};
             JsonRpcUtil client{IOMode::Tcp};
 
-            server.launchServer(4028, [&](CxnHandle cxn) {
+            server.launchServer(4029, [&](CxnHandle cxn) {
                 //on connect
                 serverConnected = ++order; //(0 or 1)
                 server.readAsync(cxn);
@@ -73,7 +73,7 @@ namespace miner {
                 barrier.unblock();
             });
 
-            client.launchClient("127.0.0.1", 4028, [&](CxnHandle cxn) {
+            client.launchClient("127.0.0.1", 4029, [&](CxnHandle cxn) {
                 //on connect
                 clientConnected = ++order; //(0 or 1)
 
@@ -97,11 +97,11 @@ namespace miner {
             //variables contain the order of events starting at 1
             EXPECT_THAT(serverConnected, AnyOf(1, 2));
             EXPECT_THAT(clientConnected, AnyOf(1, 2));
-            EXPECT_NE(clientConnected, serverConnected);
+            EXPECT_NE(  clientConnected, serverConnected);
 
             EXPECT_THAT(serverDisconnected, AnyOf(3, 4));
             EXPECT_THAT(clientDisconnected, AnyOf(3, 4));
-            EXPECT_NE(clientDisconnected, serverDisconnected);
+            EXPECT_NE(  clientDisconnected, serverDisconnected);
         }
     }
 
@@ -124,7 +124,7 @@ namespace miner {
             //client.setOutgoingModifier(logClient);
             //client.setIncomingModifier(logClient);
 
-            server.launchServer(4028, [&](CxnHandle cxn) {
+            server.launchServer(4030, [&](CxnHandle cxn) {
                 server.setReadAsyncLoopEnabled(true);
                 server.readAsync(cxn);
             }, [&] {
@@ -154,7 +154,7 @@ namespace miner {
                 return n + m;
             }, "n", "m");
 
-            client.launchClient("127.0.0.1", 4028, [&](CxnHandle cxn) {
+            client.launchClient("127.0.0.1", 4030, [&](CxnHandle cxn) {
                 client.setReadAsyncLoopEnabled(true);
                 client.readAsync(cxn);
 
@@ -246,14 +246,14 @@ namespace miner {
         }
 
         void launchServerWithReadLoop() {
-            server->launchServer(4028, [&] (CxnHandle cxn) {
+            server->launchServer(4031, [&] (CxnHandle cxn) {
                 server->setReadAsyncLoopEnabled(true);
                 server->readAsync(cxn);
             });
         };
 
         void launchClient(std::function<void(CxnHandle)> onCxn) {
-            client->launchClient("127.0.0.1", 4028, std::move(onCxn));
+            client->launchClient("127.0.0.1", 4031, std::move(onCxn));
         }
 
         template<class Func>

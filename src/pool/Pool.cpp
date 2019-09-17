@@ -11,12 +11,13 @@ namespace miner {
      * because only Pool is referenced by another compilation unit.
      */
     static const Pool::Registry<PoolEthashStratum> registryPoolEthashStratum {"EthashStratum2", HasPowTypeEthash::getPowType(), "stratum2"};
-    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"Cuckatoo31Stratum"  , HasPowTypeCuckatoo31::getPowType(), "GrinStratum", "stratum"};
+    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"Cuckatoo31Stratum", HasPowTypeCuckatoo31::getPowType(), "GrinStratum", "stratum"};
 
 
-    uint64_t Pool::createNewPoolUid() {
-        static std::atomic<uint64_t> uid = {1};
-        return uid.fetch_add(1);
+    std::atomic_uint64_t Pool::poolCounter {0};
+
+    Pool::Pool(PoolConstructionArgs args)
+            : constructionArgs(std::move(args)) {
     }
 
     void StillAliveTrackable::onStillAlive() {
@@ -32,28 +33,21 @@ namespace miner {
         lastKnownAliveTime = time;
     }
 
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &poolImplName) {
+    shared_ptr<Pool> Pool::makePool(const PoolConstructionArgs &args, const std::string &poolImplName) {
         if (auto entry = entryWithName(poolImplName))
-            return entry.value().makeFunc(std::move(args));
-        return nullptr;
-    }
-
-    unique_ptr<Pool> Pool::makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType) {
-        for (const auto &entry : getEntries()) {
-            bool hasMatchingName =
-                    protocolType == entry.protocolType ||
-                            (!entry.protocolType.empty() && protocolType == entry.protocolTypeAlias);
-
-            if (hasMatchingName && entry.powType == powType)
-                return entry.makeFunc(std::move(args));
-        }
+            return entry.value().makeFunc(args);
         return nullptr;
     }
 
     std::string Pool::getPoolImplNameForPowAndProtocolType(const std::string &powType, const std::string &protocolType) {
-        for (const auto &entry : getEntries())
-            if (entry.powType == powType && entry.protocolType == protocolType)
+        for (const auto &entry : getEntries()) {
+            bool hasMatchingName =
+                    protocolType == entry.protocolType ||
+                    (!entry.protocolTypeAlias.empty() && protocolType == entry.protocolTypeAlias);
+
+            if (hasMatchingName && entry.powType == powType)
                 return entry.poolImplName;
+        }
         return ""; //no matching poolImpl found
     }
 
@@ -81,7 +75,7 @@ namespace miner {
     bool Pool::hasProtocolType(const std::string &protocolType) {
         for (const auto &entry : getEntries()) {
             if (entry.protocolType == protocolType ||
-                (!entry.protocolType.empty() && protocolType == entry.protocolTypeAlias)) {
+                (!entry.protocolTypeAlias.empty() && protocolType == entry.protocolTypeAlias)) {
                 return true;
             }
         }

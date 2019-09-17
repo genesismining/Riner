@@ -5,6 +5,7 @@
 #include <src/common/Assert.h>
 #include <src/util/Copy.h>
 #include <src/pool/Work.h>
+#include <src/statistics/PoolRecords.h>
 #include <src/common/StringSpan.h>
 #include <string>
 #include <list>
@@ -12,7 +13,6 @@
 #include <chrono>
 
 namespace miner {
-    class PoolRecords;
 
     /**
      * @brief Args passed into every Pool subclass ctor
@@ -26,7 +26,6 @@ namespace miner {
         uint16_t port;
         std::string username;
         std::string password;
-        PoolRecords &poolRecords;
     };
 
     /**
@@ -73,6 +72,8 @@ namespace miner {
      */
     class Pool : public StillAliveTrackable {
 
+        static std::atomic_uint64_t poolCounter;
+
         /**
          * Entry in the global registry of Pool subclasses (aka PoolImpls)
          * it associates a makeFunc (a function that can instantiate a certain subclass)
@@ -83,7 +84,7 @@ namespace miner {
             const std::string powType;
             const std::string protocolType;
             const std::string protocolTypeAlias;
-            std::function<unique_ptr<Pool>(PoolConstructionArgs)> makeFunc;
+            std::function<shared_ptr<Pool>(const PoolConstructionArgs &)> makeFunc;
         };
 
         static std::list<Entry> &getEntries() {
@@ -98,42 +99,58 @@ namespace miner {
         const Entry *info = nullptr;
 
     protected:
-        /**
-         * all pool uids get created through this call
-         * @return a new pool uid (that is never 0 for simpler debugging of uninitialized poolUids)
-         */
-        static uint64_t createNewPoolUid();
-        Pool() = default;
+
+        explicit Pool(PoolConstructionArgs args);
+        std::weak_ptr<Pool> _this;
+        std::atomic_bool connected {false};
+        PoolRecords records;
 
     public:
+
+        Pool() = delete;
+
+        const PoolConstructionArgs constructionArgs;
+
+        const uint64_t poolUid {poolCounter.fetch_add(1, std::memory_order_relaxed)};
+
+        inline auto readRecords() const {
+            return records.read();
+        }
+
+        inline void addRecordsListener(PoolRecords &parent) {
+            records.addListener(parent);
+        }
+
         virtual cstring_span getName() const = 0;
 
-        /**
-         * @return uid that makes it possible to identify which WorkSolution belongs to which pool in a PoolSwitcher
-         */
-        virtual uint64_t getPoolUid() const = 0;
+        virtual bool isExpiredJob(const PoolJob &job) {
+            return true;
+        }
 
         /**
-         * @brief tryGetWork call as implemented by the Pool subclasses (aka PoolImpls)
+         * @brief tryGetWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)
+         *
          * this method is only supposed to be called by the templated tryGetWork<WorkT>() method below.
          * this method tries to return valid work as quickly as possible, but also blocks for a short amount of time to wait
          * for work to become available if it isn't already when the call is being made. After a short timeout period with
          * still no work available, nullopt is returned.
          * @return type erased valid unique_ptr or nullopt
          */
-        virtual optional<unique_ptr<Work>> tryGetWork() = 0;
+        virtual optional<unique_ptr<Work>> tryGetWorkImpl() = 0;
 
         /**
-         * @brief submitWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)
-         * this method is only supposed to be called by the templated submitWork<WorkSolutionT>() method below.
+         * @brief submitSolutionImpl call as implemented by the Pool subclasses (aka PoolImpls)
+         *
+         * this method is only supposed to be called by the templated submitSolution<WorkSolutionT>() method below.
          * this method takes the ownership of the given solution and starts its async submission, so that this
          * method can return quickly without blocking.
          * @param solution the solution to be submitted to the pool
          */
-        virtual void submitWorkImpl(unique_ptr<WorkSolution> solution) = 0;
+        virtual void submitSolutionImpl(unique_ptr<WorkSolution> solution) = 0;
 
         /**
          * @brief obtain work from a pool
+         *
          * this method is supposed to be called from within an AlgoImpl. It is the intended way of obtaining work from a pool
          * this method tries to return valid work as quickly as possible, but also blocks for a short amount of time to wait
          * for work to become available if it isn't already when the call is being made. After a short timeout period with
@@ -146,7 +163,7 @@ namespace miner {
          */
         template<class WorkT>
         optional<unique_ptr<WorkT>> tryGetWork() {
-            auto maybeWork = tryGetWork();
+            auto maybeWork = tryGetWorkImpl();
             if (maybeWork) {
                 auto &work = maybeWork.value();
                 MI_EXPECTS(work != nullptr && work->powType == WorkT::getPowType());
@@ -164,10 +181,17 @@ namespace miner {
          * @param solution the solution to be submitted to the pool
          */
         template<class WorkSolutionT>
-        void submitWork(unique_ptr<WorkSolutionT> result) {
+        void submitSolution(unique_ptr<WorkSolutionT> result) {
             MI_EXPECTS(result != nullptr && result->powType == WorkSolutionT::getPowType());
 
-            submitWorkImpl(static_unique_ptr_cast<WorkSolutionT>(std::move(result)));
+            submitSolutionImpl(static_unique_ptr_cast<WorkSolutionT>(std::move(result)));
+        }
+
+        /**
+         * @return whether a connection is established
+         */
+        inline bool isConnected() const {
+            return connected.load(std::memory_order_relaxed);
         }
 
         /**
@@ -204,9 +228,10 @@ namespace miner {
 
                 auto *entry = &getEntries().back();
                 //create type erased creation function
-                entry->makeFunc = [entry] (PoolConstructionArgs args) {
-                    auto pool = std::make_unique<T>(std::move(args));
+                entry->makeFunc = [entry] (const PoolConstructionArgs &args) {
+                    auto pool = std::make_shared<T>(args);
                     pool->info = entry;
+                    pool->_this = pool;
                     return pool;
                 };
             }
@@ -216,9 +241,7 @@ namespace miner {
         };
 
         //returns nullptr if no matching PoolImpl subclass was found
-        static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &poolImplName);
-        static unique_ptr<Pool> makePool(PoolConstructionArgs args, const std::string &powType, const std::string &protocolType);
-
+        static shared_ptr<Pool> makePool(const PoolConstructionArgs &args, const std::string &poolImplName);
         //returns emptyString if no matching poolImplName was found
         static std::string getPoolImplNameForPowAndProtocolType(const std::string &powType, const std::string &protocolType);
 

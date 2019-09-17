@@ -2,15 +2,17 @@
 //
 
 #include "PoolSwitcher.h"
+#include "WorkQueue.h"
 #include <src/common/Assert.h>
 #include <src/algorithm/Algorithm.h>
 
 namespace miner {
 
 
-    PoolSwitcher::PoolSwitcher(clock::duration checkInterval, clock::duration durUntilDeclaredDead)
-    : checkInterval(checkInterval)
-    , durUntilDeclaredDead(durUntilDeclaredDead) {
+    PoolSwitcher::PoolSwitcher(std::string powType, clock::duration checkInterval, clock::duration durUntilDeclaredDead)
+            : Pool(PoolConstructionArgs{})
+            , checkInterval(checkInterval)
+            , durUntilDeclaredDead(durUntilDeclaredDead) {
 
         periodicAliveCheckTask = std::async(std::launch::async, &PoolSwitcher::periodicAliveCheck, this);
     }
@@ -44,9 +46,9 @@ namespace miner {
         auto now = clock::now();
 
         for (size_t i = 0; i < pools.size(); ++i) {
-            PoolData &poolData = pools[i];
+            auto pool = pools[i];
 
-            auto lastKnownAliveTime = poolData.pool->getLastKnownAliveTime();
+            auto lastKnownAliveTime = pool->getLastKnownAliveTime();
 
             if (i <= activePoolIndex) {
                 bool dead = now - lastKnownAliveTime > durUntilDeclaredDead;
@@ -62,7 +64,7 @@ namespace miner {
                     if (activePoolIndex != i) {
                         activePoolIndex = i;
 
-                        auto name = gsl::to_string(poolData.pool->getName());
+                        auto name = gsl::to_string(pool->getName());
                         LOG(INFO) << "Pool #" << i << " (" << name << ") chosen as new active pool";
                     }
                 }
@@ -74,20 +76,19 @@ namespace miner {
         }
     }
 
-    optional_ref<Pool> PoolSwitcher::activePool() {
+    std::shared_ptr<Pool> PoolSwitcher::activePool() {
         if (activePoolIndex >= pools.size())
-            return nullopt;
-        auto &poolData = pools[activePoolIndex];
-        MI_EXPECTS(poolData.pool != nullptr);
-        return type_safe::opt_ref(*poolData.pool);
+            return nullptr;
+        auto pool = pools[activePoolIndex];
+        MI_EXPECTS(pool != nullptr);
+        return pool;
     }
 
-    optional<unique_ptr<Work>> PoolSwitcher::tryGetWork() {
+    optional<unique_ptr<Work>> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
-        auto pool = activePool();
-        if (pool) {
-            LOG(INFO) << "getting work from " << gsl::to_string(pool.value().getName());
-            return pool.value().tryGetWork();
+        if (auto pool = activePool()) {
+            LOG(INFO) << "getting work from " << gsl::to_string(pool->getName());
+            return pool->tryGetWorkImpl();
         }
 
         LOG(INFO) << "PoolSwitcher cannot provide work since there is no active pool";
@@ -97,27 +98,32 @@ namespace miner {
         return nullopt;
     }
 
-    void PoolSwitcher::submitWorkImpl(unique_ptr<WorkSolution> result) {
-        std::shared_ptr<WorkProtocolData> data = result->getProtocolData().lock();
-        if (!data) {
-            LOG(INFO) << "work result cannot be submitted because it has expired";
+    void PoolSwitcher::submitSolutionImpl(unique_ptr<WorkSolution> solution) {
+        std::shared_ptr<const PoolJob> job = solution->getJob();
+        if (!job) {
+            LOG(INFO) << "work solution cannot be submitted because it has expired";
+            return;
+        }
+        std::shared_ptr<Pool> pool = job->pool.lock();
+        if (!pool) {
+            LOG(INFO) << "work solution cannot be submitted because its pool does not exist anymore";
             return;
         }
         
-        auto resultPoolUid = data->getPoolUid();
-        auto activePoolUid = std::numeric_limits<decltype(resultPoolUid)>::max();
+        auto solutionPoolUid = pool->poolUid;
+        auto activePoolUid = std::numeric_limits<decltype(solutionPoolUid)>::max();
         bool sameUid = true;
 
         {
             std::lock_guard<std::mutex> lock(mut);
 
-            if (auto pool = activePool()) {
+            if (auto pool_ = activePool()) {
 
-                activePoolUid = pool.value().getPoolUid();
+                activePoolUid = pool_->poolUid;
 
-                sameUid = activePoolUid == resultPoolUid;
+                sameUid = activePoolUid == solutionPoolUid;
                 if (sameUid) {
-                    return pool.value().submitWorkImpl(std::move(result));
+                    return pool_->submitSolutionImpl(std::move(solution));
                 }
             }
         } //unlock
@@ -125,11 +131,7 @@ namespace miner {
         if (sameUid)
             LOG(INFO) << "solution could not be submitted, since there is no active pool";
         else
-            LOG(INFO) << "solution belongs to another pool (uid " << resultPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
-    }
-
-    uint64_t PoolSwitcher::getPoolUid() const {
-        return uid;
+            LOG(INFO) << "solution belongs to another pool (uid " << solutionPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
     }
 
     cstring_span PoolSwitcher::getName() const {
@@ -139,27 +141,6 @@ namespace miner {
     size_t PoolSwitcher::poolCount() const {
         std::lock_guard<std::mutex> lock(mut);
         return pools.size();
-    }
-
-    PoolSwitcher::ApiInfo PoolSwitcher::gatherApiInfo() const {
-        ApiInfo info;
-        info.totalRecords = _totalRecords.read();
-        {
-            std::lock_guard<std::mutex> lock(mut);
-            info.pools.reserve(pools.size());
-
-            size_t i = 0;
-            for (auto &poolData : pools) {
-                MI_EXPECTS(poolData.records);
-                MI_EXPECTS(poolData.pool);
-
-                const PoolConstructionArgs &a = poolData.args;
-                info.pools.push_back({a.host, a.port, a.username, a.password,
-                        poolData.records->read()});
-                ++i;
-            }
-        }
-        return info;
     }
 
 }

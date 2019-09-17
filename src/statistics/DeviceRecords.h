@@ -26,7 +26,8 @@ namespace miner {
     public:
         struct Data {
             Entry traversedNonces;
-            Entry failedShareVerifications;
+            Entry validShares;
+            Entry invalidShares;
         };
 
         DeviceRecords() = default;
@@ -41,9 +42,7 @@ namespace miner {
 
         //call this when a "hardware error" happened, e.g. the found solution of your
         //algorithm does not stand verification on the cpu
-        void reportFailedShareVerification();
-
-        uint64_t getVerificationDifficulty() const;
+        void reportShare(double difficulty, bool valid);
 
     private:
         StatisticNode<Data> _node;

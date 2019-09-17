@@ -3,10 +3,32 @@
 #include <numeric>
 #include <src/algorithm/Algorithm.h>
 #include <src/common/Assert.h>
+#include <src/common/Chrono.h>
 #include <src/pool/PoolSwitcher.h>
+#include <src/statistics/PoolRecords.h>
 
 namespace miner {
     using namespace jrpc;
+
+    static nl::json jsonSerialize(const decltype(PoolRecords::Data::acceptedShares) &avg, clock::time_point time) {
+        return {
+            {"totalCount", avg.mean.getTotal()},
+            {"connectionCount", avg.interval.getTotal()},
+            {"totalHashesPerSec", avg.mean.getWeightRate(time)},
+            {"connectionHashesPerSec", avg.interval.getWeightRate(time)},
+            {"5mHashesPerSec", avg.avg5m.getWeightRate(time)},
+            {"5mSharesPerSec", avg.avg5m.getRate(time)}
+        };
+    }
+
+    static nl::json jsonSerialize(const PoolRecords::Data &data) {
+        clock::time_point time = clock::now();
+        return {
+            {"accepted", jsonSerialize(data.acceptedShares, time)},
+            {"rejected", jsonSerialize(data.rejectedShares, time)},
+            {"duplicate", jsonSerialize(data.duplicateShares, time)}
+        };
+    }
 
     ApiServer::ApiServer(uint16_t port, const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse,
             const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers)
@@ -36,6 +58,7 @@ namespace miner {
 
         }, "a", "b");
 
+        // TODO: refactor and cleanup
         io->addMethod("getGpuStats", [&] () {
 
             nl::json result;
@@ -55,10 +78,10 @@ namespace miner {
 
                     j = {
                             {"index", d.deviceIndex},
-                            {"runs algorithm", true},
-                            {"algo impl", d.settings.algoImplName},
-                            {"device vendor", stringFromVendorEnum(d.id.getVendor())},
-                            {"device name", gsl::to_string(d.id.getName())}
+                            {"isInUse", true},
+                            {"algoImpl", d.settings.algoImplName},
+                            {"deviceVendor", stringFromVendorEnum(d.id.getVendor())},
+                            {"deviceName", gsl::to_string(d.id.getName())}
                     };
 
                     auto data = d.records.read();
@@ -75,21 +98,34 @@ namespace miner {
                             {{"kind", "average"}, {"average", tnPair.second}, {"interval", "since last call"}},
                     };
 
-                    auto &fsv = data.failedShareVerifications;
+                    auto &is = data.invalidShares;
+                    auto isPair = is.interval.getAndReset();
 
                     j["failed share verifications"] = {
-                            {{"kind", "exp average"}, {"exp average", fsv.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", fsv.avg30s.getDecayExp().count()}},
-                            {{"kind", "exp average"}, {"exp average", fsv.avg5m .getWeightRate(now) }, {"interval", "seconds"}, {"seconds", fsv.avg5m.getDecayExp().count()}},
-                            {{"kind", "amount"}, {"amount" , static_cast<long long>(fsv.mean.getTotalWeight())}, {"interval", "total"}},
-                            {{"kind", "average"}, {"average", fsv.mean.getWeightRate(now)}, {"interval", "total"}},
-                            {{"kind", "amount"}, {"amount" , tnPair.first}, {"interval", "since last call"}},
-                            {{"kind", "average"}, {"average" , tnPair.second}, {"interval", "since last call"}},
+                            {{"kind", "exp average"}, {"exp average", is.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", is.avg30s.getDecayExp().count()}},
+                            {{"kind", "exp average"}, {"exp average", is.avg5m .getWeightRate(now)}, {"interval", "seconds"}, {"seconds", is.avg5m.getDecayExp().count()}},
+                            {{"kind", "amount"}, {"amount" , static_cast<long long>(is.mean.getTotalWeight())}, {"interval", "total"}},
+                            {{"kind", "average"}, {"average", is.mean.getWeightRate(now)}, {"interval", "total"}},
+                            {{"kind", "amount"}, {"amount" , isPair.first}, {"interval", "since last call"}},
+                            {{"kind", "average"}, {"average" , isPair.second}, {"interval", "since last call"}},
+                    };
+
+                    auto &vs = data.validShares;
+                    auto vsPair = vs.interval.getAndReset();
+
+                    j["successful share verifications"] = {
+                            {{"kind", "exp average"}, {"exp average", vs.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", vs.avg30s.getDecayExp().count()}},
+                            {{"kind", "exp average"}, {"exp average", vs.avg5m .getWeightRate(now)}, {"interval", "seconds"}, {"seconds", vs.avg5m.getDecayExp().count()}},
+                            {{"kind", "amount"}, {"amount" , static_cast<long long>(vs.mean.getTotalWeight())}, {"interval", "total"}},
+                            {{"kind", "average"}, {"average", vs.mean.getWeightRate(now)}, {"interval", "total"}},
+                            {{"kind", "amount"}, {"amount" , vsPair.first}, {"interval", "since last call"}},
+                            {{"kind", "average"}, {"average" , vsPair.second}, {"interval", "since last call"}},
                     };
 
                 } else {
                     j = {
                             {"index", i},
-                            {"does run algorithm", false},
+                            {"isInUse", false},
                     };
                 }
 
@@ -106,23 +142,32 @@ namespace miner {
 
             auto lockedPoolSwitchers = poolSwitchers.readLock();
             for (auto &poolSwitcherPair : *lockedPoolSwitchers) {
+                std::string powType = poolSwitcherPair.first;
                 auto &poolSwitcher = poolSwitcherPair.second;
 
-                nl::json algoj;
+                MI_EXPECTS(poolSwitcher->getPowType() == powType);
 
-                auto info = poolSwitcher->gatherApiInfo();
+                nl::json switcheri;
 
-                for (auto &poolInfo : info.pools) {
+                const auto &pools = poolSwitcher->getPoolsData();
 
+                for (auto &pool : pools) {
+                    const auto &data = pool->readRecords();
                     nl::json poolj = {
-                            {"ip", poolInfo.host + ":" + std::to_string(poolInfo.port)},
+                            {"url", pool->constructionArgs.host + ":" + std::to_string(pool->constructionArgs.port)},
+                            {"shares", jsonSerialize(data)},
+                            {"connected", pool->isConnected()},
+                            {"connectionSec", std::chrono::duration<double>(data.connectionDuration()).count()}
                     };
 
-                    algoj.push_back(poolj);
+                    switcheri.push_back(poolj);
                 }
 
-
-                result[poolSwitcher->getPowType()] = algoj;
+                const auto &data = poolSwitcher->readRecords();
+                result[powType] = {
+                        {"pools", switcheri},
+                        {"shares", jsonSerialize(data)}
+                };
             }
             return result;
         });

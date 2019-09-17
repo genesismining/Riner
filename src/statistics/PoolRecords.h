@@ -7,7 +7,7 @@ namespace miner {
 
     class PoolRecords {
 
-        struct Entry {
+        struct Averages {
             void addRecord(double val, clock::time_point t = clock::now()) {
                 mean    .addRecord(val, t);
                 interval.addRecord(val, t);
@@ -19,23 +19,31 @@ namespace miner {
             mutable Mean interval; //mutable, because it gets reset by the reader
             ExpAverage avg30s {seconds(30)};
             ExpAverage avg5m  {minutes(5)};
+
+            inline auto getAndReset(clock::time_point time) {
+                return interval.getAndReset(time);
+            }
         };
 
     public:
 
         struct Data {
-            Entry acceptedShares;
-            Entry rejectedShares;
-            Entry duplicateShares;
+            Averages acceptedShares;
+            Averages rejectedShares;
+            Averages duplicateShares;
+
+            clock::duration connectionDuration() const;
         };
 
-        PoolRecords() {};
+        PoolRecords() = default;
         PoolRecords(PoolRecords &&) = delete;
-        explicit PoolRecords(PoolRecords &parentListening); //this is not a copy constructor, its just a constructor that uses the parent to initialize
+        void addListener(PoolRecords &parentListening);
 
-        void reportShare(bool isAccepted, bool isDuplicate);
+        void reportShare(double difficulty, bool isAccepted, bool isDuplicate);
 
         Data read() const;
+
+        void resetInterval();
 
     private:
 

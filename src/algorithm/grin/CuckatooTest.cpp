@@ -38,8 +38,7 @@ public:
 
     CuckatooSolverTest() :
             programLoader(testKernelDir, "") {
-        workProtocolData = std::make_shared<WorkProtocolData>(33);
-        header = std::make_unique<WorkCuckatoo31>(workProtocolData);
+        header = std::make_unique<WorkCuckatoo31>();
     }
 
 protected:
@@ -83,7 +82,6 @@ protected:
     cl::Device device;
     cl::Context context;
     VendorEnum vendor = VendorEnum::kUnknown;
-    std::shared_ptr<WorkProtocolData> workProtocolData;
     std::unique_ptr<WorkCuckatoo31> header;
 };
 
@@ -123,8 +121,7 @@ TEST_F(CuckatooSolverTest, Solve31) {
     h.getBytes(header->prePow);
     SiphashKeys keys = AlgoCuckatoo31Cl::calculateKeys(*header);    
     // Siphash Keys: 707696558862008831, 13844509301656340219, 10878251467021832460, 1593815210236709481
-    
-    workProtocolData = nullptr;
+
     std::vector<CuckatooSolver::Cycle> cycles = solver->solve(keys, [] {return false;});
     ASSERT_EQ(1, cycles.size());
     LOG(INFO) << "Edges: " << toString(cycles[0].edges);

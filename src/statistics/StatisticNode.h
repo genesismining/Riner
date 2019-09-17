@@ -15,12 +15,8 @@ namespace miner {
     class StatisticNode {
 
         struct Node {
-            shared_ptr<LockGuarded<T>> _content;
+            LockGuarded<T> _content;
             LockGuarded<std::list<weak_ptr<Node>>> _listeners;
-
-            Node()
-            : _content(make_shared<LockGuarded<T>>()) {
-            }
 
             void addListener(shared_ptr<Node> &listener) {
                 _listeners.lock()->emplace_back(make_weak(listener));
@@ -44,8 +40,7 @@ namespace miner {
             std::function<void(T &)> &&lockedForEach(std::function<void(T &)> &&func) {
 
                 { // content lock scope
-                    MI_EXPECTS(_content);
-                    auto content = _content->lock();
+                    auto content = _content.lock();
                     func(*content);
                 } // unlock content
 
@@ -104,18 +99,25 @@ namespace miner {
             _node->lockedForEach(std::move(func));
         }
 
+        //use this function in case you want to modify the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
+        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+        void lockedApply(std::function<void(T &)> &&func) {
+            MI_EXPECTS(_node);
+            auto content = _node->_content.lock();
+            func(*content);
+        }
+
         //use this function in case you want to read the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
         //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
-        template<class Func>
-        void lockedRead(Func &&func) {
+        void lockedApply(std::function<void(const T &)> &&func) const {
             MI_EXPECTS(_node);
-            auto content = _node->_content->lock();
+            auto content = _node->_content.lock();
             func(*content);
         }
 
         //get a copy of the T instance of this node
         T getValue() const {
-            auto locked = _node->_content->lock();
+            auto locked = _node->_content.lock();
             T copy = *locked;
             return copy;
         }

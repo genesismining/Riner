@@ -48,7 +48,7 @@ namespace miner {
     std::pair<double, double> Mean::getAndReset(clock::time_point time) {
         std::pair<double, double> res(getWeightRate(time), getRate(time));
         total = 0;
-        weight_rate = rate = weight_rate = 0;
+        weight_rate = rate = weight_total = 0;
         first_update = time;
         last_update = time;
         return res;

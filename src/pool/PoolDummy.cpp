@@ -5,27 +5,9 @@
 
 namespace miner {
 
-    PoolDummy::PoolDummy(PoolConstructionArgs argsMoved)
-    : args(std::move(argsMoved))
-    , io(IOMode::Tcp) {
-
-        //prepare workQueue
-        auto refillThreshold = 8; //once the amount of queued elements goes below this value, refillFunc gets called from another thread
-
-        //the refill func gets called from another thread and allows us to create new items from the so called 'master' element
-        //the master element itself can be updated from somewhere else (e.g. as soon as we get a tcp message with a new job)
-        auto refillFunc = [] (auto &out, auto &workMaster, size_t currentSize) {
-
-            for (auto i = currentSize; i < 16; ++i) {
-                ++workMaster->extraNonce;
-
-                auto newWork = make_unique<WorkEthash>(*workMaster); //alloc new instance
-                out.push_back(std::move(newWork));
-            }
-
-            LOG(INFO) << "workQueue got refilled from " << currentSize << " to " << currentSize + out.size() << " items";
-        };
-        workQueue = make_unique<WorkQueue>(refillThreshold, refillFunc);
+    PoolDummy::PoolDummy(const PoolConstructionArgs &args)
+            : Pool(args)
+            , io(IOMode::Tcp) {
 
         //launch the json rpc 2.0 client
         //the passed lambda will get called once a connection got established. That connection is represented by cxn.
@@ -80,8 +62,8 @@ namespace miner {
             jrpc::Message authorize = jrpc::RequestBuilder{}
                     .id(io.nextId++)
                     .method("mining.authorize")
-                    .param(args.username)
-                    .param(args.password)
+                    .param(constructionArgs.username)
+                    .param(constructionArgs.password)
                     .done();
 
             io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {
@@ -119,11 +101,15 @@ namespace miner {
         //connection from this side, a setReadAsyncLoopEnabled(false) is necessary
     }
 
-    optional<unique_ptr<Work>> PoolDummy::tryGetWork() {
-        return {};
+    bool PoolDummy::isExpiredJob(const PoolJob &job) {
+        return queue.isExpiredJob(job);
     }
 
-    void PoolDummy::submitWorkImpl(unique_ptr<WorkSolution>) {
+    optional<unique_ptr<Work>> PoolDummy::tryGetWorkImpl() {
+        return queue.popWithTimeout();
+    }
+
+    void PoolDummy::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {
 
     }
 
