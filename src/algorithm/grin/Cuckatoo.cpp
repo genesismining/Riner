@@ -105,16 +105,12 @@ std::vector<CuckatooSolver::Cycle> CuckatooSolver::solve(const SiphashKeys& keys
     VLOG(1) << "Bulding Graph";
     Graph graph(opts_.n, opts_.n - 7, opts_.n - 7); // TODO this should be determined by the estimate of remaining edges
 
-    foreachActiveEdge(opts_.n, edges.data(), [&debugActive](uint32_t edge) {
-        debugActive++;
-    });
-    VLOG(0) << "active edges: " << debugActive;
-
     foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &graph, &debugActive](uint32_t edge) {
-            uint32_t u = getNode(keys, edge, 0);
-            uint32_t v = getNode(keys, edge, 1);
-            graph.addUToV(u, v);
-            graph.addVToU(v, u);
+        uint32_t u = getNode(keys, edge, 0);
+        uint32_t v = getNode(keys, edge, 1);
+        graph.addUToV(u, v);
+        graph.addVToU(v, u);
+        debugActive++;
     });
 
     VLOG(0) << "active edges: " << debugActive;
