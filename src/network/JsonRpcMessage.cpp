@@ -37,36 +37,47 @@ namespace miner { namespace jrpc {
         }
 
         Message::Message(nl::json j) {
-            id = j.at("id");
+            auto idIt = j.find("id");
+            if (idIt != j.end()) {
+                id = *idIt;
+            }
 
-            auto methodIt = j.find("method");
-            if (methodIt != j.end()) {
+            auto resultIt = j.find("result");
+            if (resultIt != j.end()) {
+                var = Response{std::move(*resultIt)};
+            }
+            else if (j.count("error")) {
+                Error error;
+                auto &je = j["error"];
+
+                if (je.is_array()) {
+                    // Bitcoin stratum protocol compatibility
+                    error.code = toErrorCode(je.at(0));
+                    error.message = std::move(je.at(1));
+                }
+                else {
+                    error.code = toErrorCode(je.at("code"));
+
+                    if (je.count("data"))
+                        error.data = std::move(je.at("data"));
+
+                    if (je.count("message")) {
+                        error.message = std::move(je.at("message"));
+                    }
+                }
+
+                var = Response{std::move(error)};
+            }
+            else {
+                // message is not a Response, therefore it has to be a Request
                 Request req;
 
-                req.method = *methodIt;
+                req.method = std::move(j.at("method"));
                 auto paramsIt = j.find("params");
                 if (paramsIt != j.end())
                     req.params = *paramsIt;
 
                 var = std::move(req);
-            }
-            else if (j.count("result")) {
-                var = Response{std::move(j.at("result"))};
-            }
-            else if (j.count("error")) {
-                Error error;
-                auto &je = j.at("error");
-
-                error.code = toErrorCode(je.at("code"));
-
-                if (je.count("data"))
-                    error.data = std::move(je.at("data"));
-
-                if (je.count("message")) {
-                    error.message = je.at("message");
-                }
-
-                var = Response{std::move(error)};
             }
         }
 

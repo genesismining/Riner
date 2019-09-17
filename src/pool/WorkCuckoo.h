@@ -9,11 +9,24 @@
 
 namespace miner {
 
-struct HasPowTypeCuckatoo31 {
+/**
+ * All struct HasPowType* used by PoolGrin have to implement int edgeBits()
+ */
+
+template<int EDGE_BITS>
+struct HasPowTypeCuckatoo;
+
+template<>
+struct HasPowTypeCuckatoo<31> {
+    static inline int edgeBits() {
+        return 31;
+    }
+
     static inline constexpr auto &getPowType() {
         return "cuckatoo31";
     }
 };
+
 
 template<class PowTypeT>
 class WorkCuckoo : public Work, public PowTypeT {
@@ -41,8 +54,8 @@ public:
     std::vector<uint32_t> pow;
 };
 
-using WorkCuckatoo31 = WorkCuckoo<HasPowTypeCuckatoo31>;
-using WorkSolutionCuckatoo31 = WorkSolutionCuckoo<HasPowTypeCuckatoo31>;
+using WorkCuckatoo31 = WorkCuckoo<HasPowTypeCuckatoo<31>>;
+using WorkSolutionCuckatoo31 = WorkSolutionCuckoo<HasPowTypeCuckatoo<31>>;
 
 } // namespace miner
 

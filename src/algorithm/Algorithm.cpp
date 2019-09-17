@@ -16,7 +16,7 @@ namespace miner {
      * This is necessary so that the compiler includes the necessary code into a library
      * because only Algorithm is referenced by another compilation unit.
      */
-    static const Algorithm::Registry<AlgoCuckatoo31Cl> registryAlgoCuckatoo31Cl {"AlgoCuckatoo31Cl", HasPowTypeCuckatoo31::getPowType()};
+    static const Algorithm::Registry<AlgoCuckatoo31Cl> registryAlgoCuckatoo31Cl {"AlgoCuckatoo31Cl", HasPowTypeCuckatoo<31>::getPowType()};
     static const Algorithm::Registry<AlgoDummy>        regustryAlgoDummy        {"AlgoDummy"   , HasPowTypeEthash::getPowType()};
     static const Algorithm::Registry<AlgoEthashCL>     registryAlgoEthashCL     {"AlgoEthashCL", HasPowTypeEthash::getPowType()};
 

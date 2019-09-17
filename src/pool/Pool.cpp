@@ -11,7 +11,7 @@ namespace miner {
      * because only Pool is referenced by another compilation unit.
      */
     static const Pool::Registry<PoolEthashStratum> registryPoolEthashStratum {"EthashStratum2", HasPowTypeEthash::getPowType(), "stratum2"};
-    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"Cuckatoo31Stratum", HasPowTypeCuckatoo31::getPowType(), "GrinStratum", "stratum"};
+    static const Pool::Registry<PoolGrinStratum>   registryPoolGrinStratum   {"Cuckatoo31Stratum", HasPowTypeCuckatoo<31>::getPowType(), "GrinStratum", "stratum"};
 
 
     std::atomic_uint64_t Pool::poolCounter {0};

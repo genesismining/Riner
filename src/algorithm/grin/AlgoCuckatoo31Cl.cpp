@@ -60,6 +60,7 @@ void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
     while (!terminate_) {
         auto work = args_.workProvider.tryGetWork<WorkCuckatoo31>().value_or(nullptr);
         if (!work) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
 

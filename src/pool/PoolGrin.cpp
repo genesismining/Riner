@@ -96,7 +96,8 @@ namespace miner {
             }
 
             jrpc::Message submit = jrpc::RequestBuilder{}.id(io.nextId++)
-                    .param("edge_bits", solution->pow.size())
+                    .method("submit")
+                    .param("edge_bits", solution->edgeBits())
                     .param("height", job->height)
                     .param("job_id", job->jobId)
                     .param("nonce", solution->nonce)
@@ -104,11 +105,15 @@ namespace miner {
                     .done();
 
             auto onResponse = [this] (CxnHandle cxn, jrpc::Message res) {
-                auto idStr = res.id.empty() ? res.id.get<std::string>() : "<no id>";
+                std::string idStr = "<no id>";
+                if (!res.id.is_null()) {
+                    idStr = std::to_string(res.id.get<int64_t>());
+                }
                 bool accepted = false;
                 if (auto result = res.getIfResult()) {
-                    if (result.value() == "ok")
+                    if (result.value() == "ok") {
                         accepted = true;
+                    }
                 }
 
                 // TODO: check whether difficulty of submitted share is 1
@@ -144,15 +149,26 @@ namespace miner {
         //    restart();
         //});
 
-        io.io().layerBelow().setIncomingModifier([] (nl::json &json) {
-            try {
-                json["id"] = std::stoi(json.at("id").get<std::string>());
-            } catch(std::invalid_argument&) {
-                json["id"] = 0;
+        JsonIO &jsonLayer = io.io().layerBelow(); //Json layer is below Jrpc layer
+
+        jsonLayer.setIncomingModifier([] (nl::json &json) {
+            auto methodIt = json.find("method");
+            if (methodIt != json.end() && *methodIt == "job") {
+                // actually this is a notification and notifications should have no id
+                json.erase("id");
+            }
+            else {
+                try {
+                    auto idIt = json.find("id");
+                    if (idIt != json.end())
+                        json["id"] = std::stoll(idIt->get<std::string>());
+                } catch (std::invalid_argument &) {
+                    // something strange happened
+                    json["id"] = nullptr;
+                }
             }
         });
 
-        JsonIO &jsonLayer = io.io().layerBelow(); //Json layer is below Jrpc layer
         jsonLayer.setOutgoingModifier([] (nl::json &json) { //plug in a modifier func to change its id to string right before any json gets send
             json["id"] = std::to_string(json.at("id").get<jrpc::JsonRpcUtil::IdType>());
         });
