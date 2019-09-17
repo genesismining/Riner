@@ -9,7 +9,7 @@ docs/latex
 docs/xml
 
 # Downloaded kernels
-src/kernel
+src/kernel/ethash.cl
 
 # CMake generated files
 CMakeCache.txt
