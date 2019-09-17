@@ -87,7 +87,7 @@ namespace miner {
         HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
         HexString(jparams[3]).swapByteOrder().getBytes(jobTarget);
 
-        job->workTemplate.setJobDifficultyAndTarget(jobTarget);
+        job->workTemplate.setDifficultiesAndTargets(jobTarget);
 
         //work->epoch is calculated in the refill thread
 

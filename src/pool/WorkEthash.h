@@ -42,7 +42,7 @@ namespace miner {
         }
 
         // TODO: export this to proper functions
-        void setJobDifficultyAndTarget(const Bytes<32> &jobTarget) {
+        void setDifficultiesAndTargets(const Bytes<32> &jobTarget) {
             using limits = std::numeric_limits<double>;
             int offset = 31;
             for (; offset >= 8 && jobTarget[offset] == 0; offset--);
