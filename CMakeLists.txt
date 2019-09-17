@@ -38,7 +38,7 @@ add_library(LibMiner
         src/statistics/Average.cpp src/statistics/Average.h
         src/statistics/DeviceRecords.cpp src/statistics/DeviceRecords.h
         src/statistics/PoolRecords.cpp src/statistics/PoolRecords.h
-        src/algorithm/grin/siphash.h
+        src/kernel/siphash.h
         src/algorithm/grin/Graph.cpp src/algorithm/grin/Graph.h
         src/algorithm/grin/AlgoCuckatoo31Cl.cpp src/algorithm/grin/AlgoCuckatoo31Cl.h
         src/algorithm/grin/Cuckatoo.cpp src/algorithm/grin/Cuckatoo.h

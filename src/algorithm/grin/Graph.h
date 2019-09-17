@@ -1,6 +1,6 @@
 #pragma once
 
-#include "siphash.h"
+#include "src/kernel/siphash.h"
 #include <src/common/Assert.h>
 
 #include <stdint.h>

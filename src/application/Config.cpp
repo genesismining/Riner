@@ -195,8 +195,10 @@ namespace miner {
                 gs.api_port = apiPortDefault;
             }
 
-            std::string default_opencl_kernel_dir("./kernel");
+            std::string default_opencl_kernel_dir("./");
             gs.opencl_kernel_dir = valueOr(jo, "opencl_kernel_dir", default_opencl_kernel_dir);
+            if (gs.opencl_kernel_dir.empty())
+                gs.opencl_kernel_dir = default_opencl_kernel_dir;
             gs.start_profile = jo.at("start_profile");
 
             if (!getProfile(gs.start_profile)) {

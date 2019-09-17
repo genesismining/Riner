@@ -1,6 +1,6 @@
 #pragma once
 
-#include "siphash.h"
+#include "src/kernel/siphash.h"
 
 #include <src/util/Copy.h>
 #include <src/util/ConfigUtils.h>

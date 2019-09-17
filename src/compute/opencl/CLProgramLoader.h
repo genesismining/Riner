@@ -22,7 +22,7 @@ namespace miner {
 
         optional<cl::Program> loadProgram(cl::Context context, cstring_span clFileInDir, cstring_span clCompilerOptions) {
             std::vector<cstring_span> files = {clFileInDir};
-            return loadProgram(context, std::move(files), clCompilerOptions);
+            return loadProgram(std::move(context), files, clCompilerOptions);
         }
 
         optional<cl::Program> loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span clCompilerOptions);

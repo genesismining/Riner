@@ -33,7 +33,7 @@ TEST(Siphash, GenerateUV) {
 }
 
 class CuckatooSolverTest: public testing::Test {
-    constexpr static const char *testKernelDir = "src/algorithm/";
+    constexpr static const char *testKernelDir = "./src/";
 public:
 
     CuckatooSolverTest() :
@@ -65,7 +65,7 @@ protected:
         options.context = context;
         options.device = device;
 
-        std::vector<std::string> files = {"grin/siphash.h", "grin/cuckatoo.cl"};
+        std::vector<std::string> files = {"/kernel/siphash.h", "/kernel/cuckatoo.cl"};
         std::string fileDir = testKernelDir;
         for (auto &fileName : files) {
             auto path = fileDir + fileName;
