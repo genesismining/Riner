@@ -8,7 +8,7 @@ namespace miner { namespace jrpc {
         Message JsonRpcIO::convertIncoming(nl::json j) {
             try {
                 return Message{std::move(j)};
-            } catch(const nl::json::parse_error &e) {
+            } catch(const nl::json::exception &e) {
                 throw IOConversionError{e.what()};
             }
         }

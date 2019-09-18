@@ -43,15 +43,14 @@ namespace miner { namespace jrpc {
             }
 
             auto resultIt = j.find("result");
-            if (resultIt != j.end()) {
-                var = Response{std::move(*resultIt)};
-            }
-            else if (j.count("error")) {
+            auto errorIt = j.find("error");
+            // Bitcoin stratum protocol responses include "error" and "result" keys always
+            if (errorIt != j.end() && !errorIt->is_null()) {
                 Error error;
-                auto &je = j["error"];
+                auto &je = *errorIt;
 
                 if (je.is_array()) {
-                    // Bitcoin stratum protocol compatibility
+                    // Bitcoin stratum protocol error responses contain an "error" array
                     error.code = toErrorCode(je.at(0));
                     error.message = std::move(je.at(1));
                 }
@@ -67,6 +66,9 @@ namespace miner { namespace jrpc {
                 }
 
                 var = Response{std::move(error)};
+            }
+            else if (resultIt != j.end()) {
+                var = Response{std::move(*resultIt)};
             }
             else {
                 // message is not a Response, therefore it has to be a Request
