@@ -161,7 +161,7 @@ namespace miner {
                 try {
                     auto idIt = json.find("id");
                     if (idIt != json.end())
-                        json["id"] = std::stoll(idIt->get<std::string>());
+                        *idIt = std::stoll(idIt->get<std::string>());
                 } catch (std::invalid_argument &) {
                     // something strange happened
                     json["id"] = nullptr;
