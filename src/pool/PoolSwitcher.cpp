@@ -101,7 +101,7 @@ namespace miner {
     void PoolSwitcher::submitSolutionImpl(unique_ptr<WorkSolution> solution) {
         std::shared_ptr<const PoolJob> job = solution->getJob();
         if (!job) {
-            LOG(INFO) << "work solution cannot be submitted because it has expired";
+            LOG(INFO) << "work solution is not submitted because its job is stale";
             return;
         }
         std::shared_ptr<Pool> pool = job->pool.lock();
