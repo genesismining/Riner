@@ -10,6 +10,27 @@
 namespace miner {
     using namespace jrpc;
 
+    static nl::json jsonSerialize(const decltype(DeviceRecords::Data::scannedNonces) &avg, clock::time_point time) {
+        return {
+                {"totalHashes", avg.mean.getTotalWeight()},
+                {"totalReports", avg.mean.getTotal()},
+                {"totalHashesPerSec", avg.mean.getWeightRate(time)},
+                {"5sHashesPerSec", avg.avg5s.getWeightRate(time)},
+                {"5sReportsPerSec", avg.avg5s.getRate(time)},
+                {"30sHashesPerSec", avg.avg30s.getWeightRate(time)},
+                {"30sReportsPerSec", avg.avg30s.getRate(time)}
+        };
+    }
+
+    static nl::json jsonSerialize(const decltype(DeviceRecords::Data::validWorkUnits) &avg, clock::time_point time) {
+        return {
+                {"totalCount", avg.mean.getTotal()},
+                {"totalHashesPerSec", avg.mean.getWeightRate(time)},
+                {"5mHashesPerSec", avg.avg5m.getWeightRate(time)},
+                {"5mWorkUnitsPerSec", avg.avg5m.getRate(time)}
+        };
+    }
+
     static nl::json jsonSerialize(const decltype(PoolRecords::Data::acceptedShares) &avg, clock::time_point time) {
         return {
             {"totalCount", avg.mean.getTotal()},
@@ -76,50 +97,16 @@ namespace miner {
 
                     MI_EXPECTS(i == d.deviceIndex); //just to be sure
 
+                    auto data = d.records.read();
                     j = {
                             {"index", d.deviceIndex},
                             {"isInUse", true},
                             {"algoImpl", d.settings.algoImplName},
                             {"deviceVendor", stringFromVendorEnum(d.id.getVendor())},
-                            {"deviceName", gsl::to_string(d.id.getName())}
-                    };
-
-                    auto data = d.records.read();
-                    auto &tn = data.traversedNonces;
-                    auto tnPair = tn.interval.getAndReset();
-
-                    j["traversed nonces"] = {
-                            {{"kind", "exp average"}, {"exp average", tn.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", tn.avg30s.getDecayExp().count()}},
-                            {{"kind", "exp average"}, {"exp average", tn.avg5m .getWeightRate(now)}, {"interval", "seconds"}, {"seconds", tn.avg5m .getDecayExp().count()}},
-                            {{"kind", "average"}, {"average", tn.mean.getWeightRate(now)}, {"interval", "total"}},
-                            {{"kind", "amount" }, {"amount" , static_cast<long long>(tn.mean.getTotalWeight())}, {"interval", "total"}},
-                            {{"kind", "average"}, {"average", tn.mean.getWeightRate(now)}, {"interval", "total"}},
-                            {{"kind", "amount" }, {"amount" , tnPair.first }, {"interval", "since last call"}},
-                            {{"kind", "average"}, {"average", tnPair.second}, {"interval", "since last call"}},
-                    };
-
-                    auto &is = data.invalidShares;
-                    auto isPair = is.interval.getAndReset();
-
-                    j["failed share verifications"] = {
-                            {{"kind", "exp average"}, {"exp average", is.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", is.avg30s.getDecayExp().count()}},
-                            {{"kind", "exp average"}, {"exp average", is.avg5m .getWeightRate(now)}, {"interval", "seconds"}, {"seconds", is.avg5m.getDecayExp().count()}},
-                            {{"kind", "amount"}, {"amount" , static_cast<long long>(is.mean.getTotalWeight())}, {"interval", "total"}},
-                            {{"kind", "average"}, {"average", is.mean.getWeightRate(now)}, {"interval", "total"}},
-                            {{"kind", "amount"}, {"amount" , isPair.first}, {"interval", "since last call"}},
-                            {{"kind", "average"}, {"average" , isPair.second}, {"interval", "since last call"}},
-                    };
-
-                    auto &vs = data.validShares;
-                    auto vsPair = vs.interval.getAndReset();
-
-                    j["successful share verifications"] = {
-                            {{"kind", "exp average"}, {"exp average", vs.avg30s.getWeightRate(now)}, {"interval", "seconds"}, {"seconds", vs.avg30s.getDecayExp().count()}},
-                            {{"kind", "exp average"}, {"exp average", vs.avg5m .getWeightRate(now)}, {"interval", "seconds"}, {"seconds", vs.avg5m.getDecayExp().count()}},
-                            {{"kind", "amount"}, {"amount" , static_cast<long long>(vs.mean.getTotalWeight())}, {"interval", "total"}},
-                            {{"kind", "average"}, {"average", vs.mean.getWeightRate(now)}, {"interval", "total"}},
-                            {{"kind", "amount"}, {"amount" , vsPair.first}, {"interval", "since last call"}},
-                            {{"kind", "average"}, {"average" , vsPair.second}, {"interval", "since last call"}},
+                            {"deviceName", gsl::to_string(d.id.getName())},
+                            {"scannedNonces", jsonSerialize(data.scannedNonces, now)},
+                            {"workUnits", jsonSerialize(data.validWorkUnits, now)},
+                            {"hwErrors", jsonSerialize(data.invalidWorkUnits, now)}
                     };
 
                 } else {

@@ -165,7 +165,7 @@ namespace miner {
                         submitShareTask(work, resultNonces, device);
                     });
                 }
-                device.records.reportAmtTraversedNonces(raw_intensity);
+                device.records.reportScannedNoncesAmount(raw_intensity);
 
                 if (work->expired()) {
                     LOG(INFO) << "aborting kernel loop because work has expired on " << std::this_thread::get_id();
@@ -193,7 +193,7 @@ namespace miner {
                 pool.submitSolution(std::move(result));
 
             bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->deviceTarget);
-            device.records.reportShare(work->deviceDifficulty, isValidSolution);
+            device.records.reportWorkUnit(work->deviceDifficulty, isValidSolution);
             if (!isValidSolution) {
                 LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
             }

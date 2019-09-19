@@ -5,19 +5,19 @@
 
 namespace miner {
 
-    void DeviceRecords::reportAmtTraversedNonces(uint64_t inAmt) {
+    void DeviceRecords::reportScannedNoncesAmount(uint64_t inAmt) {
         _node.lockedForEach([inAmt] (Data &data) {
-            data.traversedNonces.addRecord(inAmt);
+            data.scannedNonces.addRecord(inAmt);
         });
     }
 
-    void DeviceRecords::reportShare(double difficulty, bool valid) {
+    void DeviceRecords::reportWorkUnit(double difficulty, bool valid) {
         _node.lockedForEach([=] (Data &data) {
             if (valid) {
-                data.validShares.addRecord(difficulty);
+                data.validWorkUnits.addRecord(difficulty);
             }
             else {
-                data.invalidShares.addRecord(difficulty);
+                data.invalidWorkUnits.addRecord(difficulty);
             }
         });
     }

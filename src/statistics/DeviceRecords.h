@@ -9,7 +9,7 @@ namespace miner {
 
     class DeviceRecords {
 
-        struct Entry {
+        struct Average {
             void addRecord(double val, clock::time_point t = clock::now()) {
                 mean    .addRecord(val, t);
                 interval.addRecord(val, t);
@@ -23,11 +23,25 @@ namespace miner {
             ExpAverage avg5m  {minutes(5)};
         };
 
+        struct NonceAverage {
+            void addRecord(double val, clock::time_point t = clock::now()) {
+                mean    .addRecord(val, t);
+                interval.addRecord(val, t);
+                avg5s   .addRecord(val, t);
+                avg30s  .addRecord(val, t);
+            }
+
+            Mean mean;
+            mutable Mean interval; //mutable, because it gets reset by the reader
+            ExpAverage avg5s  {seconds(5)};
+            ExpAverage avg30s {seconds(30)};
+        };
+
     public:
         struct Data {
-            Entry traversedNonces;
-            Entry validShares;
-            Entry invalidShares;
+            NonceAverage scannedNonces;
+            Average validWorkUnits;
+            Average invalidWorkUnits;
         };
 
         DeviceRecords() = default;
@@ -38,11 +52,12 @@ namespace miner {
 
         //call this whenever your algo finished traversing a bunch of nonces
         //this is what the hashrate will get derived from
-        void reportAmtTraversedNonces(uint64_t traversedNonces);
+        void reportScannedNoncesAmount(uint64_t scannedNonces);
 
-        //call this when a "hardware error" happened, e.g. the found solution of your
-        //algorithm does not stand verification on the cpu
-        void reportShare(double difficulty, bool valid);
+        //call this when a solution of your algorithm was found that was verified by the CPU
+        //if the solution is valid matching e.g. deviceDifficulty, then the valid flag needs to be set
+        //a hardware error or a software bug might produce an invalid solution and the valid flag must be cleared for invalid solutions
+        void reportWorkUnit(double difficulty, bool valid);
 
     private:
         StatisticNode<Data> _node;

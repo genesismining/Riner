@@ -64,10 +64,10 @@ namespace miner {
             //... add algorithm here ...
 
             //report statistical data about hashrate etc via device.records.report...
-            device.records.reportAmtTraversedNonces(rawIntensity);
+            device.records.reportScannedNoncesAmount(rawIntensity);
             sleep_for(1s);
 
-            device.records.reportShare(workOr->deviceDifficulty, true);
+            device.records.reportWorkUnit(workOr->deviceDifficulty, true);
             sleep_for(1s);
 
             //once you notice work has expired you may abort calculation and get fresh work
