@@ -9,6 +9,7 @@
 #include <src/algorithm/ethash/DagCache.h>
 #include <src/algorithm/ethash/DagFile.h>
 #include <src/util/LockUtils.h>
+#include <src/util/TaskExecutorPool.h>
 #include <src/compute/opencl/CLProgramLoader.h>
 
 #include <mutex>
@@ -42,8 +43,8 @@ namespace miner {
             std::vector<buffer_entry_t> outputBuffer = std::vector<buffer_entry_t>(bufferCount, 0); //this is where clOutputBuffer gets read into
         };
 
-        //submit tasks are created from several threads, therefore LockGuarded
-        LockGuarded<std::future<void>> submitTask;
+        //used to execute share submission tasks. It's safe to not track the futures returned by addTask() due to the lifetime of tasks
+        TaskExecutorPool tasks {std::min(std::thread::hardware_concurrency(), 2U)};
 
         std::vector<std::future<void>> gpuTasks; //one task per gpu
 
@@ -53,10 +54,8 @@ namespace miner {
         //gets called numGpuSubTasks times from each gpuTask
         void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device &deviceSettings);
 
-        //gets called by gpuSubTask for each non-empty result vector
-        void
-        submitShareTask(std::shared_ptr<const WorkEthash> work, const std::vector<uint64_t> &resultNonces,
-                        Device &device);
+        //gets called by gpuSubTask for each nonce found
+        void submitShare(std::shared_ptr<const WorkEthash> work, uint64_t nonce, Device &device);
 
         //returns possible solution nonces
         std::vector<uint64_t> runKernel(PerGpuSubTask &, DagFile &dag, const WorkEthash &,

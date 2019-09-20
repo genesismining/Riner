@@ -156,14 +156,8 @@ namespace miner {
 
                 auto resultNonces = runKernel(state, dag, *work, nonceBegin, nonceEnd);
 
-                if (!resultNonces.empty()) {
-                    //todo: submitTasks lock can be avoided by declaring one vector per subTask inside the gpuTask
-
-                    auto sTask = submitTask.lock();
-
-                    asyncAppend(*sTask, launch::async, [this, work, resultNonces = std::move(resultNonces), &device] () {
-                        submitShareTask(work, resultNonces, device);
-                    });
+                for (uint64_t resultNonce : resultNonces) {
+                    tasks.addTask(std::bind(&AlgoEthashCL::submitShare, this, work, resultNonce, std::ref(device)));
                 }
                 device.records.reportScannedNoncesAmount(raw_intensity);
 
@@ -175,28 +169,24 @@ namespace miner {
         }
     }
 
-    void AlgoEthashCL::submitShareTask(std::shared_ptr<const WorkEthash> work,
-                                       const std::vector<uint64_t> &resultNonces, Device &device) {
+    void AlgoEthashCL::submitShare(std::shared_ptr<const WorkEthash> work, uint64_t nonce, Device &device) {
 
-        for (auto nonce : resultNonces) {//for each possible solution
+        auto result = work->makeWorkSolution<WorkSolutionEthash>();
 
-            auto result = work->makeWorkSolution<WorkSolutionEthash>();
+        //calculate proof of work hash from nonce and dag-caches
+        auto hashes = dagCache.readLock()->getHash(work->header, nonce);
 
-            //calculate proof of work hash from nonce and dag-caches
-            auto hashes = dagCache.readLock()->getHash(work->header, nonce);
+        result->nonce = nonce;
+        result->header = work->header;
+        result->mixHash = hashes.mixHash;
 
-            result->nonce = nonce;
-            result->header = work->header;
-            result->mixHash = hashes.mixHash;
+        if (lessThanLittleEndian(hashes.proofOfWorkHash, work->jobTarget))
+            pool.submitSolution(std::move(result));
 
-            if (lessThanLittleEndian(hashes.proofOfWorkHash, work->jobTarget))
-                pool.submitSolution(std::move(result));
-
-            bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->deviceTarget);
-            device.records.reportWorkUnit(work->deviceDifficulty, isValidSolution);
-            if (!isValidSolution) {
-                LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
-            }
+        bool isValidSolution = lessThanLittleEndian(hashes.proofOfWorkHash, work->deviceTarget);
+        device.records.reportWorkUnit(work->deviceDifficulty, isValidSolution);
+        if (!isValidSolution) {
+            LOG(INFO) << "discarding invalid solution nonce: 0x" << HexString(toBytesWithBigEndian(nonce)).str();
         }
     }
 
