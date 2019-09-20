@@ -89,6 +89,7 @@ add_library(LibMiner
         src/util/ConfigUtils.cpp src/util/ConfigUtils.h
         src/util/Random.h
         src/util/StringUtils.cpp src/util/StringUtils.h
+        src/util/TaskExecutorPool.h src/util/TaskExecutorPool.cpp
         src/util/OptionalAccess.h
         src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
