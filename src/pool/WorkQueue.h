@@ -49,7 +49,7 @@ namespace miner {
                 return nullopt;
             std::unique_ptr<Work> work = jobQueue.front()->makeWork();
             work->job = jobQueue.front();
-            return work;
+            return std::move(work);
         }
 
         inline bool isExpiredJob(const PoolJob &job) {
