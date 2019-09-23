@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/kernel/siphash.h"
+#include <src/kernel/siphash.h>
 
 #include <src/util/Copy.h>
 #include <src/util/ConfigUtils.h>
@@ -9,17 +9,24 @@
 #include <src/common/OpenCL.h>
 #include <src/compute/opencl/CLProgramLoader.h>
 #include <src/compute/ComputeApiEnums.h>
+#include <future>
 #include <stdint.h>
 #include <string>
 
 namespace miner {
 
+class TaskExecutorPool;
+
 class CuckatooSolver {
 public:
+
+    struct Cycle;
+    typedef std::function<void(std::vector<Cycle>)> ResultFn;
     typedef std::function<bool()> AbortFn;
 
     struct Options {
         Device &deviceInfo;
+        TaskExecutorPool &tasks;
         uint32_t n = 0;
         uint32_t cycleLength = 42;
         cl::Context context;
@@ -31,11 +38,18 @@ public:
         std::vector<uint32_t> edges;
     };
 
-    CuckatooSolver(Options options) :
-            opts_(std::move(options)),
-            edgeCount_(static_cast<uint32_t>(1) << opts_.n) {
+    CuckatooSolver(Options options)
+            : opts_(std::move(options))
+            , edgeCount_(uint64_t(1) << opts_.n)
+            , nodeMask_(edgeCount_ - 1){
         CHECK(opts_.cycleLength % 2 == 0) << "Cycle length must be even!";
         prepare();
+    }
+
+    ~CuckatooSolver() {
+        if (taskFuture.valid()) {
+            taskFuture.wait();
+        }
     }
 
     DELETE_COPY(CuckatooSolver);
@@ -44,25 +58,28 @@ public:
         return opts_.deviceInfo;
     }
 
-    std::vector<Cycle> solve(const SiphashKeys& keys, AbortFn abortFn);
+    const std::future<void> &solve(const SiphashKeys &keys, ResultFn resultFn, AbortFn abortFn);
 
     static bool isValidCycle(uint32_t n, uint32_t cycleLength, const SiphashKeys& keys, const Cycle& cycle);
 
 private:
     void prepare();
 
-    void pruneActiveEdges(const SiphashKeys& keys, uint32_t activeEdges, int uorv, bool initial);
+    void pruneActiveEdges(const SiphashKeys& keys, uint64_t activeEdges, int uorv, bool initial);
 
     int32_t getBucketBitShift();
 
-    uint32_t getNode(const SiphashKeys& keys, uint32_t edge, uint32_t uOrV);
+    inline uint32_t getNode(const SiphashKeys& keys, uint32_t edge, uint32_t uOrV) {
+        return uint32_t(siphash24(&keys, (2 * edge) | uOrV) & nodeMask_);
+    }
 
     std::string getDeviceName();
 
     static constexpr uint32_t pruneRounds_ = 99;
 
     const Options opts_;
-    const uint32_t edgeCount_;
+    const uint64_t edgeCount_;
+    const uint32_t nodeMask_;
 
     uint32_t buckets_ = 0;
     uint32_t maxBucketSize_ = 0;
@@ -83,6 +100,7 @@ private:
     cl::Kernel kernelKillEdgesAndCreateNodes_;
 
     cl::CommandQueue queue_;
+    std::future<void> taskFuture;
 };
 
 } /* namespace miner */

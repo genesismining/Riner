@@ -20,7 +20,7 @@ AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
         cl::Device device = deviceOr.value();
         workers_.emplace_back([this, &assignedDevice, device] {
             cl::Context context(device);
-            CuckatooSolver::Options opts {assignedDevice};
+            CuckatooSolver::Options opts {assignedDevice, tasks};
             opts.n = 31;
             opts.context = context;
             opts.device = device;
@@ -58,25 +58,30 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
 
 void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
     while (!terminate_) {
-        auto work = args_.workProvider.tryGetWork<WorkCuckatoo31>().value_or(nullptr);
+        auto work = std::shared_ptr<WorkCuckatoo31>(
+                args_.workProvider.tryGetWork<WorkCuckatoo31>().value_or(nullptr));
         if (!work) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;
         }
 
-        std::vector<CuckatooSolver::Cycle> cycles = solver.solve(calculateKeys(*work), [&work]() {
-            return !work->valid();
-        });
-        solver.getDevice().records.reportScannedNoncesAmount(1);
-        LOG(INFO)<< "Found " << cycles.size() << " cycles of target length.";
-        // TODO sha pow and compare to difficulty
-        for (auto& cycle : cycles) {
-            solver.getDevice().records.reportWorkUnit(1., true);
-            auto pow = work->makeWorkSolution<WorkSolutionCuckatoo31>();
-            pow->nonce = work->nonce;
-            pow->pow = std::move(cycle.edges);
-            args_.workProvider.submitSolution(std::move(pow));
-        }
+        solver.solve(
+                calculateKeys(*work),
+                [&, work](std::vector<CuckatooSolver::Cycle> cycles) {
+                    solver.getDevice().records.reportScannedNoncesAmount(1);
+                    LOG(INFO)<< "Found " << cycles.size() << " cycles of target length.";
+                    // TODO sha pow and compare to difficulty
+                    for (auto& cycle : cycles) {
+                        solver.getDevice().records.reportWorkUnit(1., true);
+                        auto pow = work->makeWorkSolution<WorkSolutionCuckatoo31>();
+                        pow->nonce = work->nonce;
+                        pow->pow = std::move(cycle.edges);
+                        args_.workProvider.submitSolution(std::move(pow));
+                    }
+                },
+                [this, work] {
+                    return !work->valid() || terminate_.load(std::memory_order_relaxed);
+                });
     }
 }
 

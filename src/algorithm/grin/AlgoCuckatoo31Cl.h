@@ -2,6 +2,7 @@
 
 #include <src/algorithm/Algorithm.h>
 #include <src/algorithm/grin/Cuckatoo.h>
+#include <src/util/TaskExecutorPool.h>
 #include <atomic>
 #include <vector>
 #include <thread>
@@ -22,6 +23,7 @@ private:
     std::atomic<bool> terminate_;
 
     AlgoConstructionArgs args_;
+    TaskExecutorPool tasks {std::thread::hardware_concurrency()};
     std::vector<std::thread> workers_;
 };
 

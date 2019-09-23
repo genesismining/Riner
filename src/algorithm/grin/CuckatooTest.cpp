@@ -8,6 +8,7 @@
 #include <src/util/Logging.h>
 #include <src/util/StringUtils.h>
 #include <src/util/FileUtils.h>
+#include <src/util/TaskExecutorPool.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -59,7 +60,7 @@ protected:
         Device::AlgoSettings algoSettings;
         Device algoDevice = {deviceId.value(), algoSettings, 0};
 
-        CuckatooSolver::Options options {algoDevice};
+        CuckatooSolver::Options options {algoDevice, tasks};
         options.programLoader = &programLoader;
         options.n = n;
         options.context = context;
@@ -83,6 +84,7 @@ protected:
     cl::Context context;
     VendorEnum vendor = VendorEnum::kUnknown;
     std::unique_ptr<WorkCuckatoo31> header;
+    TaskExecutorPool tasks {1};
 };
 
 TEST_F(CuckatooSolverTest, Solve29) {
@@ -96,15 +98,18 @@ TEST_F(CuckatooSolverTest, Solve29) {
     header->prePow.resize(72, 0);
     header->nonce = 0x15000000;
 
-    std::vector<CuckatooSolver::Cycle> cycles = solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header),
-            [] {return false;});
-    ASSERT_EQ(1, cycles.size());
-    EXPECT_THAT(cycles[0].edges,
-            testing::ElementsAreArray( { 31512508, 59367126, 60931190, 94763886, 104277898, 116747030, 127554684,
+    solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header),
+            [] (std::vector<CuckatooSolver::Cycle> cycles) {
+                ASSERT_EQ(1, cycles.size());
+                EXPECT_THAT(cycles[0].edges, testing::ElementsAreArray( {
+                    31512508, 59367126, 60931190, 94763886, 104277898, 116747030, 127554684,
                     142281893, 197249170, 210206965, 211338509, 256596889, 259030601, 261857131, 268667508, 271769895,
                     295284253, 296568689, 319619493, 324904830, 338819144, 340659072, 385650715, 385995656, 392428799,
                     406828082, 411433229, 412126883, 430148237, 435642922, 451290256, 451616065, 467529516, 472555386,
                     474712317, 503536255, 504936349, 509088607, 510814466, 519326390, 521564062, 525046456 }));
+            },
+            [] {return false;})
+            .wait();
 }
 
 TEST_F(CuckatooSolverTest, Solve31) {
@@ -122,16 +127,22 @@ TEST_F(CuckatooSolverTest, Solve31) {
     SiphashKeys keys = AlgoCuckatoo31Cl::calculateKeys(*header);    
     // Siphash Keys: 707696558862008831, 13844509301656340219, 10878251467021832460, 1593815210236709481
 
-    std::vector<CuckatooSolver::Cycle> cycles = solver->solve(keys, [] {return false;});
-    ASSERT_EQ(1, cycles.size());
-    LOG(INFO) << "Edges: " << toString(cycles[0].edges);
-    EXPECT_TRUE(CuckatooSolver::isValidCycle(31, 42, keys, cycles[0]));
-    EXPECT_THAT(cycles[0].edges, testing::ElementsAreArray( { 25658671, 33517224, 169257816, 263176471, 275158520,
-            279314901, 304448673, 325368254, 460577821, 523175179, 562671497, 563415534, 658916799, 748246646,
-            760653191, 841797550, 884140246, 1055282821, 1071033665, 1103276156, 1144618546, 1145968364, 1185166942,
-            1355190350, 1394097284, 1443271097, 1519523172, 1640431487, 1670430783, 1680011930, 1703111873, 1716961047,
-            1729277548, 1751151239, 1755525050, 1779819427, 1789289757, 1833144376, 2038031226, 2046215501, 2111816174,
-            2115207736 }));
+    solver->solve(
+            keys,
+            [&keys] (std::vector<CuckatooSolver::Cycle> cycles) {
+                ASSERT_EQ(1, cycles.size());
+                LOG(INFO) << "Edges: " << toString(cycles[0].edges);
+                EXPECT_TRUE(CuckatooSolver::isValidCycle(31, 42, keys, cycles[0]));
+                EXPECT_THAT(cycles[0].edges, testing::ElementsAreArray(
+                        {25658671, 33517224, 169257816, 263176471, 275158520, 279314901, 304448673, 325368254,
+                         460577821, 523175179, 562671497, 563415534, 658916799, 748246646, 760653191, 841797550,
+                         884140246, 1055282821, 1071033665, 1103276156, 1144618546, 1145968364, 1185166942, 1355190350,
+                         1394097284, 1443271097, 1519523172, 1640431487, 1670430783, 1680011930, 1703111873, 1716961047,
+                         1729277548, 1751151239, 1755525050, 1779819427, 1789289757, 1833144376, 2038031226, 2046215501,
+                         2111816174, 2115207736}));
+            },
+            [] {return false;})
+            .wait();
 }
 
 TEST_F(CuckatooSolverTest, IsValidCycle) {

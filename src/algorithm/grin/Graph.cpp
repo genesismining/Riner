@@ -15,8 +15,7 @@ uint32_t Graph::getEdgeCount() {
 
 uint32_t Graph::Table::getEdgeCount() {
     uint32_t edges = 0;
-    for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << bits_); ++i) {
-        Bucket& bucket = buckets_[i];
+    for (auto &bucket : buckets_) {
         edges += __builtin_popcount(bucket.full);
     }
     return edges;
@@ -24,8 +23,7 @@ uint32_t Graph::Table::getEdgeCount() {
 
 uint32_t Graph::Table::getOverflowBucketCount() {
     uint32_t overflows = 0;
-    for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << bits_); ++i) {
-        Bucket& bucket = buckets_[i];
+    for (auto &bucket : buckets_) {
         if (bucket.insertions > Bucket::kCapacity) {
             overflows++;
         }
@@ -71,8 +69,7 @@ std::vector<Graph::Cycle> Graph::findCycles(int length) {
 std::vector<Graph::Cycle> Graph::Cyclefinder::findCycles(int length) {
     cycles_.clear();
 
-  for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << u_.bits_); ++i) {
-        Bucket& bucket = u_.buckets_[i];
+    for (auto &bucket : u_.buckets_) {
         for(uint32_t j = 0; j<std::min(bucket.insertions, Bucket::kCapacity); ++j) {
             uint32_t u = bucket.key[j];
             appendFromU(u, length);
@@ -85,7 +82,7 @@ std::vector<Graph::Cycle> Graph::Cyclefinder::findCycles(int length) {
 }
 
 void Graph::Cyclefinder::appendFromU(uint32_t u, int length) {
-    for(uint32_t v: u_.getValues(u)) {
+    for (uint32_t v : u_.getValues(u)) {
         prefix_.push_back(u);
         prefix_.push_back(v);
         // Recurse:
@@ -96,7 +93,7 @@ void Graph::Cyclefinder::appendFromU(uint32_t u, int length) {
 }
 
 void Graph::Cyclefinder::appendFromV(uint32_t v, int length) {
-    for(uint32_t u: v_.getValues(v)) {
+    for (uint32_t u : v_.getValues(v)) {
         prefix_.push_back(u);
         prefix_.push_back(v);
         if (length == 1) {
@@ -108,7 +105,7 @@ void Graph::Cyclefinder::appendFromV(uint32_t v, int length) {
             }
         } else {
             // Recurse:
-            appendFromU(u ^ 1 , length -1);
+            appendFromU(u ^ 1, length - 1);
         }
         prefix_.pop_back();
         prefix_.pop_back();
@@ -119,9 +116,8 @@ void Graph::Table::prune(Table& reverse) {
     std::vector<uint32_t> deactivatedK;
     std::vector<uint32_t> deactivatedV;
 
-    for (uint32_t i = 0; i < (static_cast<uint32_t>(1) << bits_); ++i) {
-        Bucket& bucket = buckets_[i];
-        for(uint32_t j = 0; j<std::min(bucket.insertions, Bucket::kCapacity); ++j) {
+    for (auto &bucket : buckets_) {
+        for (uint32_t j = 0; j < std::min(bucket.insertions, Bucket::kCapacity); ++j) {
             uint32_t key = bucket.key[j];
             if (!hasSingleActive(key)) {
                 continue;

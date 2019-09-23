@@ -74,16 +74,12 @@ private:
 
     class Table {
     public:
-        Table(uint32_t n, uint32_t bits) :
-                bits_(bits), mask_((static_cast<uint32_t>(1) << bits) - 1), shift_(n - bits) {
+        Table(uint32_t n, uint32_t bits)
+                : bits_(bits)
+                , mask_((size_t(1) << bits) - 1)
+                , shift_(n - bits)
+                , buckets_(size_t(1) << bits, {{0}}) {
             MI_EXPECTS(sizeof(Bucket) == 64);
-            uint32_t count = static_cast<uint32_t>(1) << bits;
-            buckets_ = new Bucket[count];
-            memset(buckets_, 0, sizeof(Bucket) * count);
-        }
-
-        ~Table() {
-            delete[] buckets_;
         }
 
         uint32_t getEdgeCount();
@@ -190,7 +186,7 @@ private:
         const uint32_t mask_;
         const uint32_t shift_;
 
-        Bucket* buckets_;
+        std::vector<Bucket> buckets_;
     };
 
     class Cyclefinder {
