@@ -90,7 +90,7 @@ namespace miner {
             return entries;
         }
 
-        static optional_ref<Entry> entryWithName(const std::string &algoImplName);
+        static opt::optional<Entry &> entryWithName(const std::string &algoImplName);
         const Entry *info = nullptr;
 
     };

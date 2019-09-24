@@ -22,7 +22,7 @@ namespace miner {
         return allDevices;
     }
 
-    optional<cl::Device> ComputeModule::getDeviceOpenCL(const DeviceId &requestId) {
+    opt::optional<cl::Device> ComputeModule::getDeviceOpenCL(const DeviceId &requestId) {
 
         std::vector<cl::Platform> clPlatforms;
         cl::Platform::get(&clPlatforms);
@@ -41,7 +41,7 @@ namespace miner {
 
         LOG(INFO) << "ComputeModule: in 'getDeviceOpenCL' the device '" << gsl::to_string(requestId.getName())
         << "' does not have a corresponding opencl device";
-        return nullopt;
+        return opt::nullopt;
     }
 
     CLProgramLoader &ComputeModule::getProgramLoaderOpenCL() {

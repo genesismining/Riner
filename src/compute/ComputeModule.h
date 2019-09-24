@@ -23,8 +23,8 @@ namespace miner {
 
         const std::vector<DeviceId> &getAllDeviceIds();
 
-        optional<cl::Device> getDeviceOpenCL(const DeviceId &);
-        //optional_ref<vk::Device> getDeviceVulkan(const DeviceId &)
+        opt::optional<cl::Device> getDeviceOpenCL(const DeviceId &);
+        //opt::optional<vk::Device> getDeviceVulkan(const DeviceId &)
 
         CLProgramLoader &getProgramLoaderOpenCL();
     };

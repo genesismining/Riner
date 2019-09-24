@@ -15,8 +15,11 @@ namespace miner {
     {
     }
 
-    optional_ref<const PcieIndex> DeviceId::getIfPcieIndex() const {
-        return id.optional_value(type_safe::variant_type<PcieIndex>());
+    opt::optional<const PcieIndex&> DeviceId::getIfPcieIndex() const {
+        if (auto ptr = mp::get_if<PcieIndex>(&id)) {
+            return *ptr;
+        }
+        return {};
     }
 
     VendorEnum DeviceId::getVendor() const {
@@ -45,8 +48,8 @@ namespace miner {
         return name;
     }
 
-    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &device) {
-        variant<PcieIndex, DeviceVendorId> idVariant = PcieIndex{};
+    opt::optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &device) {
+        mp::variant<PcieIndex, DeviceVendorId> idVariant = PcieIndex{};
         VendorEnum vendorEnum = VendorEnum::kUnknown;
 
         auto deviceName = device.getInfo<CL_DEVICE_NAME>();
@@ -79,7 +82,7 @@ namespace miner {
                 //          pcieId.segment, pcieId.bus, pcieId.device, pcieId.function);
             }
             else {
-                return nullopt;
+                return opt::nullopt;
             }
         }
         else if (deviceVendor.substr(0, 6) == "NVIDIA") {
@@ -103,7 +106,7 @@ namespace miner {
                 idVariant = pcieId;
             }
             else {
-                return nullopt;
+                return opt::nullopt;
             }
         }
         else if (deviceVendor.substr(0, 5) == "Intel") {
@@ -114,7 +117,7 @@ namespace miner {
         else {
             auto name = device.getInfo<CL_DEVICE_NAME>();
             LOG(INFO) << "could not find PCIe ID for OpenCL device '" << name << "' with vendor name '" << deviceVendor << "'";
-            return nullopt;
+            return opt::nullopt;
         }
 
         return DeviceId(vendorEnum, idVariant, deviceName);

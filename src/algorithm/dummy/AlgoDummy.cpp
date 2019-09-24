@@ -20,7 +20,7 @@ namespace miner {
             auto &device = deviceRef.get();
 
             //try to obtain an OpenCL device for the assigned device via its id
-            if (optional<cl::Device> clDeviceOr = _args.compute.getDeviceOpenCL(device.id)) {
+            if (opt::optional<cl::Device> clDeviceOr = _args.compute.getDeviceOpenCL(device.id)) {
 
                 //prepare everything the device thread is going to need
                 DeviceThread deviceThread = {
@@ -54,8 +54,8 @@ namespace miner {
         while (!algo._shutdown) {
 
             //get work from pool or try again
-            auto workOr = pool.tryGetWork<WorkEthash>().value_or(nullptr);
-            if (!workOr)
+            auto work = pool.tryGetWork<WorkEthash>();
+            if (!work)
                 continue; //this does not cause a busy wait loop, tryGetWork has a timeout mechanism
 
             //get settings that have been parsed from the config file via device.settings
@@ -67,11 +67,11 @@ namespace miner {
             device.records.reportScannedNoncesAmount(rawIntensity);
             sleep_for(1s);
 
-            device.records.reportWorkUnit(workOr->deviceDifficulty, true);
+            device.records.reportWorkUnit(work->deviceDifficulty, true);
             sleep_for(1s);
 
             //once you notice work has expired you may abort calculation and get fresh work
-            if (workOr->expired()) {
+            if (work->expired()) {
                 continue;
             }
 

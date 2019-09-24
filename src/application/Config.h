@@ -17,7 +17,7 @@ namespace miner {
         explicit Config(const nl::json &configJson);
 
         struct GlobalSettings {
-            optional<int>
+            opt::optional<int>
                     temp_cutoff,
                     temp_overheat,
                     temp_target;
@@ -42,7 +42,7 @@ namespace miner {
             std::string name;
 
             struct GpuSettings {
-                optional<uint32_t>
+                opt::optional<uint32_t>
                         core_clock_MHz_min, //engine_min
                         core_clock_MHz_max, //engine_max
                         core_clock_MHz,
@@ -65,7 +65,7 @@ namespace miner {
 
             std::list<AlgoSettings> algoSettings;
 
-            optional_ref<const AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
+            opt::optional<const AlgoSettings &> getAlgoSettings(const std::string &algoImplName) const;
         };
 
         struct Profile {
@@ -80,9 +80,9 @@ namespace miner {
             Mapping device_default;
         };
 
-        optional_ref<const DeviceProfile> getDeviceProfile(const std::string &name) const;
-        optional_ref<Profile> getProfile(const std::string &name);
-        optional_ref<Profile> getStartProfile();
+        opt::optional<const DeviceProfile &> getDeviceProfile(const std::string &name) const;
+        opt::optional<Profile &> getProfile(const std::string &name);
+        opt::optional<Profile &> getStartProfile();
 
         operator bool() {return valid;}
 

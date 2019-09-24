@@ -13,14 +13,14 @@ namespace miner {
 
         ~AmdgpuApi() override;
 
-        optional<int> getEngineClock() override;
-        optional<int> getMemoryClock() override;
-        optional<int> getVoltage() override;
-        optional<int> getTemperature() override;
-        optional<int> getFanPercent() override;
-        optional<int> getFanRpm() override;
-        optional<int> getPower() override;
-        optional<int> getTdp() override;
+        opt::optional<int> getEngineClock() override;
+        opt::optional<int> getMemoryClock() override;
+        opt::optional<int> getVoltage() override;
+        opt::optional<int> getTemperature() override;
+        opt::optional<int> getFanPercent() override;
+        opt::optional<int> getFanRpm() override;
+        opt::optional<int> getPower() override;
+        opt::optional<int> getTdp() override;
 
         bool setEngineClock(int freq) override;
         bool setMemoryClock(int freq) override;
@@ -42,15 +42,15 @@ namespace miner {
 
         struct table_entry {
             int freq;
-            optional<int> vddc;
-            optional<int> measuredVddc;
+            opt::optional<int> vddc;
+            opt::optional<int> measuredVddc;
         };
 
         struct frequency_settings {
             char type;
             std::vector<table_entry> table;
             std::pair<int, int> range {0, INT_MAX};
-            optional<int> freqTarget;
+            opt::optional<int> freqTarget;
             std::fstream dpm;
             std::ifstream currentFreq;
         };
@@ -65,12 +65,12 @@ namespace miner {
         frequency_settings sclk {'s'};
         frequency_settings mclk {'m'};
 
-        optional<int> vddcTarget;
+        opt::optional<int> vddcTarget;
         std::pair<int, int> vddcRange;
 
         std::once_flag manualFan;
         std::once_flag manualPowerProfile;
-        optional<int> tdp;
+        opt::optional<int> tdp;
 
         std::string pciePath;
         std::string hwmonPath;

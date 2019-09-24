@@ -82,11 +82,11 @@ namespace miner {
         return false;
     }
 
-    auto Pool::entryWithName(const std::string &poolImplName) -> optional_ref<Entry> {
+    auto Pool::entryWithName(const std::string &poolImplName) -> opt::optional<Entry &> {
         for (auto &entry : getEntries())
             if (entry.poolImplName == poolImplName)
-                return type_safe::opt_ref(entry);
-        return nullopt;
+                return entry;
+        return {};
     }
 
 }

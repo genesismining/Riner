@@ -8,7 +8,7 @@ namespace miner { namespace jrpc {
 
         RequestBuilder::RequestBuilder() {
             _msg.var = Request{}; //make _msg be a request
-            MI_ENSURES(_msg.var.has_value<Request>({}));
+            MI_ENSURES(mp::holds_alternative<Request>(_msg.var));
         }
 
         RequestBuilder &RequestBuilder::id(nl::json id) {
@@ -17,7 +17,7 @@ namespace miner { namespace jrpc {
         }
 
         Request &RequestBuilder::msgRequest() {
-            return _msg.var.value<Request>({});
+            return mp::get<Request>(_msg.var);
         }
 
         RequestBuilder &RequestBuilder::method(String name) {

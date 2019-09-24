@@ -9,8 +9,8 @@
 
 namespace miner {
 
-    static optional<int> getCurrentDpmFreq(std::fstream &file) {
-        optional<int> freq = nullopt;
+    static opt::optional<int> getCurrentDpmFreq(std::fstream &file) {
+        opt::optional<int> freq = opt::nullopt;
         if (file.is_open()) {
             file.clear();
             file.seekg(0);
@@ -31,8 +31,8 @@ namespace miner {
     }
 
     template<typename T = int, typename Stream = std::ifstream>
-    static optional<T> getIntFromFile(Stream &file) {
-        optional<T> value = nullopt;
+    static opt::optional<T> getIntFromFile(Stream &file) {
+        opt::optional<T> value = opt::nullopt;
         if (file.is_open()) {
             file.clear();
             file.seekg(0);
@@ -112,9 +112,9 @@ namespace miner {
         return writeToFile(file, std::to_string(profile));
     }
 
-    optional<int> AmdgpuApi::getEngineClock() {
-        optional<int> freqMhz;
-        optional<uint32_t> freqHz = getIntFromFile<uint32_t>(sclk.currentFreq);
+    opt::optional<int> AmdgpuApi::getEngineClock() {
+        opt::optional<int> freqMhz;
+        opt::optional<uint32_t> freqHz = getIntFromFile<uint32_t>(sclk.currentFreq);
         if (freqHz)
             freqMhz = (freqHz.value() + 500000U) / 1000000U;
         else
@@ -122,9 +122,9 @@ namespace miner {
         return freqMhz;
     }
 
-    optional<int> AmdgpuApi::getMemoryClock() {
-        optional<int> freqMhz;
-        optional<uint32_t> freqHz = getIntFromFile<uint32_t>(mclk.currentFreq);
+    opt::optional<int> AmdgpuApi::getMemoryClock() {
+        opt::optional<int> freqMhz;
+        opt::optional<uint32_t> freqHz = getIntFromFile<uint32_t>(mclk.currentFreq);
         if (freqHz)
             freqMhz = (freqHz.value() + 500000U) / 1000000U;
         else
@@ -132,36 +132,36 @@ namespace miner {
         return freqMhz;
     }
 
-    optional<int> AmdgpuApi::getVoltage() {
+    opt::optional<int> AmdgpuApi::getVoltage() {
         return getIntFromFile(voltage);
     }
 
-    optional<int> AmdgpuApi::getTemperature() {
+    opt::optional<int> AmdgpuApi::getTemperature() {
         auto t = getIntFromFile(temp);
         if (t)
             t = (t.value() + 500) / 1000;
         return t;
     }
 
-    optional<int> AmdgpuApi::getFanPercent() {
+    opt::optional<int> AmdgpuApi::getFanPercent() {
         auto pwm = getIntFromFile(fanPwm);
         if (pwm)
             pwm = (pwm.value() + 127) / 255;
         return pwm;
     }
 
-    optional<int> AmdgpuApi::getFanRpm() {
+    opt::optional<int> AmdgpuApi::getFanRpm() {
         return getIntFromFile(fanRpm);
     }
 
-    optional<int> AmdgpuApi::getPower() {
+    opt::optional<int> AmdgpuApi::getPower() {
         auto p = getIntFromFile(power);
         if (p)
             p = (p.value() + 500000) / 1000000;
         return p;
     }
 
-    optional<int> AmdgpuApi::getTdp() {
+    opt::optional<int> AmdgpuApi::getTdp() {
         auto tdp = getIntFromFile(powerCap);
         if (tdp)
             tdp = (tdp.value() + 500000) / 1000000;
@@ -173,7 +173,7 @@ namespace miner {
         freq = std::min(std::max(sclk.range.first, freq), sclk.range.second);
         if (sclk.freqTarget.has_value() && sclk.freqTarget.value() == freq)
             return true;
-        optional<int> oldFreq = sclk.freqTarget;
+        opt::optional<int> oldFreq = sclk.freqTarget;
         setPowerstateRange(sclk, 0, 1);
         sclk.freqTarget = freq;
         bool success = applyPowerplaySettings(sclk);
@@ -187,7 +187,7 @@ namespace miner {
         freq = std::min(std::max(mclk.range.first, freq), mclk.range.second);
         if (mclk.freqTarget.has_value() && mclk.freqTarget.value() == freq)
             return true;
-        optional<int> oldFreq = mclk.freqTarget;
+        opt::optional<int> oldFreq = mclk.freqTarget;
         mclk.freqTarget = freq;
         bool success = applyPowerplaySettings(mclk);
         if (!success)
@@ -200,7 +200,7 @@ namespace miner {
         voltage = std::min(std::max(vddcRange.first, voltage), vddcRange.second);
         if (vddcTarget.has_value() && vddcTarget.value() == voltage)
             return true;
-        optional<int> oldVddc = vddcTarget;
+        opt::optional<int> oldVddc = vddcTarget;
         vddcTarget = voltage;
         setPowerstateRange(sclk, 0, 1);
         int maxMclkState = 0;
@@ -308,7 +308,7 @@ namespace miner {
                 while (std::getline(api->vddcTable, line)) {
                     int idx, freq, voltage;
                     int min, max;
-                    optional<int> realVoltage;
+                    opt::optional<int> realVoltage;
                     std::vector<table_entry> *table = nullptr;
                     if (line == "OD_SCLK:")
                         stage = SCLK;
@@ -321,7 +321,7 @@ namespace miner {
                             case SCLK:
                                 table = &api->sclk.table;
                                 setPowerstateRange(api->sclk, table->size(), table->size() + 1);
-                                realVoltage = nullopt; // TODO: check whether api->getVoltage() to set optimized voltages
+                                realVoltage = opt::nullopt; // TODO: check whether api->getVoltage() to set optimized voltages
                                 if (realVoltage)
                                     realVoltage = realVoltage.value() + realVoltage.value() / 50; // add ~2 percent
                                 break;

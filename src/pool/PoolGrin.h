@@ -43,7 +43,7 @@ namespace miner {
 
         // Pool interface
         bool isExpiredJob(const PoolJob &job) override;
-        optional<unique_ptr<Work>> tryGetWorkImpl() override;
+        unique_ptr <Work> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution> result) override;
     private:
 

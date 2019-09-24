@@ -4,7 +4,6 @@
 #include "JsonRpcMessage.h"
 #include <src/util/Logging.h>
 #include <src/common/Assert.h>
-#include <type_safe/visitor.hpp>
 
 namespace miner { namespace jrpc {
 
@@ -120,40 +119,37 @@ namespace miner { namespace jrpc {
         }
 
         bool Message::isResponse() const {
-            return var.has_value<Response>({});
+            return mp::holds_alternative<Response>(var);
         }
 
         bool Message::isRequest() const {
-            return var.has_value<Request>({});
+            return mp::holds_alternative<Request>(var);
         }
 
-        optional_ref<const Error> Message::getIfError() const {
-            optional_ref<const Error> result;
-            visit<Response>(var, [&] (auto &r) {
-                visit<Error>(r.var, [&] (auto &err) {
-                    result = type_safe::opt_cref(err);
-                });
-            });
-            return result;
+        opt::optional<const Error &> Message::getIfError() const {
+            if (auto respPtr = mp::get_if<Response>(&var)) {
+                if (auto errPtr = mp::get_if<Error>(&respPtr->var)) {
+                    return *errPtr;
+                }
+            }
+            return {};
         }
 
-        optional_ref<nl::json>
+        opt::optional<nl::json &>
         Message::getIfResult() {
-            optional_ref<nl::json> result;
-            visit<Response>(var, [&] (auto &r) {
-                visit<nl::json>(r.var, [&] (auto &res) {
-                    result = type_safe::opt_ref(res);
-                });
-            });
-            return result;
+            if (auto respPtr = mp::get_if<Response>(&var)) {
+                if (auto resPtr = mp::get_if<nl::json>(&respPtr->var)) {
+                    return *resPtr;
+                }
+            }
+            return {};
         }
 
-        optional_ref<Request> Message::getIfRequest() {
-            optional_ref<Request> result;
-            visit<Request>(var, [&] (auto &req) {
-                result = type_safe::opt_ref(req);
-            });
-            return result;
+        opt::optional<Request &> Message::getIfRequest() {
+            if (auto reqPtr = mp::get_if<Request>(&var)) {
+                return *reqPtr;
+            }
+            return {};
         }
 
         bool Message::isResultTrue() {
@@ -161,11 +157,10 @@ namespace miner { namespace jrpc {
         }
 
         bool Message::hasMethodName(const char *name) const {
-            bool result = false;
-            visit<Request>(var, [&] (const Request &req) {
-                result = req.method == name;
-            });
-            return result;
+            if (auto reqPtr = mp::get_if<Request>(&var)) {
+                return reqPtr->method == name;
+            }
+            return false;
         }
 
         bool Message::isError() const {

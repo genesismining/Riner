@@ -9,7 +9,7 @@
 namespace miner {namespace file {
 
         template<class T>
-        inline static optional<T> readFileInto(cstring_span filePath) {
+        inline static opt::optional<T> readFileInto(cstring_span filePath) {
             using namespace std;
             ifstream stream(filePath.data());
 
@@ -35,14 +35,14 @@ namespace miner {namespace file {
                 LOG(WARNING) << "Failed when trying to load a file at '"
                              << to_string(filePath) << "'";
             }
-            return nullopt;
+            return opt::nullopt;
         }
 
-        optional<std::string> readFileIntoString(cstring_span filePath) {
+        opt::optional<std::string> readFileIntoString(cstring_span filePath) {
             return readFileInto<std::string>(filePath);
         }
 
-        optional<std::vector<uint8_t>> readFileIntoByteVector(cstring_span filePath) {
+        opt::optional<std::vector<uint8_t>> readFileIntoByteVector(cstring_span filePath) {
             return readFileInto<std::vector<uint8_t>>(filePath);
         }
 

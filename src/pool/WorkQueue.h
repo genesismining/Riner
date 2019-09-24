@@ -43,13 +43,13 @@ namespace miner {
 
         }
 
-        optional<unique_ptr<Work>> tryGetWork() {
+        unique_ptr<Work> tryGetWork() {
             std::unique_lock<std::mutex> lock(mutex);
             if (jobQueue.empty())
-                return nullopt;
+                return nullptr;
             std::unique_ptr<Work> work = jobQueue.front()->makeWork();
             work->job = jobQueue.front();
-            return std::move(work);
+            return work;
         }
 
         inline bool isExpiredJob(const PoolJob &job) {
@@ -138,7 +138,7 @@ namespace miner {
         }
 
         //set "gold master" value that will be incremented and replicated by the refillFunc callback once the queue is
-        //too empty. optional clearQueue parameter defines whether all existing replica of the previous master should be cleared
+        //too empty. cleanFlag parameter defines whether all existing replica of the previous master should be cleared
         //while holding the lock
         void setMaster(std::unique_ptr<PoolJob> newMaster, bool cleanFlag = false) {
             {
@@ -158,10 +158,10 @@ namespace miner {
             notifyNeedsRefill.notify_one();
         }
 
-        optional<unique_ptr<Work>> popWithTimeout(std::chrono::steady_clock::duration timeoutDuration = std::chrono::milliseconds(100)) {
+        unique_ptr<Work> popWithTimeout(std::chrono::steady_clock::duration timeoutDuration = std::chrono::milliseconds(100)) {
             size_t currentSize = 0;
             bool hasMaster = false;
-            optional<unique_ptr<Work>> result;
+            unique_ptr<Work> result;
 
             {
                 std::unique_lock<std::mutex> lock(mutex);
@@ -171,7 +171,7 @@ namespace miner {
                 });
 
                 if (timedOut)
-                    return nullopt;
+                    return nullptr;
 
                 result = std::move(buffer.back());
                 buffer.pop_back();

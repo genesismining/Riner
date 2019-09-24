@@ -35,13 +35,13 @@ namespace miner {
         return ""; //no matching algo type found
     }
 
-    auto Algorithm::entryWithName(const std::string &algoImplName) -> optional_ref<Entry> {
+    auto Algorithm::entryWithName(const std::string &algoImplName) -> opt::optional<Entry &> {
         for (auto &entry : getEntries()) {
             if (entry.algoImplName == algoImplName) {
-                return type_safe::opt_ref(entry);
+                return entry;
             }
         }
-        return nullopt;
+        return {};
     }
 
 }

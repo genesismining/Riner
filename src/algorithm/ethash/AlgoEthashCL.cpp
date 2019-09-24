@@ -57,7 +57,7 @@ namespace miner {
         while (!shutdown) {
             //get work only for obtaining dag creation info
             LOG(INFO) << "trying to get work for dag creation";
-            auto work = pool.tryGetWork<WorkEthash>().value_or(nullptr);
+            auto work = pool.tryGetWork<WorkEthash>();
             if (!work)
                 continue; //check shutdown and try again
 
@@ -137,7 +137,7 @@ namespace miner {
         }
 
         while (!shutdown) {
-            std::shared_ptr<const WorkEthash> work = pool.tryGetWork<WorkEthash>().value_or(nullptr);
+            std::shared_ptr<const WorkEthash> work = pool.tryGetWork<WorkEthash>();
             if (!work)
                 continue; //check shutdown and try again
 

@@ -32,7 +32,7 @@ namespace miner {
 
     class DeviceId {
         VendorEnum vendorEnum = VendorEnum::kUnknown;
-        variant<PcieIndex, DeviceVendorId> id;
+        mp::variant<PcieIndex, DeviceVendorId> id;
         std::string name; //name is not used in comparison operators
 
     public:
@@ -44,12 +44,12 @@ namespace miner {
 
         VendorEnum getVendor() const;
         cstring_span getName() const;
-        optional_ref<const PcieIndex> getIfPcieIndex() const;
+        opt::optional<const PcieIndex&> getIfPcieIndex() const;
 
         bool operator==(const DeviceId &rhs) const;
         bool operator<(const DeviceId &rhs) const;
     };
 
     std::vector<DeviceId> gatherAllDeviceIds();
-    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &);
+    opt::optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &);
 }

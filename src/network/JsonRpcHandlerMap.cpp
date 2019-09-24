@@ -11,7 +11,7 @@ namespace miner { namespace jrpc {
         _mmap.lock()->insert({std::move(id), make_unique<ResponseHandler>(std::move(handler))});
     }
 
-    optional<ResponseHandler> HandlerMap::tryPopForId(const nl::json &id) {
+    opt::optional<ResponseHandler> HandlerMap::tryPopForId(const nl::json &id) {
         unique_ptr<ResponseHandler> handler;
 
         { auto mmap = _mmap.lock();
@@ -26,7 +26,7 @@ namespace miner { namespace jrpc {
         if (handler)
             return std::move(*handler); //move handler out of unique_ptr
         else
-            return nullopt;
+            return opt::nullopt;
     }
 
 }}

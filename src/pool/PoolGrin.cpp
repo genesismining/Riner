@@ -75,7 +75,7 @@ namespace miner {
         return queue.isExpiredJob(job);
     }
 
-    optional<unique_ptr<Work>> PoolGrinStratum::tryGetWorkImpl() {
+    unique_ptr<Work> PoolGrinStratum::tryGetWorkImpl() {
         return queue.tryGetWork();
     }
 

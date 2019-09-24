@@ -10,7 +10,7 @@
 
 namespace miner {
 
-    Application::Application(optional<std::string> configPath) {
+    Application::Application(opt::optional<std::string> configPath) {
         using namespace std::chrono;
 
         if (configPath) {

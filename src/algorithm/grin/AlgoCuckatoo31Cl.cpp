@@ -13,7 +13,7 @@ AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
     for (auto &assignedDeviceRef : args_.assignedDevices) {
         auto &assignedDevice = assignedDeviceRef.get();
 
-        optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(assignedDevice.id);
+        opt::optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(assignedDevice.id);
         if (!deviceOr) {
             continue;
         }
@@ -59,7 +59,7 @@ AlgoCuckatoo31Cl::~AlgoCuckatoo31Cl() {
 void AlgoCuckatoo31Cl::run(cl::Context& context, CuckatooSolver& solver) {
     while (!terminate_) {
         auto work = std::shared_ptr<WorkCuckatoo31>(
-                args_.workProvider.tryGetWork<WorkCuckatoo31>().value_or(nullptr));
+                args_.workProvider.tryGetWork<WorkCuckatoo31>());
         if (!work) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             continue;

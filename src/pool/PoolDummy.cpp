@@ -105,7 +105,7 @@ namespace miner {
         return queue.isExpiredJob(job);
     }
 
-    optional<unique_ptr<Work>> PoolDummy::tryGetWorkImpl() {
+    unique_ptr<Work> PoolDummy::tryGetWorkImpl() {
         return queue.popWithTimeout();
     }
 

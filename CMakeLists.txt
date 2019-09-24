@@ -15,6 +15,13 @@ find_package(OpenCL REQUIRED)
 include_directories(${OpenCL_INCLUDE_DIRS})
 link_directories(${OpenCL_LIBRARY})
 
+#download external mpark/variant v1.4.0 library
+file(DOWNLOAD https://github.com/mpark/variant/releases/download/v1.4.0/variant.hpp ${CMAKE_CURRENT_SOURCE_DIR}/lib/variant/variant.hpp TLS_VERIFY ON STATUS FILE_RET)
+if(NOT ("0" IN_LIST FILE_RET))
+    list(GET FILE_RET 1 ERROR)
+    message(ERROR "Download of variant library failed: ${ERROR}")
+endif()
+
 #download external ethash OpenCL kernel
 file(DOWNLOAD https://raw.githubusercontent.com/genesismining/sgminer-gm/bc138413d9098d6ed285df1bdebc70b47f69bcac/kernel/ethash-new.cl ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/ethash.cl TLS_VERIFY ON STATUS FILE_RET)
 if(NOT ("0" IN_LIST FILE_RET))
@@ -109,7 +116,6 @@ target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 #add subdirectories
 add_subdirectory("lib/gsl")
 add_subdirectory("lib/json")
-add_subdirectory("lib/type_safe")
 add_subdirectory("lib/easyloggingpp")
 
 target_compile_definitions(LibMiner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
@@ -127,8 +133,8 @@ include_directories(
         lib/cl2hpp/include
         lib/gsl/include
         lib/json/include
-        lib/type_safe/include
-        lib/type_safe/external/debug_assert
+        lib/Optional
+        lib/variant
         lib/easyloggingpp/src
 )
 

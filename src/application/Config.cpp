@@ -17,14 +17,14 @@ namespace miner {
     static inline void optionalValue(T &ret, const nl::json &j, const char *key) {
         const auto &it = j.find(key);
         if (it == j.end())
-            ret = nullopt;
+            ret = {};
         else
-            ret = *it;
+            ret.emplace(*it);
     }
 
     template<typename T>
-    static inline optional<T> optionalValue(const nl::json &j, const char *key) {
-        optional<T> ret;
+    static inline opt::optional<T> optionalValue(const nl::json &j, const char *key) {
+        opt::optional<T> ret;
         optionalValue(ret, j, key);
         return ret;
     }
@@ -241,32 +241,33 @@ namespace miner {
         }
     }
 
-    optional_ref<const Config::DeviceProfile::AlgoSettings> Config::DeviceProfile::getAlgoSettings(const std::string &algoImplName) const {
+    opt::optional<const Config::DeviceProfile::AlgoSettings &> Config::DeviceProfile::getAlgoSettings(
+            const std::string &algoImplName) const {
         for (auto &algs : algoSettings)
             if (algs.algoImplName == algoImplName)
-                return type_safe::opt_ref(algs);
-        return nullopt;
+                return algs;
+        return {};
     }
 
-    optional_ref<const Config::DeviceProfile> Config::getDeviceProfile(const std::string &name) const {
+    opt::optional<const Config::DeviceProfile &> Config::getDeviceProfile(const std::string &name) const {
         for (auto &devp : deviceProfiles)
             if (devp.name == name)
-                return type_safe::opt_ref(devp);
-        return nullopt;
+                return devp;
+        return {};
     }
 
-    optional_ref<Config::Profile> Config::getProfile(const std::string &name) {
+    opt::optional<Config::Profile &> Config::getProfile(const std::string &name) {
         for (auto &prof : profiles)
             if (prof.name == name)
-                return type_safe::opt_ref(prof);
-        return nullopt;
+                return prof;
+        return {};
     }
 
     const std::list<Config::Pool> &Config::getPools() const {
         return pools;
     }
 
-    optional_ref<miner::Config::Profile> Config::getStartProfile() {
+    opt::optional<Config::Profile &> Config::getStartProfile() {
         return getProfile(globalSettings.start_profile);
     }
 

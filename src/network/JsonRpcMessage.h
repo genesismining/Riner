@@ -69,7 +69,7 @@ namespace miner { namespace jrpc {
      * response-specific part of `jrpc::Message`. contains a variant that is either an `Error`
      */
     struct Response { //response-specific part of message
-        variant<Error, nl::json /*= Result*/> var = Error{};
+        mp::variant<Error, nl::json /*= Result*/> var = Error{};
     };
 
     /**
@@ -85,7 +85,7 @@ namespace miner { namespace jrpc {
      */
     struct Message {
         //constexpr static auto jsonrpc = "2.0"; //always the same
-        variant<Request, Response> var = Request{};
+        mp::variant<Request, Response> var = Request{};
 
         /**
          * `id`, ideally `Null`, `String`, `Number` or empty (=`nl::json{}`). Empty means that no `id` member is
@@ -131,19 +131,19 @@ namespace miner { namespace jrpc {
          * checks if this `Message` is a `jrpc::Response`, then checks whether it is a `jrpc::Error`. If it is, returns the ref to that `jrpc::Error`
          * @return ref to the underlying `jrpc::Error` or `nullopt`
          */
-        optional_ref<const Error> getIfError() const;
+        opt::optional<const Error &> getIfError() const;
 
         /**
          * convenience function for quick access to the result `nl::json` object, if this `Message` is a `Request` that is not an `Error`.
          * @return ref to underlying result `nl::json` object, or `nullopt`
          */
-        optional_ref<nl::json> getIfResult(); //TODO: make const
+        opt::optional<nl::json &> getIfResult(); //TODO: make const
 
         /**
          * convenience function for quick access to the `Request` object.
          * @return ref to this `Message`'s `jrpc::Request` object if it is a request, `nullopt` otherwise.
          */
-        optional_ref<Request> getIfRequest(); //TODO: make const
+        opt::optional<Request &> getIfRequest(); //TODO: make const
 
         /**
          * convenience function that checks whether this `Message` is a `Response` that is not an `Error`. If so, tries to
@@ -152,14 +152,14 @@ namespace miner { namespace jrpc {
          * @return the `jrpc::Response`s `"result"` as a `T`, or `nullopt`
          */
         template<class T>
-        optional<T> resultAs() {
-            if (optional_ref<nl::json> result = getIfResult()) {
+        opt::optional<T> resultAs() {
+            if (opt::optional<nl::json &> result = getIfResult()) {
                 try {
                     return result.value().get<T>();
                 }
                 catch (const nl::json::exception &e) {}
             }
-            return nullopt;
+            return opt::nullopt;
         }
 
         /**

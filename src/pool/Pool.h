@@ -93,7 +93,7 @@ namespace miner {
             return entries;
         }
 
-        static optional_ref<Entry> entryWithName(const std::string &poolImplName);
+        static opt::optional<Entry &> entryWithName(const std::string &poolImplName);
 
         //info points to the actual Entry in the global registry. it gets assigned in Entry::makeFunc TODO: refactor, just copy it instead
         const Entry *info = nullptr;
@@ -133,10 +133,10 @@ namespace miner {
          * this method is only supposed to be called by the templated tryGetWork<WorkT>() method below.
          * this method tries to return valid work as quickly as possible, but also blocks for a short amount of time to wait
          * for work to become available if it isn't already when the call is being made. After a short timeout period with
-         * still no work available, nullopt is returned.
-         * @return type erased valid unique_ptr or nullopt
+         * still no work available, nullptr is returned.
+         * @return type erased valid unique_ptr or nullptr
          */
-        virtual optional<unique_ptr<Work>> tryGetWorkImpl() = 0;
+        virtual unique_ptr<Work> tryGetWorkImpl() = 0;
 
         /**
          * @brief submitSolutionImpl call as implemented by the Pool subclasses (aka PoolImpls)
@@ -154,22 +154,21 @@ namespace miner {
          * this method is supposed to be called from within an AlgoImpl. It is the intended way of obtaining work from a pool
          * this method tries to return valid work as quickly as possible, but also blocks for a short amount of time to wait
          * for work to become available if it isn't already when the call is being made. After a short timeout period with
-         * still no work available, nullopt is returned.
+         * still no work available, nullptr is returned.
          * This method is supposed to be called repeatedly in a loop in AlgoImpls, and will not cause busy waiting if
          * nullopt is returned repeatedly due to its internal timeout mechanism
          *
          * @tparam WorkT the Work subclass for a specific POWtype
-         * @return a valid unique_ptr containing work or a nullopt optional
+         * @return a valid unique_ptr containing work or a nullptr
          */
         template<class WorkT>
-        optional<unique_ptr<WorkT>> tryGetWork() {
-            auto maybeWork = tryGetWorkImpl();
-            if (maybeWork) {
-                auto &work = maybeWork.value();
-                MI_EXPECTS(work != nullptr && work->powType == WorkT::getPowType());
-                return static_unique_ptr_cast<WorkT>(std::move(maybeWork.value()));
+        unique_ptr<WorkT> tryGetWork() {
+            auto work = tryGetWorkImpl();
+            if (work) {
+                MI_EXPECTS(work->powType == WorkT::getPowType());
+                return static_unique_ptr_cast<WorkT>(std::move(work));
             }
-            return nullopt;
+            return nullptr;
         }
 
         /**
@@ -224,7 +223,8 @@ namespace miner {
             Registry(const std::string &poolImplName, const std::string &powType, std::string protocolType, std::string protocolTypeAlias = "") noexcept {
                 LOG(DEBUG) << "register Pool: " << poolImplName;
 
-                getEntries().emplace_back(Entry{poolImplName, powType, protocolType, protocolTypeAlias});
+                getEntries().emplace_back(Entry{
+                    poolImplName, powType, std::move(protocolType), std::move(protocolTypeAlias)});
 
                 auto *entry = &getEntries().back();
                 //create type erased creation function

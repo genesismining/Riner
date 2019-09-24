@@ -10,6 +10,6 @@
 [submodule "lib/json"]
 	path = lib/json
 	url = https://github.com/nlohmann/json.git
-[submodule "lib/type_safe"]
-	path = lib/type_safe
-	url = https://github.com/foonathan/type_safe
+[submodule "lib/Optional"]
+	path = lib/Optional
+	url = https://github.com/akrzemi1/Optional

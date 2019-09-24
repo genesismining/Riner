@@ -98,7 +98,7 @@ namespace miner {
         return queue.isExpiredJob(job);
     }
 
-    optional<unique_ptr<Work>> PoolEthashStratum::tryGetWorkImpl() {
+    unique_ptr <Work> PoolEthashStratum::tryGetWorkImpl() {
         return queue.popWithTimeout();
     }
 

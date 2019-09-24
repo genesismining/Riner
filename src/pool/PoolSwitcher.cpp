@@ -84,7 +84,7 @@ namespace miner {
         return pool;
     }
 
-    optional<unique_ptr<Work>> PoolSwitcher::tryGetWorkImpl() {
+    unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
         if (auto pool = activePool()) {
             LOG(INFO) << "getting work from " << gsl::to_string(pool->getName());
@@ -95,7 +95,7 @@ namespace miner {
         //wait for a short period of time to prevent busy waiting in the algorithms' loops
         //TODO: better solution would be to wait for a short time, and if a pool becomes available in that time period it can be used immediately and the function returns
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        return nullopt;
+        return nullptr;
     }
 
     void PoolSwitcher::submitSolutionImpl(unique_ptr<WorkSolution> solution) {

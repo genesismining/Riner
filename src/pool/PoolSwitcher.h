@@ -40,7 +40,7 @@ namespace miner {
             return pool;
         }
 
-        optional<unique_ptr<Work>> tryGetWorkImpl() override;
+        unique_ptr <Work> tryGetWorkImpl() override;
 
         void submitSolutionImpl(unique_ptr<WorkSolution>) override;
 

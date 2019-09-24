@@ -21,7 +21,7 @@ namespace miner {
         unique_ptr<ComputeModule> compute; //lazy init, depends on config
 
         //This below is implicitly assuming that the same Gpu cannot be used by 2 AlgoImpls simultaneoulsy since they share the AlgoSettings. If this ever changes this vector must be something else
-        SharedLockGuarded<std::deque<optional<Device>>> devicesInUse; //nullopt if device is not used by any algo, same indexing as ConfigModule::getAllDeviceIds()
+        SharedLockGuarded<std::deque<opt::optional<Device>>> devicesInUse; //nullopt if device is not used by any algo, same indexing as ConfigModule::getAllDeviceIds()
 
         //algorithm name is the key of this map
         SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> poolSwitchers;
@@ -33,7 +33,7 @@ namespace miner {
         void launchProfile(const Config &config, Config::Profile &prof);
 
     public:
-        explicit Application(optional<std::string> configPath);
+        explicit Application(opt::optional<std::string> configPath);
 
         void logLaunchInfo(const std::string &implName, std::vector<std::reference_wrapper<Device>> &assignedDevices) const;
     };

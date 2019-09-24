@@ -28,14 +28,14 @@ namespace miner {
         GpuApi(const GpuApi &) = delete;
         GpuApi &operator=(const GpuApi &) = delete;
 
-        virtual optional<int> getEngineClock();
-        virtual optional<int> getMemoryClock();
-        virtual optional<int> getVoltage();
-        virtual optional<int> getTemperature();
-        virtual optional<int> getFanPercent();
-        virtual optional<int> getFanRpm();
-        virtual optional<int> getPower();
-        virtual optional<int> getTdp();
+        virtual opt::optional<int> getEngineClock();
+        virtual opt::optional<int> getMemoryClock();
+        virtual opt::optional<int> getVoltage();
+        virtual opt::optional<int> getTemperature();
+        virtual opt::optional<int> getFanPercent();
+        virtual opt::optional<int> getFanRpm();
+        virtual opt::optional<int> getPower();
+        virtual opt::optional<int> getTdp();
 
         virtual bool setEngineClock(int freq);
         virtual bool setMemoryClock(int freq);
