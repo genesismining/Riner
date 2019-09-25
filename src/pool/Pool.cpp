@@ -35,7 +35,7 @@ namespace miner {
 
     shared_ptr<Pool> Pool::makePool(const PoolConstructionArgs &args, const std::string &poolImplName) {
         if (auto entry = entryWithName(poolImplName))
-            return entry.value().makeFunc(args);
+            return entry->makeFunc(args);
         return nullptr;
     }
 
@@ -53,13 +53,13 @@ namespace miner {
 
     std::string Pool::getPowTypeForPoolImplName(const std::string &poolImplName) {
         if (auto entry = entryWithName(poolImplName))
-            return entry.value().powType;
+            return entry->powType;
         return ""; //no matching powType found
     }
 
     std::string Pool::getProtocolTypeForPoolImplName(const std::string &poolImplName) {
         if (auto entry = entryWithName(poolImplName))
-            return entry.value().protocolType;
+            return entry->protocolType;
         return ""; //no matching protocol type found
     }
 
@@ -82,7 +82,7 @@ namespace miner {
         return false;
     }
 
-    auto Pool::entryWithName(const std::string &poolImplName) -> opt::optional<Entry &> {
+    optional_ref<Pool::Entry> Pool::entryWithName(const std::string &poolImplName) {
         for (auto &entry : getEntries())
             if (entry.poolImplName == poolImplName)
                 return entry;

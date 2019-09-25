@@ -15,7 +15,7 @@ namespace miner {
     {
     }
 
-    opt::optional<const PcieIndex&> DeviceId::getIfPcieIndex() const {
+    optional_cref<PcieIndex> DeviceId::getIfPcieIndex() const {
         if (auto ptr = mp::get_if<PcieIndex>(&id)) {
             return *ptr;
         }
@@ -139,7 +139,7 @@ namespace miner {
 
             for (auto &clDevice : clDevices) {
                 if (auto deviceId = obtainDeviceIdFromOpenCLDevice(clDevice)) {
-                    result.push_back(deviceId.value());
+                    result.push_back(*deviceId);
                 }
                 else {
                     LOG(INFO) << "unable to obtain device id for clDevice at " << clDevice();

@@ -126,7 +126,7 @@ namespace miner { namespace jrpc {
             return mp::holds_alternative<Request>(var);
         }
 
-        opt::optional<const Error &> Message::getIfError() const {
+        optional_cref<Error> Message::getIfError() const {
             if (auto respPtr = mp::get_if<Response>(&var)) {
                 if (auto errPtr = mp::get_if<Error>(&respPtr->var)) {
                     return *errPtr;
@@ -135,7 +135,7 @@ namespace miner { namespace jrpc {
             return {};
         }
 
-        opt::optional<nl::json &>
+        optional_ref<nl::json>
         Message::getIfResult() {
             if (auto respPtr = mp::get_if<Response>(&var)) {
                 if (auto resPtr = mp::get_if<nl::json>(&respPtr->var)) {
@@ -145,7 +145,7 @@ namespace miner { namespace jrpc {
             return {};
         }
 
-        opt::optional<Request &> Message::getIfRequest() {
+        optional_ref<Request> Message::getIfRequest() {
             if (auto reqPtr = mp::get_if<Request>(&var)) {
                 return *reqPtr;
             }

@@ -93,7 +93,7 @@ namespace miner {
                 nl::json j;
 
                 if (deviceInUse) {
-                    const Device &d = deviceInUse.value();
+                    const Device &d = *deviceInUse;
 
                     MI_EXPECTS(i == d.deviceIndex); //just to be sure
 

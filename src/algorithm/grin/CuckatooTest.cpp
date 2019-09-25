@@ -53,12 +53,12 @@ protected:
 
         opt::optional<DeviceId> deviceId = obtainDeviceIdFromOpenCLDevice(device);
         EXPECT_TRUE(deviceId.has_value());
-        LOG(INFO)<< "Running on device " << gsl::to_string(deviceId.value().getName());
-        vendor = deviceId.value().getVendor();
+        LOG(INFO)<< "Running on device " << gsl::to_string(deviceId->getName());
+        vendor = deviceId->getVendor();
         context = cl::Context(device);
 
         Device::AlgoSettings algoSettings;
-        Device algoDevice = {deviceId.value(), algoSettings, 0};
+        Device algoDevice = {*deviceId, algoSettings, 0};
 
         CuckatooSolver::Options options {algoDevice, tasks};
         options.programLoader = &programLoader;

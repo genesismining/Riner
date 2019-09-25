@@ -165,7 +165,7 @@ namespace miner {
                     ++counter; LOG(INFO) << "return from method 0";
 
                     if (auto result = msg.getIfResult()) {
-                        EXPECT_TRUE(result.value().empty());
+                        EXPECT_TRUE(result->empty());
                         ++counter; LOG(INFO) << "got to line: " << __LINE__;
                     }
 
@@ -177,7 +177,7 @@ namespace miner {
                         ++counter; LOG(INFO) << "return from method 1";
 
                         if (auto result = msg.getIfResult()) {
-                            EXPECT_EQ(result.value(), 4);
+                            EXPECT_EQ(*result, 4);
                             ++counter; LOG(INFO) << "got to line: " << __LINE__;
                         }
 
@@ -190,7 +190,7 @@ namespace miner {
                             ++counter; LOG(INFO) << "return from method 2";
 
                             if (auto result = msg.getIfResult()) {
-                                EXPECT_EQ(result.value(), 8);
+                                EXPECT_EQ(*result, 8);
                                 ++counter; LOG(INFO) << "got to line: " << __LINE__;
                             }
 
@@ -204,7 +204,7 @@ namespace miner {
                                 ++counter; LOG(INFO) << "return from method 3";
 
                                 if (auto result = msg.getIfResult()) {
-                                    EXPECT_EQ(result.value(), 9);
+                                    EXPECT_EQ(*result, 9);
                                     ++counter; LOG(INFO) << "got to line: " << __LINE__;
                                 }
 
@@ -292,7 +292,7 @@ namespace miner {
             {auto lmsg = msg.lock();
                 EXPECT_TRUE(lmsg->isError());
                 if (lmsg->isError())
-                    EXPECT_EQ(lmsg->getIfError().value().code, jrpc::ErrorCode::method_not_found);
+                    EXPECT_EQ(lmsg->getIfError()->code, jrpc::ErrorCode::method_not_found);
             }
         });
         EXPECT_FALSE(timeout);

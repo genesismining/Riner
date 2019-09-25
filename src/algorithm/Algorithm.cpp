@@ -23,19 +23,19 @@ namespace miner {
 
     unique_ptr<Algorithm> Algorithm::makeAlgo(AlgoConstructionArgs args, const std::string &implName) {
         if (auto entry = entryWithName(implName)) {
-            return entry.value().makeFunc(std::move(args));
+            return entry->makeFunc(std::move(args));
         }
         return nullptr;
     }
 
     std::string Algorithm::powTypeForAlgoImplName(const std::string &algoImplName) {
         if (auto entry = entryWithName(algoImplName)) {
-            return entry.value().powType;
+            return entry->powType;
         }
         return ""; //no matching algo type found
     }
 
-    auto Algorithm::entryWithName(const std::string &algoImplName) -> opt::optional<Entry &> {
+    optional_ref<Algorithm::Entry> Algorithm::entryWithName(const std::string &algoImplName) {
         for (auto &entry : getEntries()) {
             if (entry.algoImplName == algoImplName) {
                 return entry;

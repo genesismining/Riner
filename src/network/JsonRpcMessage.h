@@ -131,19 +131,19 @@ namespace miner { namespace jrpc {
          * checks if this `Message` is a `jrpc::Response`, then checks whether it is a `jrpc::Error`. If it is, returns the ref to that `jrpc::Error`
          * @return ref to the underlying `jrpc::Error` or `nullopt`
          */
-        opt::optional<const Error &> getIfError() const;
+        optional_cref<Error> getIfError() const;
 
         /**
          * convenience function for quick access to the result `nl::json` object, if this `Message` is a `Request` that is not an `Error`.
          * @return ref to underlying result `nl::json` object, or `nullopt`
          */
-        opt::optional<nl::json &> getIfResult(); //TODO: make const
+        optional_ref<nl::json> getIfResult(); //TODO: make const
 
         /**
          * convenience function for quick access to the `Request` object.
          * @return ref to this `Message`'s `jrpc::Request` object if it is a request, `nullopt` otherwise.
          */
-        opt::optional<Request &> getIfRequest(); //TODO: make const
+        optional_ref<Request> getIfRequest(); //TODO: make const
 
         /**
          * convenience function that checks whether this `Message` is a `Response` that is not an `Error`. If so, tries to
@@ -153,9 +153,9 @@ namespace miner { namespace jrpc {
          */
         template<class T>
         opt::optional<T> resultAs() {
-            if (opt::optional<nl::json &> result = getIfResult()) {
+            if (optional_ref<nl::json> result = getIfResult()) {
                 try {
-                    return result.value().get<T>();
+                    return result->get<T>();
                 }
                 catch (const nl::json::exception &e) {}
             }

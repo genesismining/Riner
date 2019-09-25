@@ -25,7 +25,7 @@ namespace miner { namespace jrpc {
 
                     if (auto optHandler = _pending.tryPopForId(msg.id)) {
                         try {
-                            optHandler.value()(cxn, msg);
+                            (*optHandler)(cxn, msg);
                         }
                         catch (const nl::json::exception &e) {
                             LOG(ERROR) << "json error while running jrpc handler for id '" << msg.id << "': " << e.what();

@@ -25,7 +25,7 @@ namespace miner {
                 LOG(ERROR) << "failed to read " << clFilePath;
                 return opt::nullopt;
             }
-            sources.push_back(std::move(source.value()));
+            sources.push_back(std::move(*source));
         }
         return compileCLFile(context, sources, options);
     }

@@ -17,7 +17,7 @@ AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
         if (!deviceOr) {
             continue;
         }
-        cl::Device device = deviceOr.value();
+        cl::Device device = *deviceOr;
         workers_.emplace_back([this, &assignedDevice, device] {
             cl::Context context(device);
             CuckatooSolver::Options opts {assignedDevice, tasks};

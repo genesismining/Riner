@@ -65,7 +65,7 @@ namespace miner {
 
             std::list<AlgoSettings> algoSettings;
 
-            opt::optional<const AlgoSettings &> getAlgoSettings(const std::string &algoImplName) const;
+            optional_cref<Config::DeviceProfile::AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
         };
 
         struct Profile {
@@ -80,9 +80,9 @@ namespace miner {
             Mapping device_default;
         };
 
-        opt::optional<const DeviceProfile &> getDeviceProfile(const std::string &name) const;
-        opt::optional<Profile &> getProfile(const std::string &name);
-        opt::optional<Profile &> getStartProfile();
+        optional_cref<DeviceProfile> getDeviceProfile(const std::string &name) const;
+        optional_ref<Profile> getProfile(const std::string &name);
+        optional_ref<Profile> getStartProfile();
 
         operator bool() {return valid;}
 

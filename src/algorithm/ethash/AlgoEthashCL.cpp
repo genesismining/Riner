@@ -20,7 +20,7 @@ namespace miner {
             if (auto clDevice = args.compute.getDeviceOpenCL(device.get().id)) {
 
                 gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
-                                              std::move(clDevice.value()), device));
+                                              std::move(*clDevice), device));
             }
         }
     }
@@ -50,7 +50,7 @@ namespace miner {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
         }
-        plat.clProgram = maybeProgram.value();
+        plat.clProgram = *maybeProgram;
 
         DagFile dag;
 

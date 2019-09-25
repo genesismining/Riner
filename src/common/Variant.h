@@ -2,7 +2,6 @@
 #pragma once
 
 #include <variant.hpp>
-#include <utility>
 
 namespace miner {
 

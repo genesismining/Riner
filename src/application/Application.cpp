@@ -14,7 +14,7 @@ namespace miner {
         using namespace std::chrono;
 
         if (configPath) {
-            config = configUtils::loadConfig(configPath.value());
+            config = configUtils::loadConfig(*configPath);
         } else {
             LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
             return;
@@ -38,7 +38,7 @@ namespace miner {
             LOG(WARNING) << "no start profile configured";
             return;
         }
-        auto &prof = maybeProf.value();
+        auto &prof = *maybeProf;
 
         launchProfile(config, prof);
     }

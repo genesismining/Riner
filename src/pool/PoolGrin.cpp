@@ -37,7 +37,7 @@ namespace miner {
             io.callAsync(cxn, getjobtemplate, [this] (CxnHandle cxn, jrpc::Message response) {
                 if (auto result = response.getIfResult()) {
                     _cxn = cxn;
-                    onMiningNotify(result.value());
+                    onMiningNotify(*result);
                 }
             });
 
@@ -111,7 +111,7 @@ namespace miner {
                 }
                 bool accepted = false;
                 if (auto result = res.getIfResult()) {
-                    if (result.value() == "ok") {
+                    if (*result == "ok") {
                         accepted = true;
                     }
                 }
@@ -123,7 +123,7 @@ namespace miner {
 
                 if (!accepted) {
                     if (auto error = res.getIfError()) {
-                        auto code = error.value().code;
+                        auto code = error->code;
                         LOG_IF(code == -32502, FATAL) << "Invalid share";
                     }
                 }

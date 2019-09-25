@@ -27,7 +27,7 @@ namespace miner {
                         *this,
                         _args.workProvider,
                         device,
-                        std::move(clDeviceOr.value())
+                        std::move(*clDeviceOr)
                 };
 
                 //start a new thread

@@ -67,8 +67,8 @@ namespace miner {namespace configUtils {
                     //initialize the device inside the devicesInUse list, and put it
                     //into the assignedDevices list of this algoImpl
 
-                    deviceToInit.emplace(deviceId, algoSettings.value(), i);
-                    result.emplace_back(deviceToInit.value());
+                    deviceToInit.emplace(deviceId, *algoSettings, i);
+                    result.emplace_back(*deviceToInit);
                 }
                 else {
                     LOG(WARNING) << "no algorithm settings for '" << implName << "' in deviceProfile '" << devProf.name << "'";

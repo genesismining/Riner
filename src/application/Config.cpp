@@ -241,7 +241,7 @@ namespace miner {
         }
     }
 
-    opt::optional<const Config::DeviceProfile::AlgoSettings &> Config::DeviceProfile::getAlgoSettings(
+    optional_cref<Config::DeviceProfile::AlgoSettings> Config::DeviceProfile::getAlgoSettings(
             const std::string &algoImplName) const {
         for (auto &algs : algoSettings)
             if (algs.algoImplName == algoImplName)
@@ -249,14 +249,14 @@ namespace miner {
         return {};
     }
 
-    opt::optional<const Config::DeviceProfile &> Config::getDeviceProfile(const std::string &name) const {
+    optional_cref<Config::DeviceProfile> Config::getDeviceProfile(const std::string &name) const {
         for (auto &devp : deviceProfiles)
             if (devp.name == name)
                 return devp;
         return {};
     }
 
-    opt::optional<Config::Profile &> Config::getProfile(const std::string &name) {
+    optional_ref<Config::Profile> Config::getProfile(const std::string &name) {
         for (auto &prof : profiles)
             if (prof.name == name)
                 return prof;
@@ -267,7 +267,7 @@ namespace miner {
         return pools;
     }
 
-    opt::optional<Config::Profile &> Config::getStartProfile() {
+    optional_ref<Config::Profile> Config::getStartProfile() {
         return getProfile(globalSettings.start_profile);
     }
 

@@ -93,7 +93,7 @@ namespace miner {
             return entries;
         }
 
-        static opt::optional<Entry &> entryWithName(const std::string &poolImplName);
+        static optional_ref<Entry> entryWithName(const std::string &poolImplName);
 
         //info points to the actual Entry in the global registry. it gets assigned in Entry::makeFunc TODO: refactor, just copy it instead
         const Entry *info = nullptr;

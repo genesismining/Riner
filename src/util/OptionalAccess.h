@@ -35,19 +35,4 @@ namespace miner {
         return {};
     }
 
-    class BadOptionalAccess : public std::exception {
-    public:
-        const char *what() const noexcept override {
-            return "bad optional access";
-        };
-    };
-
-    //unwrap an optional<Reftype> and throw BadOptionalAccess if it is nullopt
-    template<class T>
-    T &unwrap(const opt::optional<T &> &opt) {
-        if (opt)
-            return opt.value();
-        throw BadOptionalAccess();
-    }
-
 }

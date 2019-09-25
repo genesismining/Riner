@@ -64,11 +64,11 @@ namespace miner {
             if (auto instance = api(args)) {
                 const auto &settings = args.settings;
                 if (settings.power_limit_W)
-                    instance->setTdp(settings.power_limit_W.value());
+                    instance->setTdp(*settings.power_limit_W);
                 if (settings.core_voltage_mV)
-                    instance->setVoltage(settings.core_voltage_mV.value());
+                    instance->setVoltage(*settings.core_voltage_mV);
                 if (settings.memory_clock_MHz)
-                    instance->setMemoryClock(settings.memory_clock_MHz.value());
+                    instance->setMemoryClock(*settings.memory_clock_MHz);
                 if (settings.core_clock_MHz || settings.core_clock_MHz_min)
                     instance->setEngineClock(settings.core_clock_MHz.value_or(settings.core_clock_MHz_min.value_or(0)));
                 return instance;
