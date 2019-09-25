@@ -300,7 +300,7 @@ namespace miner {
             LOG(INFO) << "calculating dag cache for epoch = " << epoch;
             MI_EXPECTS(epoch == getEthEpoch(seedHash));
             const uint32_t numNodes = cacheSize[epoch];
-            buffer = DynamicBuffer<node_t>(numNodes, 64);
+            buffer = DynamicBuffer<node_t>(numNodes);
             auto nodes = buffer.data();
 
             SHA3_512(buffer.bytes(), seedHash.data(), 32);

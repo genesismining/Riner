@@ -4,6 +4,8 @@
 #include <src/common/Span.h>
 #include <gsl/gsl>
 
+#include <type_traits>
+
 namespace miner {
 
     //simple replacement for std::vector<char> in situations where huge
@@ -21,14 +23,24 @@ namespace miner {
 
         DynamicBuffer() = default;
         // only use alignment if a stronger power of two alignment than the natural alignment of T is needed
-        DynamicBuffer(size_t size, size_t alignment = 1)
-            : owner(new T[size + (sizeof(T) + alignment - 2) / sizeof(T)])
-            , buffer(reinterpret_cast<T*>((uintptr_t(owner) + alignment - 1) & ~static_cast<uintptr_t>(alignment - 1)), static_cast<ptrdiff_t>(size)) {
+        DynamicBuffer(size_t size, size_t alignment = alignof(T))
+            : owner(reinterpret_cast<T*>(::operator new(size * sizeof(T) + alignment - 1)))
+            , buffer(reinterpret_cast<T*>((uintptr_t(owner) + alignment - 1) & ~uintptr_t(alignment - 1))
+                , ptrdiff_t(size)) {
+            if (!std::is_trivially_constructible<T>::value) {
+                new(buffer.data()) T[size];
+            }
         }
 
         ~DynamicBuffer() {
-            if (owner) //if not moved-from
-                delete[] owner;
+            if (owner) { //if not moved-from
+                if (!std::is_trivially_destructible<T>::value) {
+                    for (auto &element : buffer) {
+                        element.~T();
+                    }
+                }
+                ::operator delete(owner);
+            }
         }
 
         DynamicBuffer(DynamicBuffer &&o) noexcept
