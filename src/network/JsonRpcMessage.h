@@ -69,7 +69,7 @@ namespace miner { namespace jrpc {
      * response-specific part of `jrpc::Message`. contains a variant that is either an `Error`
      */
     struct Response { //response-specific part of message
-        mp::variant<Error, nl::json /*= Result*/> var = Error{};
+        variant<Error, nl::json /*= Result*/> var = Error{};
     };
 
     /**
@@ -85,7 +85,7 @@ namespace miner { namespace jrpc {
      */
     struct Message {
         //constexpr static auto jsonrpc = "2.0"; //always the same
-        mp::variant<Request, Response> var = Request{};
+        variant<Request, Response> var = Request{};
 
         /**
          * `id`, ideally `Null`, `String`, `Number` or empty (=`nl::json{}`). Empty means that no `id` member is
@@ -152,14 +152,14 @@ namespace miner { namespace jrpc {
          * @return the `jrpc::Response`s `"result"` as a `T`, or `nullopt`
          */
         template<class T>
-        opt::optional<T> resultAs() {
+        optional<T> resultAs() {
             if (optional_ref<nl::json> result = getIfResult()) {
                 try {
                     return result->get<T>();
                 }
                 catch (const nl::json::exception &e) {}
             }
-            return opt::nullopt;
+            return nullopt;
         }
 
         /**

@@ -23,8 +23,8 @@ namespace miner {
     }
 
     template<typename T>
-    static inline opt::optional<T> optionalValue(const nl::json &j, const char *key) {
-        opt::optional<T> ret;
+    static inline optional<T> optionalValue(const nl::json &j, const char *key) {
+        optional<T> ret;
         optionalValue(ret, j, key);
         return ret;
     }

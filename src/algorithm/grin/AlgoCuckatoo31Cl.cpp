@@ -13,7 +13,7 @@ AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
     for (auto &assignedDeviceRef : args_.assignedDevices) {
         auto &assignedDevice = assignedDeviceRef.get();
 
-        opt::optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(assignedDevice.id);
+        optional<cl::Device> deviceOr = args.compute.getDeviceOpenCL(assignedDevice.id);
         if (!deviceOr) {
             continue;
         }

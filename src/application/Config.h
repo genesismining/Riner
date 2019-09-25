@@ -17,7 +17,7 @@ namespace miner {
         explicit Config(const nl::json &configJson);
 
         struct GlobalSettings {
-            opt::optional<int>
+            optional<int>
                     temp_cutoff,
                     temp_overheat,
                     temp_target;
@@ -42,7 +42,7 @@ namespace miner {
             std::string name;
 
             struct GpuSettings {
-                opt::optional<uint32_t>
+                optional<uint32_t>
                         core_clock_MHz_min, //engine_min
                         core_clock_MHz_max, //engine_max
                         core_clock_MHz,

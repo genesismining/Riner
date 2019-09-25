@@ -12,7 +12,7 @@ namespace miner {
 
     class CLProgramLoader {
 
-        opt::optional<cl::Program> compileCLFile(cl::Context context, std::vector<std::string> sources, cstring_span options);
+        optional<cl::Program> compileCLFile(cl::Context context, std::vector<std::string> sources, cstring_span options);
 
         const std::string clSourceDir;
         const std::string precompiledKernelDir;
@@ -20,12 +20,12 @@ namespace miner {
     public:
         CLProgramLoader(std::string clSourceDir, std::string precompiledKernelDir);
 
-        opt::optional<cl::Program> loadProgram(cl::Context context, cstring_span clFileInDir, cstring_span clCompilerOptions) {
+        optional<cl::Program> loadProgram(cl::Context context, cstring_span clFileInDir, cstring_span clCompilerOptions) {
             std::vector<cstring_span> files = {clFileInDir};
             return loadProgram(std::move(context), files, clCompilerOptions);
         }
 
-        opt::optional<cl::Program> loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span clCompilerOptions);
+        optional<cl::Program> loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span clCompilerOptions);
     };
 
 }

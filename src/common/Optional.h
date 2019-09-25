@@ -12,4 +12,9 @@ namespace miner {
     
     namespace opt = std::experimental;
 
+    template<class T>
+    using optional = opt::optional<T>;
+
+    constexpr opt::nullopt_t nullopt = opt::nullopt;
+
 }

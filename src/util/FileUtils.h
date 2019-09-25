@@ -7,9 +7,9 @@
 
 namespace miner {namespace file {
 
-        opt::optional<std::string> readFileIntoString(cstring_span filePath);
+        optional<std::string> readFileIntoString(cstring_span filePath);
 
-        opt::optional<std::vector<uint8_t>> readFileIntoByteVector(cstring_span filePath);
+        optional<std::vector<uint8_t>> readFileIntoByteVector(cstring_span filePath);
 
 
 

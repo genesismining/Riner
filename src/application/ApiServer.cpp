@@ -51,7 +51,7 @@ namespace miner {
         };
     }
 
-    ApiServer::ApiServer(uint16_t port, const SharedLockGuarded<std::deque<opt::optional<Device>>> &devicesInUse,
+    ApiServer::ApiServer(uint16_t port, const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse,
             const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers)
             : devicesInUse(devicesInUse)
             , poolSwitchers(poolSwitchers)
@@ -88,7 +88,7 @@ namespace miner {
             auto devicesInUseLocked = devicesInUse.readLock();
 
             size_t i = 0;
-            for (const opt::optional<Device> &deviceInUse : *devicesInUseLocked) {
+            for (const optional<Device> &deviceInUse : *devicesInUseLocked) {
 
                 nl::json j;
 

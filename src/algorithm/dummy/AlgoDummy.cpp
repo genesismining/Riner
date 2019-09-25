@@ -20,7 +20,7 @@ namespace miner {
             auto &device = deviceRef.get();
 
             //try to obtain an OpenCL device for the assigned device via its id
-            if (opt::optional<cl::Device> clDeviceOr = _args.compute.getDeviceOpenCL(device.id)) {
+            if (optional<cl::Device> clDeviceOr = _args.compute.getDeviceOpenCL(device.id)) {
 
                 //prepare everything the device thread is going to need
                 DeviceThread deviceThread = {

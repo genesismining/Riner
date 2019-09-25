@@ -25,7 +25,7 @@ namespace miner { namespace jrpc {
         //only matches method name, no parameter check for function overloading
         bool matches(const Message &request) const {
             MI_EXPECTS(request.isRequest());
-            return _name == mp::get<Request>(request.var).method;
+            return _name == var::get<Request>(request.var).method;
         }
 
         Message invoke(const Message &request) const {

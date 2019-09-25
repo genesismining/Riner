@@ -20,7 +20,7 @@ namespace miner {
 
         Config::Profile::Mapping getMappingForDevice(Config::Profile &prof, size_t deviceIndex);
 
-        std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName, const Config &config, Config::Profile &prof, std::deque<opt::optional<Device>> &devicesInUse, const std::vector<DeviceId> &allIds);
+        std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName, const Config &config, Config::Profile &prof, std::deque<optional<Device>> &devicesInUse, const std::vector<DeviceId> &allIds);
 
     }
 }

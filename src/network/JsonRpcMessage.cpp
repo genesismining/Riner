@@ -119,16 +119,16 @@ namespace miner { namespace jrpc {
         }
 
         bool Message::isResponse() const {
-            return mp::holds_alternative<Response>(var);
+            return var::holds_alternative<Response>(var);
         }
 
         bool Message::isRequest() const {
-            return mp::holds_alternative<Request>(var);
+            return var::holds_alternative<Request>(var);
         }
 
         optional_cref<Error> Message::getIfError() const {
-            if (auto respPtr = mp::get_if<Response>(&var)) {
-                if (auto errPtr = mp::get_if<Error>(&respPtr->var)) {
+            if (auto respPtr = var::get_if<Response>(&var)) {
+                if (auto errPtr = var::get_if<Error>(&respPtr->var)) {
                     return *errPtr;
                 }
             }
@@ -137,8 +137,8 @@ namespace miner { namespace jrpc {
 
         optional_ref<nl::json>
         Message::getIfResult() {
-            if (auto respPtr = mp::get_if<Response>(&var)) {
-                if (auto resPtr = mp::get_if<nl::json>(&respPtr->var)) {
+            if (auto respPtr = var::get_if<Response>(&var)) {
+                if (auto resPtr = var::get_if<nl::json>(&respPtr->var)) {
                     return *resPtr;
                 }
             }
@@ -146,7 +146,7 @@ namespace miner { namespace jrpc {
         }
 
         optional_ref<Request> Message::getIfRequest() {
-            if (auto reqPtr = mp::get_if<Request>(&var)) {
+            if (auto reqPtr = var::get_if<Request>(&var)) {
                 return *reqPtr;
             }
             return {};
@@ -157,7 +157,7 @@ namespace miner { namespace jrpc {
         }
 
         bool Message::hasMethodName(const char *name) const {
-            if (auto reqPtr = mp::get_if<Request>(&var)) {
+            if (auto reqPtr = var::get_if<Request>(&var)) {
                 return reqPtr->method == name;
             }
             return false;

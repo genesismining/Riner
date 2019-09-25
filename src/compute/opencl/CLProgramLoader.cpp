@@ -14,23 +14,23 @@ namespace miner {
     , precompiledKernelDir(std::move(precompiledKernelDir)) {
     }
 
-    opt::optional<cl::Program> CLProgramLoader::loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span options) {
+    optional<cl::Program> CLProgramLoader::loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span options) {
         std::vector<std::string> sources;
         for(auto& file: clFilesInDir) {
             std::string clFilePath = clSourceDir;
             clFilePath.append(file.data(), static_cast<size_t>(file.size()));
 
-            opt::optional<std::string> source = file::readFileIntoString(clFilePath);
+            optional<std::string> source = file::readFileIntoString(clFilePath);
             if (!source) {
                 LOG(ERROR) << "failed to read " << clFilePath;
-                return opt::nullopt;
+                return nullopt;
             }
             sources.push_back(std::move(*source));
         }
         return compileCLFile(context, sources, options);
     }
 
-    opt::optional<cl::Program> CLProgramLoader::compileCLFile(cl::Context context, std::vector<std::string> sources, cstring_span options) {
+    optional<cl::Program> CLProgramLoader::compileCLFile(cl::Context context, std::vector<std::string> sources, cstring_span options) {
         cl_int err = 0;
 
         std::string fullOptions = " -I " + clSourceDir + " ";
@@ -80,7 +80,7 @@ namespace miner {
         }
 
         if (atLeastOneFailed) {
-            return opt::nullopt;
+            return nullopt;
         }
         return std::move(program);
     }

@@ -14,14 +14,14 @@ namespace miner {
     class PoolSwitcher;
 
     class ApiServer {
-        const SharedLockGuarded<std::deque<opt::optional<Device>>> &devicesInUse;
+        const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse;
         const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers;
 
         unique_ptr<jrpc::JsonRpcUtil> io;
 
         void registerFunctions();
     public:
-        explicit ApiServer(uint16_t port, const SharedLockGuarded<std::deque<opt::optional<Device>>> &devicesInUse,
+        explicit ApiServer(uint16_t port, const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse,
                 const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers);
         ~ApiServer();
     };

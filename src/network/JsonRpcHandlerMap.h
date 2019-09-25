@@ -30,7 +30,7 @@ namespace miner { namespace jrpc {
 
         //returns nullopt if no handler with given id is inside the map
         //otherwise returns one of the handlers of that id and removes it from the map
-        opt::optional<ResponseHandler> tryPopForId(const nl::json &responseId);
+        optional<ResponseHandler> tryPopForId(const nl::json &responseId);
     };
 
 }}

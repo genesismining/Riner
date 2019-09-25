@@ -32,7 +32,7 @@ namespace miner {
 
     class DeviceId {
         VendorEnum vendorEnum = VendorEnum::kUnknown;
-        mp::variant<PcieIndex, DeviceVendorId> id;
+        variant<PcieIndex, DeviceVendorId> id;
         std::string name; //name is not used in comparison operators
 
     public:
@@ -51,5 +51,5 @@ namespace miner {
     };
 
     std::vector<DeviceId> gatherAllDeviceIds();
-    opt::optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &);
+    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &);
 }

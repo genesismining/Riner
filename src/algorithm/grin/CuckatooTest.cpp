@@ -51,7 +51,7 @@ protected:
             return nullptr;
         }
 
-        opt::optional<DeviceId> deviceId = obtainDeviceIdFromOpenCLDevice(device);
+        optional<DeviceId> deviceId = obtainDeviceIdFromOpenCLDevice(device);
         EXPECT_TRUE(deviceId.has_value());
         LOG(INFO)<< "Running on device " << gsl::to_string(deviceId->getName());
         vendor = deviceId->getVendor();

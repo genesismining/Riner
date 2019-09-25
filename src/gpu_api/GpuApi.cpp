@@ -12,30 +12,30 @@ namespace miner {
     static const GpuApi::Registry<AmdgpuApi> amdgpuRegistry {"AmdgpuApi"};
 
 
-    opt::optional<int> GpuApi::getEngineClock() {
-        return opt::nullopt;
+    optional<int> GpuApi::getEngineClock() {
+        return nullopt;
     }
 
-    opt::optional<int> GpuApi::getMemoryClock() {
-        return opt::nullopt;
+    optional<int> GpuApi::getMemoryClock() {
+        return nullopt;
     }
-    opt::optional<int> GpuApi::getVoltage() {
-        return opt::nullopt;
+    optional<int> GpuApi::getVoltage() {
+        return nullopt;
     }
-    opt::optional<int> GpuApi::getTemperature() {
-        return opt::nullopt;
+    optional<int> GpuApi::getTemperature() {
+        return nullopt;
     }
-    opt::optional<int> GpuApi::getFanPercent() {
-        return opt::nullopt;
+    optional<int> GpuApi::getFanPercent() {
+        return nullopt;
     }
-    opt::optional<int> GpuApi::getFanRpm() {
-        return opt::nullopt;
+    optional<int> GpuApi::getFanRpm() {
+        return nullopt;
     }
-    opt::optional<int> GpuApi::getPower() {
-        return opt::nullopt;
+    optional<int> GpuApi::getPower() {
+        return nullopt;
     }
-    opt::optional<int> GpuApi::getTdp() {
-        return opt::nullopt;
+    optional<int> GpuApi::getTdp() {
+        return nullopt;
     }
 
     bool GpuApi::setEngineClock(int freq) {
