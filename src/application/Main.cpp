@@ -12,14 +12,14 @@ namespace miner {
     //this function is used to get a config path until we have a proper argc argv parser
     optional<std::string> getPathAfterArg(cstring_span minusminusArg, int argc, const char *argv[]) {
         //minusminusArg is something like "--config"
-        size_t pathI = 0;
-        for (size_t i = 1; i < argc; ++i) {
+        int pathI = 0;
+        for (int i = 1; i < argc; ++i) {
             if (gsl::ensure_z(argv[i]) == minusminusArg) {
                 pathI = i + 1; //path starts at next arg
                 break;
             }
         }
-        if (pathI == 0)
+        if (pathI <= 0)
             return nullopt;
 
         std::string path = argv[pathI];
@@ -105,6 +105,7 @@ int main(int argc, const char *argv[]) {
 
     shutdownState = std::make_unique<ShutdownState>();
     signal(SIGINT, sigintHandler); //uses shutdownState
+    signal(SIGTERM, sigintHandler);
 
     auto configPath = getPathAfterArg("--config", argc, argv);
 
