@@ -103,7 +103,7 @@ namespace miner {
                             {"isInUse", true},
                             {"algoImpl", d.settings.algoImplName},
                             {"deviceVendor", stringFromVendorEnum(d.id.getVendor())},
-                            {"deviceName", gsl::to_string(d.id.getName())},
+                            {"deviceName", d.id.getName()},
                             {"scannedNonces", jsonSerialize(data.scannedNonces, now)},
                             {"workUnits", jsonSerialize(data.validWorkUnits, now)},
                             {"hwErrors", jsonSerialize(data.invalidWorkUnits, now)}

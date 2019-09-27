@@ -9,10 +9,6 @@
 
 namespace miner {
 
-    HexString::HexString(cstring_span inStr) {
-        parseSuccess = parse(inStr);
-    }
-
     HexString::HexString(cByteSpan<> src)
             : bytes(src.begin(), src.end())
             , parseSuccess(true) {
@@ -27,19 +23,21 @@ namespace miner {
         parseSuccess = parse(inStr);
     }
 
-    bool HexString::parse(cstring_span in) {
+    bool HexString::parse(const std::string &in) {
 
+        size_t inSize = in.size();
+        size_t start = (inSize + 1) % 2; //start at 0 if size is odd, 1 if even
         //cut away "0x" if needed
-        if (in.size() > 2 && in.subspan(0, 2) == "0x")
-            in = in.subspan(2);
+        if (in.size() > 2 && in.substr(0, 2) == "0x") {
+            start += 2;
+        }
 
         const char *hexChars = "0123456789ABCDEF";
-        auto start = (in.size()+1) % 2; //start at 0 if size is odd, 1 if even
 
         std::vector<uint8_t> result;
-        result.reserve((size_t(in.size()) + 1) / 2);
+        result.reserve((inSize + 1) / 2);
 
-        for (auto i = start; i < in.size(); i += 2) {
+        for (auto i = start; i < inSize; i += 2) {
 
             char pair[2] = {//the two chars that make a byte
                     (i == 0) ? '0' : in[i-1], //add leading zero if needed

@@ -73,7 +73,7 @@ private:
         return uint32_t(siphash24(&keys, (2 * edge) | uOrV) & nodeMask_);
     }
 
-    std::string getDeviceName();
+    const std::string & getDeviceName();
 
     static constexpr uint32_t pruneRounds_ = 99;
 

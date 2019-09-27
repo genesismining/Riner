@@ -120,7 +120,7 @@ namespace miner {
     void Application::logLaunchInfo(const std::string &implName, std::vector<std::reference_wrapper<Device>> &assignedDevices) const {
         std::string logText = "launching algorithm '" + implName + "' with devices: ";
         for (auto &d : assignedDevices) {
-            logText += "#" + std::to_string(d.get().deviceIndex) + " " + gsl::to_string(d.get().id.getName());
+            logText += "#" + std::to_string(d.get().deviceIndex) + " " + d.get().id.getName();
             if (&d != &assignedDevices.back())
                 logText += ", ";
         }

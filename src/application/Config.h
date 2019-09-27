@@ -2,7 +2,6 @@
 
 #include <list>
 #include <string>
-#include <src/common/StringSpan.h>
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 #include <src/common/JsonForward.h>

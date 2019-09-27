@@ -7,7 +7,7 @@
 
 namespace miner {namespace configUtils {
 
-    Config loadConfig(miner::cstring_span configPath) {
+    Config loadConfig(const std::string &configPath) {
 
         auto configStr = file::readFileIntoString(configPath);
         if (!configStr) {
@@ -54,7 +54,7 @@ namespace miner {namespace configUtils {
                 //this device is supposed to be used by this algoImpl
 
                 if (devicesInUse[i]) {
-                    LOG(WARNING) << "device #" << i << " (" << gsl::to_string(deviceId.getName()) << ") cannot be used for '" << implName << "' because it is already used by another active algorithm";
+                    LOG(WARNING) << "device #" << i << " (" << deviceId.getName() << ") cannot be used for '" << implName << "' because it is already used by another active algorithm";
                     continue;
                 }
 

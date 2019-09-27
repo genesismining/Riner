@@ -6,7 +6,6 @@
 #include <src/util/Copy.h>
 #include <src/pool/Work.h>
 #include <src/statistics/PoolRecords.h>
-#include <src/common/StringSpan.h>
 #include <string>
 #include <list>
 #include <atomic>
@@ -121,7 +120,9 @@ namespace miner {
             records.addListener(parent);
         }
 
-        virtual cstring_span getName() const = 0;
+        virtual std::string getName() const {
+            return constructionArgs.host + ":" + std::to_string(constructionArgs.port);
+        }
 
         virtual bool isExpiredJob(const PoolJob &job) {
             return true;
@@ -255,7 +256,7 @@ namespace miner {
 
         static bool hasProtocolType(const std::string &protocolType);
 
-        virtual ~Pool() = default;
+        ~Pool() override = default;
 
         DELETE_COPY_AND_MOVE(Pool);
     };

@@ -53,7 +53,7 @@ protected:
 
         optional<DeviceId> deviceId = obtainDeviceIdFromOpenCLDevice(device);
         EXPECT_TRUE(deviceId.has_value());
-        LOG(INFO)<< "Running on device " << gsl::to_string(deviceId->getName());
+        LOG(INFO) << "Running on device " << deviceId->getName();
         vendor = deviceId->getVendor();
         context = cl::Context(device);
 

@@ -8,11 +8,10 @@
 
 namespace miner {
 
-    DeviceId::DeviceId(VendorEnum vendorEnum, const decltype(id) &idVariant, cstring_span name)
-    : vendorEnum(vendorEnum)
-    , id(idVariant)
-    , name(gsl::to_string(name))
-    {
+    DeviceId::DeviceId(VendorEnum vendorEnum, const decltype(id) &idVariant, std::string name)
+        : vendorEnum(vendorEnum)
+        , id(idVariant)
+        , name(std::move(name)) {
     }
 
     optional_cref<PcieIndex> DeviceId::getIfPcieIndex() const {
@@ -44,7 +43,7 @@ namespace miner {
         return std::tie(vendorEnum, id) < std::tie(rhs.vendorEnum, rhs.id);
     }
 
-    cstring_span DeviceId::getName() const {
+    const std::string & DeviceId::getName() const {
         return name;
     }
 

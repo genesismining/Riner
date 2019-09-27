@@ -46,7 +46,7 @@ namespace miner {
 
         size_t poolCount() const;
 
-        cstring_span getName() const override;
+        std::string getName() const override;
 
         std::vector<std::shared_ptr<const Pool>> getPoolsData() const {
             std::lock_guard<std::mutex> lock(mut);
@@ -68,6 +68,7 @@ namespace miner {
         void periodicAliveCheck();
         std::future<void> periodicAliveCheckTask;
 
+        const std::string powType;
         clock::duration checkInterval;
         clock::duration durUntilDeclaredDead;
 

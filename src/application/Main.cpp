@@ -10,11 +10,11 @@
 namespace miner {
 
     //this function is used to get a config path until we have a proper argc argv parser
-    optional<std::string> getPathAfterArg(cstring_span minusminusArg, int argc, const char *argv[]) {
+    optional<std::string> getPathAfterArg(const std::string &minusminusArg, int argc, const char **argv) {
         //minusminusArg is something like "--config"
         int pathI = 0;
         for (int i = 1; i < argc; ++i) {
-            if (gsl::ensure_z(argv[i]) == minusminusArg) {
+            if (argv[i] == minusminusArg) {
                 pathI = i + 1; //path starts at next arg
                 break;
             }

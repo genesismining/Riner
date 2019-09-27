@@ -39,8 +39,8 @@ namespace miner {
             }
         }
 
-        LOG(INFO) << "ComputeModule: in 'getDeviceOpenCL' the device '" << gsl::to_string(requestId.getName())
-        << "' does not have a corresponding opencl device";
+        LOG(INFO) << "ComputeModule: in 'getDeviceOpenCL' the device '" << requestId.getName()
+                  << "' does not have a corresponding opencl device";
         return nullopt;
     }
 

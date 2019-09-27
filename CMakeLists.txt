@@ -77,7 +77,6 @@ add_library(LibMiner
         src/common/Chrono.h
         src/common/Endian.h
         src/common/Pointers.h
-        src/common/StringSpan.h
         src/common/OpenCL.h
         src/common/Optional.h
         src/common/Variant.h

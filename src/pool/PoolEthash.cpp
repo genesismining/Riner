@@ -159,8 +159,4 @@ namespace miner {
     PoolEthashStratum::~PoolEthashStratum() {
     }
 
-    cstring_span PoolEthashStratum::getName() const {
-        return constructionArgs.host;
-    }
-
 }

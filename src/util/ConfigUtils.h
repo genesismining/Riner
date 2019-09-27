@@ -11,7 +11,7 @@ namespace miner {
 
     namespace configUtils {
 
-        Config loadConfig(cstring_span configPath);
+        Config loadConfig(const std::string &configPath);
 
         std::vector<std::string> getUniqueAlgoImplNamesForProfile(Config::Profile &prof, const std::vector<DeviceId> &deviceIds);
 

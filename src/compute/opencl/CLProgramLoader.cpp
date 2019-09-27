@@ -14,11 +14,12 @@ namespace miner {
     , precompiledKernelDir(std::move(precompiledKernelDir)) {
     }
 
-    optional<cl::Program> CLProgramLoader::loadProgram(cl::Context context, const std::vector<cstring_span>& clFilesInDir, cstring_span options) {
+    optional<cl::Program> CLProgramLoader::loadProgram(cl::Context context,
+                                                       const std::vector<std::string> &clFilesInDir,
+                                                       const std::string &options) {
         std::vector<std::string> sources;
         for(auto& file: clFilesInDir) {
-            std::string clFilePath = clSourceDir;
-            clFilePath.append(file.data(), static_cast<size_t>(file.size()));
+            std::string clFilePath = clSourceDir + file;
 
             optional<std::string> source = file::readFileIntoString(clFilePath);
             if (!source) {
@@ -30,11 +31,11 @@ namespace miner {
         return compileCLFile(context, sources, options);
     }
 
-    optional<cl::Program> CLProgramLoader::compileCLFile(cl::Context context, std::vector<std::string> sources, cstring_span options) {
+    optional<cl::Program> CLProgramLoader::compileCLFile(cl::Context context, const std::vector<std::string> &sources,
+                                                         const std::string &options) {
         cl_int err = 0;
 
-        std::string fullOptions = " -I " + clSourceDir + " ";
-        fullOptions.append(options.data(), (size_t)options.size());
+        std::string fullOptions = " -I " + clSourceDir + " " + options;
 
         cl::Program program(context, sources, &err);
 

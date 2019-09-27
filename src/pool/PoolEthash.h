@@ -43,8 +43,6 @@ namespace miner {
         explicit PoolEthashStratum(const PoolConstructionArgs &);
         ~PoolEthashStratum() override;
 
-        cstring_span getName() const override;
-
     private:
         WorkQueue queue;
 

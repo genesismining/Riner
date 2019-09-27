@@ -39,8 +39,6 @@ namespace miner {
         explicit PoolGrinStratum(const PoolConstructionArgs &);
         ~PoolGrinStratum() override;
 
-        cstring_span getName() const override;
-
         // Pool interface
         bool isExpiredJob(const PoolJob &job) override;
         unique_ptr <Work> tryGetWorkImpl() override;

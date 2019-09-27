@@ -2,7 +2,6 @@
 #pragma once
 
 #include <src/util/Logging.h>
-#include <src/common/StringSpan.h>
 #include <src/common/Optional.h>
 #include <src/common/Span.h>
 #include <src/common/JsonForward.h>
@@ -23,12 +22,11 @@ namespace miner {
 
         std::vector<uint8_t> bytes;
 
-        bool parse(cstring_span inStr);
+        bool parse(const std::string &in);
         bool parseSuccess = false;
     public:
         explicit HexString(const nl::json &jsonInStr);
         explicit HexString(const std::string &inStr);
-        explicit HexString(cstring_span inStr);
         explicit HexString(cByteSpan<> src);
 
         //explicitly delete integral type to hexstring constructors, use utils in common/Endian.h to convert

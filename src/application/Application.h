@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <src/common/Optional.h>
-#include <src/common/StringSpan.h>
 #include <src/algorithm/Algorithm.h>
 #include <src/pool/Pool.h>
 #include <src/compute/ComputeModule.h>

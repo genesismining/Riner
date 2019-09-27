@@ -11,6 +11,7 @@ namespace miner {
 
     PoolSwitcher::PoolSwitcher(std::string powType, clock::duration checkInterval, clock::duration durUntilDeclaredDead)
             : Pool(PoolConstructionArgs{})
+            , powType(std::move(powType))
             , checkInterval(checkInterval)
             , durUntilDeclaredDead(durUntilDeclaredDead) {
 
@@ -64,7 +65,7 @@ namespace miner {
                     if (activePoolIndex != i) {
                         activePoolIndex = i;
 
-                        auto name = gsl::to_string(pool->getName());
+                        const auto &name = pool->getName();
                         LOG(INFO) << "Pool #" << i << " (" << name << ") chosen as new active pool";
                     }
                 }
@@ -87,7 +88,7 @@ namespace miner {
     unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
         if (auto pool = activePool()) {
-            LOG(INFO) << "getting work from " << gsl::to_string(pool->getName());
+            LOG(INFO) << "getting work from " << pool->getName();
             return pool->tryGetWorkImpl();
         }
 
@@ -134,8 +135,8 @@ namespace miner {
             LOG(INFO) << "solution belongs to another pool (uid " << solutionPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
     }
 
-    cstring_span PoolSwitcher::getName() const {
-        return "PoolSwitcher at " + std::to_string(uintptr_t(this));
+    std::string PoolSwitcher::getName() const {
+        return powType + "-PoolSwitcher";
     }
 
     size_t PoolSwitcher::poolCount() const {

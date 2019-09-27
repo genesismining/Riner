@@ -183,7 +183,4 @@ namespace miner {
     PoolGrinStratum::~PoolGrinStratum() {
     }
 
-    cstring_span PoolGrinStratum::getName() const {
-        return constructionArgs.host;
-    }
 }

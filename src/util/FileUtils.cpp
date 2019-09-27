@@ -9,9 +9,9 @@
 namespace miner {namespace file {
 
         template<class T>
-        inline static optional<T> readFileInto(cstring_span filePath) {
+        inline static optional<T> readFileInto(const std::string &filePath) {
             using namespace std;
-            ifstream stream(filePath.data());
+            ifstream stream(filePath);
 
             if (stream) {
                 T result;
@@ -27,22 +27,20 @@ namespace miner {namespace file {
                     return result;
                 }
                 else {
-                    LOG(WARNING) << "Failed to obtain size of file at '"
-                                 << to_string(filePath) << "'";
+                    LOG(WARNING) << "Failed to obtain size of file at '" << filePath << "'";
                 }
             }
             else {
-                LOG(WARNING) << "Failed when trying to load a file at '"
-                             << to_string(filePath) << "'";
+                LOG(WARNING) << "Failed when trying to load a file at '" << filePath << "'";
             }
             return nullopt;
         }
 
-        optional<std::string> readFileIntoString(cstring_span filePath) {
+        optional<std::string> readFileIntoString(const std::string &filePath) {
             return readFileInto<std::string>(filePath);
         }
 
-        optional<std::vector<uint8_t>> readFileIntoByteVector(cstring_span filePath) {
+        optional<std::vector<uint8_t>> readFileIntoByteVector(const std::string &filePath) {
             return readFileInto<std::vector<uint8_t>>(filePath);
         }
 

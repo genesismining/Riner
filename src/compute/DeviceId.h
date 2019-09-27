@@ -4,7 +4,6 @@
 #include <array>
 #include <src/common/Optional.h>
 #include <src/common/Variant.h>
-#include <src/common/StringSpan.h>
 #include <src/util/Logging.h>
 #include <src/compute/ComputeApiEnums.h>
 
@@ -36,14 +35,14 @@ namespace miner {
         std::string name; //name is not used in comparison operators
 
     public:
-        DeviceId(VendorEnum vendor, const decltype(id) &id, cstring_span name);
+        DeviceId(VendorEnum vendorEnum, const decltype(id) &idVariant, std::string name);
         DeviceId(DeviceId &&)                 = default;
         DeviceId &operator=(DeviceId &&)      = default;
         DeviceId(const DeviceId &)            = default;
         DeviceId &operator=(const DeviceId &) = default;
 
         VendorEnum getVendor() const;
-        cstring_span getName() const;
+        const std::string & getName() const;
         optional_cref<PcieIndex> getIfPcieIndex() const;
 
         bool operator==(const DeviceId &rhs) const;

@@ -233,7 +233,7 @@ void CuckatooSolver::prepare() {
     maxBucketSize_ = (maxBucketSize_ & (~31));
     VLOG(0) << buckets_ << " buckets with max size " << maxBucketSize_;
 
-    std::vector<cstring_span> files;
+    std::vector<std::string> files;
     files.emplace_back("/kernel/siphash.h");
     files.emplace_back("/kernel/cuckatoo.cl");
 
@@ -354,8 +354,8 @@ int32_t CuckatooSolver::getBucketBitShift() {
     return u == start;
 }
 
-std::string CuckatooSolver::getDeviceName() {
-    return gsl::to_string(opts_.deviceInfo.id.getName());
+const std::string & CuckatooSolver::getDeviceName() {
+    return opts_.deviceInfo.id.getName();
 }
 
 } /* namespace miner */
