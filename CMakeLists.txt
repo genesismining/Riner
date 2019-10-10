@@ -61,6 +61,8 @@ add_library(LibMiner
         src/network/JsonRpcMethod.cpp src/network/JsonRpcMethod.h
         src/network/JsonRpcHandlerMap.cpp src/network/JsonRpcHandlerMap.h
         src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
+        src/network/SslDesc.cpp src/network/SslDesc.h
+        src/network/Socket.cpp src/network/Socket.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkCuckoo.h
@@ -149,6 +151,13 @@ endif()
 target_link_libraries (Miner ${OpenCL_LIBRARY})
 if(UNIX AND NOT APPLE)
     target_link_libraries (Miner -static-libgcc -static-libstdc++)
+endif()
+
+#OpenSSL
+find_package(OpenSSL)
+if (OPENSSL_FOUND)
+    target_link_libraries (LibMiner OpenSSL::SSL)
+    target_compile_definitions(LibMiner PUBLIC HAS_OPENSSL)
 endif()
 
 #Threads

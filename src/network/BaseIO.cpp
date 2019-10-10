@@ -4,24 +4,21 @@
 #include <src/common/Assert.h>
 #include "BaseIO.h"
 
-//#include <asio/ssl.hpp>
+#ifdef HAS_OPENSSL
+#include <asio/ssl.hpp>
+#endif
 
 namespace miner {
 
     using asio::ip::tcp;
-    using TcpSocket = tcp::socket;
 
-    //namespace ssl = asio::ssl;
-    //using TcpSslSocket = ssl::stream<tcp::socket>;
-
-    template<class SocketT = TcpSocket>
-    struct Connection : public IOConnection, public std::enable_shared_from_this<Connection<SocketT>> {
+    struct Connection : public IOConnection, public std::enable_shared_from_this<Connection> {
         IOOnDisconnectedFunc &_onDisconnected;
         BaseIO::OnReceiveValueFunc &_onRecv;
-        SocketT _socket;
+        unique_ptr<Socket> _socket;
         asio::streambuf _incoming;
 
-        Connection(decltype(_onDisconnected) &onDisconnected, decltype(_onRecv) &onRecv, SocketT socket)
+        Connection(decltype(_onDisconnected) &onDisconnected, decltype(_onRecv) &onRecv, unique_ptr<Socket> socket)
         : _onDisconnected(onDisconnected), _onRecv(onRecv), _socket(std::move(socket)) {
         };
 
@@ -35,7 +32,7 @@ namespace miner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write on a connection is queued, the connection will close itself
-            asio::async_write(_socket, asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
+            asio::async_write(_socket->get(), asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
                 if (error) {
                     LOG(INFO) << "async write error #" << error <<
                               " in TcpLineConnection while trying to send '" << outgoing << "'";
@@ -47,7 +44,7 @@ namespace miner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write on a connection is queued, the connection will close itself
-            asio::async_read_until(_socket, _incoming, '\n', [this, shared = this->shared_from_this()]
+            asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
                 if (error) {
@@ -78,11 +75,16 @@ namespace miner {
 
     BaseIO::BaseIO(IOMode mode)
     : _mode(mode)
-    , _ioService()
-    , _socket(_ioService) {
+    , _ioService() {
         (void)_mode;
-        if (mode == IOMode::TcpSsl)
-            LOG(WARNING) << "IOMode TCP SSL is not supported yet, defaulting to TCP.";
+        if (mode == IOMode::TcpSsl) {
+#ifdef HAS_OPENSSL
+            LOG(WARNING) << "SSL is enabled via enableSsl() and not via the BaseIO constructor. IOMode should be used for fixed binary size vs read-until-\\n";
+#else
+            LOG(ERROR) << "cannot initialize BaseIO with SSL since binary was compiled without OpenSSL support. Recompilation required.";
+            return;
+#endif
+        }
         startIoThread();
     }
 
@@ -102,6 +104,10 @@ namespace miner {
         else {
             LOG(INFO) << "called readAsync on connection that was closed";
         }
+    }
+
+    void BaseIO::enableSsl(const SslDesc &desc) {
+        _sslDesc = desc;
     }
 
     void BaseIO::startIoThread() {
@@ -161,8 +167,7 @@ namespace miner {
 
     //used by client and server
     void BaseIO::createCxnWithSocket() {
-        auto cxn = make_shared<Connection<TcpSocket>>(_onDisconnected, _onRecv, std::move(_socket));
-        _socket = tcp::socket{_ioService}; //prepare socket for next connection
+        auto cxn = make_shared<Connection>(_onDisconnected, _onRecv, std::move(_socket));
         MI_EXPECTS(_onConnected);
         _onConnected(cxn); //user is expected to use cxn here with other calls like readAsync(cxn)
     } //cxn refcount decreased and maybe destroyed if cxn was not used in _onConnected(cxn)
@@ -182,12 +187,21 @@ namespace miner {
 
     void BaseIO::serverListen() {
         MI_EXPECTS(_acceptor);
-        _acceptor->async_accept(_socket, [this] (const asio::error_code &error) { //socket operation
+        _acceptor->async_accept(_socket->get(), [this] (const asio::error_code &error) { //socket operation
             if (!error) {
                 createCxnWithSocket();
             }
             serverListen();
         });
+    }
+
+    void BaseIO::prepareSocket() {
+        if (_sslDesc) { //create ssl socket
+            _socket = make_unique<Socket>(_ioService, _sslDesc.value());
+        }
+        else { //create tcp socket
+            _socket = make_unique<Socket>(_ioService);
+        }
     }
 
     //functions used by client
@@ -205,14 +219,14 @@ namespace miner {
         MI_ENSURES(_onConnected);
 
         _resolver = make_unique<tcp::resolver>(_ioService);
-        //socket is already prepared by ctor
+        prepareSocket();
 
         tcp::resolver::query query{host, std::to_string(port)};
 
         _resolver->async_resolve(query, [this] (auto &error, auto it) {
             if (!error) {
                 auto endpoint = *it;
-                _socket.async_connect(endpoint, [this, it] (auto &error) { //socket operation
+                _socket->get().async_connect(endpoint, [this, it] (auto &error) { //socket operation
                     clientIterateEndpoints(error, it);
                 });
             }
@@ -227,20 +241,37 @@ namespace miner {
         MI_EXPECTS(_resolver);
         if (!error) {
             LOG(INFO) << "successfully connected to " << it->host_name() << ':' << it->service_name();
-            createCxnWithSocket();
+
+            bool isClient = true;
+            _socket->asyncHandshakeOrNoop(isClient, it->host_name(), [this] (const asio::error_code &error) {
+                handshakeHandler(error);
+            });
         }
         else if (it != tcp::resolver::iterator()) {//default constructed iterator is "end"
             //The connection failed, but there's another endpoint to try.
-            _socket.close(); //socket operation
+            _socket->get().close(); //socket operation
 
             tcp::endpoint endpoint = *it;
             LOG(INFO) << "asio error while trying this endpoint: " << error.value() << " , " << error.message();
             LOG(INFO) << "connecting: trying different endpoint with ip: " << endpoint.address().to_string();
-            _socket.async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
+            _socket->get().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
                 clientIterateEndpoints(error, next);
             });
-        } else {
+        }
+        else {
             LOG(INFO) << "asio async connect: Error #" << error << ": " << error.message();
+            _onDisconnected();
+        }
+    }
+
+    void BaseIO::handshakeHandler(const asio::error_code &error) {
+        if (!error) {
+            if (_sslDesc) //if ssl is enabled a handshake happened successfully, otherwise nothing happened... successfully!
+                LOG(INFO) << "successfully performed handshake";
+            createCxnWithSocket();
+        }
+        else {
+            LOG(INFO) << "asio async handshake: Error #" << error << ": " << error.message();
             _onDisconnected();
         }
     }

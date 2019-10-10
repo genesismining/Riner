@@ -46,6 +46,7 @@ namespace miner { namespace jrpc {
             //if ReadAsyncLoop is enabled (true) this object keeps scheduling readAsync() calls after a message was successfully read (via readAsync()) to keep the connection alive and receive further messages
             //this means you usually want to call setReadAsyncLoopEnabled(true) followed by a readAsync(cxn) call that initiates the loop
             //this function may only be called before a launchClient/Server call or from the io-thread
+            //it also means that setReadAsyncLoopEnabled(false) becomes something like a 'disconnect' call when used in a received message callback, as no further requests are enqueued
             void setReadAsyncLoopEnabled(bool val);
 
             using IdType = int64_t;

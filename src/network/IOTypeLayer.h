@@ -10,12 +10,13 @@
 #include <src/util/Logging.h>
 #include <src/common/Assert.h>
 #include <src/util/TemplateUtils.h>
+#include <src/network/SslDesc.h>
 
 namespace miner {
 
     enum class IOMode {
         Tcp,
-        TcpSsl,
+        TcpSsl, //deprecated, use enableSsl()
     };
 
     class IOConnection;
@@ -172,6 +173,15 @@ namespace miner {
         void setOutgoingModifier(ModifierFunc &&func) {
             checkNotLaunchedOrOnIOThread();
             _outgoingModifier = std::move(func);
+        }
+
+        /**
+         * use this function to enable ssl (configurable via `desc`) for the connections that will be opened by this IO object.
+         * This function must be called before any launch* functions.
+         */
+        void enableSsl(const SslDesc &desc) {
+            checkNotLaunchedOrOnIOThread();
+            _layerBelow.enableSsl(desc);
         }
 
         /**
