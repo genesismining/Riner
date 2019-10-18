@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <chrono>
+#include <src/util/FileUtils.h>
+#include <src/util/TestSslData.h>
 
 namespace miner {
     using namespace jrpc;
@@ -237,12 +239,46 @@ namespace miner {
         unique_ptr<JsonRpcUtil> server;
         unique_ptr<JsonRpcUtil> client;
 
+        SslDesc sslDescServer;
+        SslDesc sslDescClient;
     public:
         using RB = jrpc::RequestBuilder;
 
         JsonRpcServerClientFixture()
         : server(make_unique<JsonRpcUtil>(IOMode::Tcp))
         , client(make_unique<JsonRpcUtil>(IOMode::Tcp)) {
+        }
+
+        bool initSsl() {
+            bool success = true;
+
+            std::string certPath = "/tmp/temp_server_certificate_for_testing.pem";
+            std::string privPath = "/tmp/temp_server_private_key_for_testing.pem";
+
+            success &= file::writeStringIntoFile(certPath, TestSslData::certificate_pem);
+            success &= file::writeStringIntoFile(privPath, TestSslData::private_key_pem);
+            if (!success)
+                return false;
+
+            LOG(INFO) << "generated " << certPath;
+            LOG(INFO) << "generated " << privPath;
+
+            sslDescServer.server = SslDesc::Server {
+                    /*cert chain */ certPath,
+                    /*private key*/ privPath,
+                    /*tmp dh file*/ ""//"dh512.pem"
+            };
+
+            sslDescServer.server->onGetPassword = [] () -> std::string {
+                return "asdf";
+            };
+
+            sslDescClient.certFiles.push_back(certPath);
+
+            server->io().enableSsl(sslDescServer);
+            client->io().enableSsl(sslDescClient);
+
+            return true;
         }
 
         void launchServerWithReadLoop() {
@@ -298,8 +334,76 @@ namespace miner {
         EXPECT_FALSE(timeout);
     }
 
-    TEST_F(JsonRpcServerClientFixture, ClientAutoReconnect) {
+    TEST_F(JsonRpcServerClientFixture, SslConnection) {
+        //this test calls a jrpc on an ssl enabled io object
+        //it does not test whether the ssl stream actually works!
 
+#ifndef HAS_OPENSSL
+        //return; //skip this test if we don't have openssl
+#endif
+
+        LockGuarded<Message> msg; //response from server to client
+
+        EXPECT_TRUE(initSsl()); //initialize ssl for server and client members
+
+        server->addMethod("method", [] () {
+            return true;
+        });
+
+        launchServerWithReadLoop();
+        launchClient([&] (CxnHandle cxn) {
+
+            client->callAsync(cxn, RB{}.id(0).method("method").done(), [&] (CxnHandle cxn, Message res) {
+                *msg.lock() = res;
+                barrier.unblock();
+            });
+            client->readAsync(cxn);
+        });
+
+        bool timeout = waitAndInvoke(barrier, [&] () {
+            server.reset();
+            client.reset();
+
+            {auto lmsg = msg.lock();
+                EXPECT_TRUE(lmsg->isResultTrue());
+            }
+        });
+        EXPECT_FALSE(timeout);
+    }
+
+    TEST_F(JsonRpcServerClientFixture, SslHandshakeWrongPassword) {
+        //this test calls a jrpc on an ssl enabled io object
+        //it tests whether no connection is established with a wrong password
+        //it does not test whether the wrong password is the reason for the connection
+        //not being established, so this test only makes sense together with other tests
+
+#ifndef HAS_OPENSSL
+        //return; //skip this test if we don't have openssl
+#endif
+
+        EXPECT_TRUE(initSsl()); //initialize ssl for server and client members
+
+        sslDescServer.server->onGetPassword = [] () -> std::string {
+            return "wrong password";
+        };
+
+        server->io().enableSsl(sslDescServer);
+
+        server->addMethod("method", [&] () {
+            barrier.unblock();
+        });
+
+        launchServerWithReadLoop();
+        launchClient([&] (CxnHandle cxn) {
+            client->callAsync(cxn, RB{}.id(0).method("method").done(), [&] (CxnHandle cxn, Message res) {});
+            client->readAsync(cxn);
+        });
+
+        bool timeout = waitAndInvoke(barrier, [&] () {
+            server.reset();
+            client.reset();
+        });
+        EXPECT_TRUE(timeout);
     }
 
 } // miner

@@ -61,7 +61,7 @@ add_library(LibMiner
         src/network/JsonRpcMethod.cpp src/network/JsonRpcMethod.h
         src/network/JsonRpcHandlerMap.cpp src/network/JsonRpcHandlerMap.h
         src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
-        src/network/SslDesc.cpp src/network/SslDesc.h
+        src/network/SslDesc.h
         src/network/Socket.cpp src/network/Socket.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
@@ -104,6 +104,7 @@ add_library(LibMiner
         src/util/HexString.cpp src/util/HexString.h
         src/util/DynamicBuffer.h
         src/util/Barrier.cpp src/util/Barrier.h
+        src/util/TestSslData.h
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         )
 

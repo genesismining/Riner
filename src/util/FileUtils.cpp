@@ -44,4 +44,13 @@ namespace miner {namespace file {
             return readFileInto<std::vector<uint8_t>>(filePath);
         }
 
-}}
+        bool writeStringIntoFile(const std::string &path, const std::string &content) {
+            std::ofstream file(path);
+            if (!file.good())
+                return false;
+            file << content;
+            file.close();
+            return true;
+        }
+
+    }}

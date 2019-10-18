@@ -11,7 +11,6 @@
 #include <src/util/Copy.h>
 #include <src/util/LockUtils.h>
 #include <list>
-#include <lib/asio/asio/include/asio/ssl/stream.hpp>
 #include "Socket.h"
 
 namespace miner {
@@ -75,10 +74,10 @@ namespace miner {
         bool ioThreadRunning() const; //not thread safe
 
     private:
-        void createCxnWithSocket();
+        void createCxnWithSocket(unique_ptr<Socket>);
         void serverListen();
         void clientIterateEndpoints(const asio::error_code &error, asio::ip::tcp::resolver::iterator it);
-        void handshakeHandler(const asio::error_code &error);
+        void handshakeHandler(const asio::error_code &error, unique_ptr<Socket>); //takes ownership of socket already
 
         IOMode _mode;
 
@@ -120,7 +119,9 @@ namespace miner {
 
         unique_ptr<std::thread> _thread;
 
-        void prepareSocket();
+        void prepareSocket(bool isClient);
+
+        bool sslEnabledButNotSupported();
     };
 
 }

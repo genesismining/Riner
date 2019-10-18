@@ -10,6 +10,6 @@ namespace miner {namespace file {
 
         optional<std::vector<uint8_t>> readFileIntoByteVector(const std::string &filePath);
 
-
+        bool writeStringIntoFile(const std::string &filePath, const std::string &content);
 
 }}

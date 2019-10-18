@@ -16,7 +16,6 @@ namespace miner {
 
     enum class IOMode {
         Tcp,
-        TcpSsl, //deprecated, use enableSsl()
     };
 
     class IOConnection;

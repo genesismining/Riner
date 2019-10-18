@@ -28,17 +28,19 @@ namespace miner {
         class None {None() = default;};
         using SslTcpSocket = None;
 #endif
-
-        variant<nullptr_t, TcpSocket, SslTcpSocket> _var {nullptr};
+        variant<nullptr_t, TcpSocket, SslTcpSocket> _var {nullptr}; //TODO: replace with old school object oriented virtual stuff!
+        bool _isClient = false;
 
     public:
-        explicit Socket(asio::io_service &); //constructs a regular tcp socket
-        Socket(asio::io_service &, const SslDesc &); //constructs a ssl enabled tcp socket or does nothing if OpenSSL is not available
+        explicit Socket(asio::io_service &, bool isClient); //constructs a regular tcp socket
+        Socket(asio::io_service &, bool isClient, const SslDesc &); //constructs a ssl enabled tcp socket or does nothing if OpenSSL is not available
         Socket() = default;
 
-        operator bool() {
+        operator bool() const {
             return mpark::get_if<nullptr_t>(&_var);
         }
+
+        bool isClient() const;
 
         /**
          * get a reference to the underlying socket type.
@@ -50,7 +52,8 @@ namespace miner {
          * if initialized as a ssl socket, performs ssl handshake, otherwise nothing. use handler to continue
          */
         using HandshakeFunc = std::function<void(const asio::error_code &)>;
-        void asyncHandshakeOrNoop(bool isClient, const std::string &host, HandshakeFunc &&handler);
+
+        void asyncHandshakeOrNoop(HandshakeFunc handler, optional<std::string> host = {});
     };
 
 }
