@@ -102,6 +102,7 @@ add_library(LibMiner
         src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
         src/util/HexString.cpp src/util/HexString.h
+        src/util/DifficultyTarget.cpp src/util/DifficultyTarget.h
         src/util/DynamicBuffer.h
         src/util/Barrier.cpp src/util/Barrier.h
         src/util/TestSslData.h

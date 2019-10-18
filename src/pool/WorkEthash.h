@@ -6,6 +6,7 @@
 #include <src/common/Pointers.h>
 #include <src/util/Bytes.h>
 #include <src/common/Span.h>
+#include <src/util/DifficultyTarget.h>
 
 namespace miner {
 
@@ -25,20 +26,26 @@ namespace miner {
 
         Bytes<32> header;
         Bytes<32> seedHash;
-        Bytes<32> jobTarget;
-        Bytes<32> deviceTarget;
+        Bytes<32> jobTarget; //actual target of the PoolJob
+        Bytes<32> deviceTarget; //easier target than above for GPUs
 
         double jobDifficulty;
-        double deviceDifficulty = 60e6;
+        double deviceDifficulty = 60e6; //60 Mh, roughly 2s on a GPU
 
         uint32_t epoch = std::numeric_limits<uint32_t>::max();
         uint32_t extraNonce;
 
         void setEpoch() {
-            if (epoch == std::numeric_limits<uint32_t>::max()) {//calculate epoch for master if it didn't happen yet
+            if (epoch == std::numeric_limits<uint32_t>::max()) {//calculate epoch for workTemplate if it didn't happen yet
                 uint32_t getEthEpoch(cByteSpan<32>);
                 epoch = getEthEpoch(seedHash);
             }
+        }
+
+        void setDifficultiesAndTargetsNew(const Bytes<32> &jobTarget) {
+            jobDifficulty = targetToDifficultyApprox(jobTarget);
+            deviceDifficulty = std::min(deviceDifficulty, jobDifficulty); //make sure deviceDiff is not harder than jobDiff
+            deviceTarget = difficultyToTargetApprox(deviceDifficulty);
         }
 
         // TODO: export this to proper functions
@@ -54,6 +61,9 @@ namespace miner {
 
             deviceDifficulty = std::min(deviceDifficulty, jobDifficulty);
             setDeviceTarget(deviceDifficulty);
+
+            MI_EXPECTS(jobDifficulty == targetToDifficultyApprox(jobTarget));
+            MI_EXPECTS(deviceTarget == difficultyToTargetApprox(deviceDifficulty));
         }
 
     private:
