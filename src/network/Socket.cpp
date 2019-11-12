@@ -31,30 +31,34 @@ namespace miner {
 
             ctx.set_verify_mode(ssl::verify_peer);
 
-            if (desc.certFiles.empty()) {
-                ctx.set_default_verify_paths(err);
-                if (err) {
-                    LOG(INFO) << server_client_str << "error setting default verify paths when creating TLS socket: " << err.message();
-                    return; //abort
-                }
-            } else {
-                //add custom verify paths
-                for (auto &path : desc.certFiles) {
-                    ctx.load_verify_file(path, err);
+            if (desc.client) {
+                if (desc.client->certFile) {
+                    auto file = desc.client->certFile.value();
+                    ctx.load_verify_file(file, err); //assuming this can either be a CA file or a certificate
                     if (err) {
-                        LOG(ERROR) << server_client_str << "error adding following verify path to tls socket: '" << path
+                        LOG(ERROR) << server_client_str << "error adding following verify file to tls socket: '" << file
                                    << "' asio error message: " << err.message();
+                        return; //abort
+                    }
+                }
+                else {
+                    ctx.set_default_verify_paths(err);
+                    if (err) {
+                        LOG(INFO) << server_client_str << "error setting default verify paths when creating TLS socket: " << err.message();
+                        return; //abort
                     }
                 }
             }
-
+            else {
+                LOG(WARNING) << server_client_str << "SslDesc provided to BaseIO does not contain client related info. Aborting.";
+            }
         }
         else { //server
 
             if (desc.server) {
                 auto &info = desc.server.value();
 
-                MI_EXPECTS(desc.server->onGetPassword);
+                MI_EXPECTS(desc.server->onGetPassword); //expect password callback to exist
                 auto onGetPassword = desc.server->onGetPassword;
 
                 ctx.set_password_callback([onGetPassword = move(onGetPassword)] (size_t max_length, c::password_purpose purp) {

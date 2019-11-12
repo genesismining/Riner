@@ -273,7 +273,8 @@ namespace miner {
                 return "asdf";
             };
 
-            sslDescClient.certFiles.push_back(certPath);
+            sslDescClient.client.emplace();
+            sslDescClient.client->certFile = certPath;
 
             server->io().enableSsl(sslDescServer);
             client->io().enableSsl(sslDescClient);
@@ -372,7 +373,7 @@ namespace miner {
     }
 
     TEST_F(JsonRpcServerClientFixture, SslHandshakeWrongPassword) {
-        //this test calls a jrpc on an ssl enabled io object
+        //this test tries to call a jrpc on an ssl enabled io object with a wrong password
         //it tests whether no connection is established with a wrong password
         //it does not test whether the wrong password is the reason for the connection
         //not being established, so this test only makes sense together with other tests

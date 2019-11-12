@@ -16,14 +16,19 @@ namespace miner {
      * and use it in Socket.cpp (which contains all the code related to SSL/TLS via asio)
      */
     struct SslDesc {
-        std::vector<std::string> certFiles; //if no cert file is provided, asio's set_default_verify_paths() is used
+        struct Client {
+            optional<std::string> certFile; //if no cert file is provided, asio's set_default_verify_paths() is used
+        };
 
-        struct Server {
+        struct Server { //settings that are exclusively relevant for the server
             std::string certificateChainFile;
             std::string privateKeyFile;
             std::string tmpDhFile;
             std::function<std::string()> onGetPassword = [] () {LOG(INFO) << "no password callback defined in SslDesc, using empty string."; return "";};
         };
+
+        //once variant is less syntactically heavy to use we can change this to a variant<Client, Server>
+        optional<Client> client;
         optional<Server> server;
     };
 
