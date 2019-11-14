@@ -1,0 +1,82 @@
+syntax = "proto2";
+
+package miner.proto;
+
+option optimize_for = LITE_RUNTIME; //generate code that only depends on the protobuf-lite library with a subset of features.
+
+message Config {
+
+    optional GlobalSettings global_settings = 1;
+    repeated DeviceAlias device_aliases = 2; //usually empty, DeviceAliases are a workaround if your GPUs don't get recognized properly.
+    repeated Profile profiles = 3;
+    repeated DeviceProfile device_profiles = 4;
+    repeated Pool pools = 5;
+
+    message GlobalSettings {
+        optional int32 temp_cutoff_celsius   = 1 [default = 85];
+        optional int32 temp_overheat_celsius = 2 [default = 80];
+        optional int32 temp_target_celsius   = 3 [default = 76];
+        optional int32 temp_hysteresis       = 4 [default =  2];
+
+        optional uint32 api_port             = 5 [default = 4028];
+        optional string opencl_kernel_dir    = 6;
+
+        optional string start_profile_name   = 7; //must correspond to "name" field of an existing Profile that should be used as the first one when starting the application
+    }
+
+    message DeviceAlias {
+        optional string name = 1;
+
+        optional uint64 index_opencl = 2;
+        optional uint64 index_vulkan = 3;
+        optional uint64 index_cuda   = 4;
+
+        optional string pcie_id = 5;
+        optional bool is_cpu    = 6 [default = false];
+    }
+
+    message Profile {
+        optional string name = 1;
+
+        repeated Task tasks = 2; //all of these tasks run simultaneously as this profile is started, and are terminated as the profile is terminated
+
+        message Task {
+
+            oneof device_name { //the device on which the task should be run
+                uint64 index = 1; //gpu index, arbitrarily chosen, order of gpus is printed at application startup.
+                string alias_name = 2; //name of a device alias specified in device_aliases
+            }
+
+            optional string device_profile_name = 3;
+            optional string algoimpl_name       = 4;
+        }
+
+    }
+
+    message DeviceProfile {
+        optional string name = 1; //name of the deviceprofile. referenced in Profile task
+
+        map<string, AlgoSettings> settings_for_algoimpl = 2; //string key is the name of the AlgoImpl e.g. "AlgoEthashCL" for which the provided AlgoSettings should be used.
+
+        message AlgoSettings {
+            optional uint32 core_clock_mhz_min = 1 [default = 700];
+            optional uint32 core_clock_mhz_max = 2 [default = 1129];
+            optional uint32 memclock = 3 [default = 2040];
+            optional uint32 powertune = 4 [default = 120];
+            optional uint32 num_threads = 5 [default = 1];
+            optional uint32 work_size = 6 [default = 128];
+            optional uint32 raw_intensity = 7 [default = 1048576];
+        }
+
+    }
+
+    message Pool {
+        optional string pow_type = 1 [default = "ethash"];
+        optional string protocol = 2 [default = "stratum+tcp"];
+        optional string host = 3;
+        optional uint32 port = 4;
+        optional string username = 5;
+        optional string password = 6;
+    }
+
+}

@@ -7,6 +7,8 @@
 #include <src/util/OptionalAccess.h>
 #include <src/util/StringUtils.h>
 
+#include <config.pb.h> //protobuf generated header for Config.proto
+
 #define PARSE_OPTIONAL(settings, json, memberName) optionalValue(settings.memberName, json, #memberName)
 
 namespace miner {

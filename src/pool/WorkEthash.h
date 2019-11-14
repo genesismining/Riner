@@ -6,6 +6,7 @@
 #include <src/common/Pointers.h>
 #include <src/util/Bytes.h>
 #include <src/common/Span.h>
+#include <src/algorithm/ethash/DagCache.h>
 #include <src/util/DifficultyTarget.h>
 
 namespace miner {
@@ -17,7 +18,6 @@ namespace miner {
     };
 
     class WorkEthash : public Work, public HasPowTypeEthash {
-
     public:
 
         WorkEthash(uint32_t extraNonce)
@@ -37,43 +37,14 @@ namespace miner {
 
         void setEpoch() {
             if (epoch == std::numeric_limits<uint32_t>::max()) {//calculate epoch for workTemplate if it didn't happen yet
-                uint32_t getEthEpoch(cByteSpan<32>);
-                epoch = getEthEpoch(seedHash);
+                epoch = calculateEthEpoch(seedHash);
             }
         }
 
-        void setDifficultiesAndTargetsNew(const Bytes<32> &jobTarget) {
+        void setDifficultiesAndTargets(const Bytes<32> &jobTarget) {
             jobDifficulty = targetToDifficultyApprox(jobTarget);
             deviceDifficulty = std::min(deviceDifficulty, jobDifficulty); //make sure deviceDiff is not harder than jobDiff
             deviceTarget = difficultyToTargetApprox(deviceDifficulty);
-        }
-
-        // TODO: export this to proper functions
-        void setDifficultiesAndTargets(const Bytes<32> &jobTarget) {
-            using limits = std::numeric_limits<double>;
-            int offset = 31;
-            for (; offset >= 8 && jobTarget[offset] == 0; offset--);
-            uint64_t target;
-            memcpy(&target, jobTarget.data() + offset - 7, 8);
-            target = le64toh(target);
-            jobDifficulty = ldexp((1. - limits::epsilon() / limits::radix) / target, 64 + 8 * (31 - offset));
-            this->jobTarget = jobTarget;
-
-            deviceDifficulty = std::min(deviceDifficulty, jobDifficulty);
-            setDeviceTarget(deviceDifficulty);
-
-            MI_EXPECTS(jobDifficulty == targetToDifficultyApprox(jobTarget));
-            MI_EXPECTS(deviceTarget == difficultyToTargetApprox(deviceDifficulty));
-        }
-
-    private:
-
-        void setDeviceTarget(double difficulty) {
-            using limits = std::numeric_limits<double>;
-            auto target = uint64_t(ceil(ldexp((1. - limits::epsilon() / limits::radix) / difficulty, 64)));
-            const auto &targetBytes = toBytesWithLittleEndian(target);
-            deviceTarget.fill(0xff); // just to be safe...
-            memcpy(deviceTarget.data() + 24, targetBytes.data(), 8);
         }
     };
 

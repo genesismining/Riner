@@ -29,7 +29,18 @@ if(NOT ("0" IN_LIST FILE_RET))
     message(WARNING "Download of ethash.cl kernel failed: ${ERROR}")
 endif()
 
+#Protocol Buffers
+find_package(Protobuf REQUIRED)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+file(GLOB_RECURSE ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
+protobuf_generate_cpp(ProtoSources ProtoHeaders ${ProtoFiles})
+message(STATUS "incldirs: ${Protobuf_INCLUDE_DIRS}")
+message(STATUS "ProtoSources: ${ProtoSources}")
+message(STATUS "ProtoHeaders: ${ProtoHeaders}")
+#add_library(LibMiner STATIC ${ProtoSources} ${ProtoHeaders})
+
 add_library(LibMiner
+        ${ProtoSources} ${ProtoHeaders}
         src/application/Application.cpp src/application/Application.h
         src/application/Config.cpp src/application/Config.h
         src/application/ApiServer.cpp src/application/ApiServer.h
@@ -124,7 +135,7 @@ add_subdirectory("lib/easyloggingpp")
 target_compile_definitions(LibMiner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
 target_compile_definitions(LibMiner PUBLIC CL_HPP_TARGET_OPENCL_VERSION=120)
 target_compile_definitions(LibMiner PUBLIC ASIO_STANDALONE) #tell asio to not include boost headers
-target_compile_definitions(LibMiner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
+#target_compile_definitions(LibMiner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
 
 target_compile_definitions(LibMiner PUBLIC ELPP_THREAD_SAFE ELPP_FEATURE_CRASH_LOG) #tell easylogging++ to be threadsafe
 #target_compile_definitions(LibMiner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
@@ -148,6 +159,9 @@ if(APPLE)
     #asio string_view fix on MacOS
     target_compile_definitions(LibMiner PUBLIC ASIO_DISABLE_STD_EXPERIMENTAL_STRING_VIEW)
 endif()
+
+#Protocol Buffers
+target_link_libraries(LibMiner ${PROTOBUF_LIBRARY})
 
 #OpenCL
 target_link_libraries (Miner ${OpenCL_LIBRARY})

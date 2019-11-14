@@ -45,4 +45,6 @@ namespace miner {
         operator bool() const;
     };
 
+    uint32_t calculateEthEpoch(cByteSpan<32> seedHash);
+
 }
