@@ -141,7 +141,11 @@ namespace miner {
             }
             sock.async_handshake(_isClient ? SslTcpSocket::client : SslTcpSocket::server, move(handler));
         });
-#else
+
+        visit<TcpSocket>(_var, [&] (TcpSocket &sock) {
+            handler({}); //just call handler synchronously, so no additional codepath is necessary at callee
+        });
+#else //if we don't have OpenSSL
         handler({}); //just call handler synchronously, so no additional codepath is necessary at callee
 #endif
     }
