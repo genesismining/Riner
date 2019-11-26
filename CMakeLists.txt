@@ -42,10 +42,12 @@ message(STATUS "ProtoHeaders: ${ProtoHeaders}")
 add_library(LibMiner
         ${ProtoSources} ${ProtoHeaders}
         src/application/Application.cpp src/application/Application.h
-        src/application/Config.cpp src/application/Config.h
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
         src/application/LoggingMain.cpp
+        src/config/Config.cpp src/config/Config.h
+        src/config/ConfigTest.cpp
+        src/config/ConfigDefaultValues.h
         src/algorithm/Algorithm.cpp src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h
@@ -187,6 +189,7 @@ find_package(GTest REQUIRED)
 add_executable(tests
     src/algorithm/grin/CuckatooTest.cpp
     src/algorithm/grin/GraphTest.cpp
+    src/config/ConfigTest.cpp
     src/pool/WorkCuckatoo31Test.cpp
     src/network/JrpcTest.cpp
 )
