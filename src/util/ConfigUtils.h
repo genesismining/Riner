@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <src/application/Config.h>
+#include <src/config/Config.h>
 #include <src/compute/DeviceId.h>
 #include <src/application/Device.h>
 #include <vector>

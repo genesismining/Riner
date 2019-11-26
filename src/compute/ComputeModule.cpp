@@ -5,7 +5,7 @@
 #include <src/util/Logging.h>
 #include <src/common/Assert.h>
 #include <src/compute/opencl/CLProgramLoader.h>
-#include <src/application/Config.h>
+#include <src/config/Config.h>
 
 namespace miner {
 

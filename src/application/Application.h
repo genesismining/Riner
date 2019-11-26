@@ -9,7 +9,7 @@
 #include <src/application/ApiServer.h>
 #include <deque>
 #include <map>
-#include "Config.h"
+#include "src/config/Config.h"
 
 namespace miner {
 

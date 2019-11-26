@@ -1,0 +1,144 @@
+#
+# Riner config file in the google protobuf text format.
+# this file can be used to tell Riner what algorithms to run on which devices
+# and which pools to connect to, as well as some other settings.
+#
+# the layout of riner config files is specified in 'config.proto'.
+#
+# if fields from the 'config.proto' specification are not assigned here, the
+# default values from ConfigDefaultValues.h are chosen.
+#
+
+global_settings {
+  api_port: 4028
+  opencl_kernel_dir: "kernel/dir/" #dir which contains the opencl kernel files (e.g. ethash.cl)
+  start_profile_name: "my_profile" #when running Riner with this config file, the tasks of "my_profile" get launched
+}
+
+# ------------------------------
+# explanation of device aliases:
+# ------------------------------
+# 
+# the following device aliases resolve the following example gpu indexing problem:
+# this is just an example to motivate the existance of device aliases. In most cases device aliases
+# are not needed.
+# 
+# PHYSIAL GPUS       | OPENCL_INDEX | VULKAN INDEX
+# (unknown to riner) |              |
+#                  A |            0 | 0
+#              --> B |            1 | 2 <--
+#                  C |            2 | 1
+#
+# RINER DEVICE_INDEX | OPENCL INDEX | VULKAN INDEX
+#                  0 |            0 | 0
+#                  1 |            1 | 1
+#                  2 |            2 | 2
+#
+# compute api implementations may chose their own order of gpus. In an attempt to get a consistent index
+# for every physical gpu, riner creates its own indexing which can be found out via --list_devices
+# in theory a case like the one above could happen, where riner's indexing fails. 
+# if we try to run the following tasks:
+#
+# task0: Some opencl algo on device_index 1
+# task1: Some vulkan algo on device_index 2
+# 
+# both algos will end up running on the same physical GPU, since
+# device_index 1 => OpenCL index 1 => Physical GPU B
+# device_index 2 => Vulkan index 2 => Physical GPU B
+#
+# the following device_alias definitions resolve the issue. 
+# device_aliases can be used manually specify a physical GPU in case we know about such an indexing issue. 
+# in this example tasks must specify the device_alias names "MyGpu1", "MyGpu2" instead of device_indices.
+
+device_alias {
+  name: "MyGpu1"
+  #lets say we somehow found out that vulkan and opencl use these different indices for the same gpu
+  index_opencl: 1
+  index_vulkan: 2
+}
+
+device_alias {
+  name: "MyGpu2"
+  #lets say we somehow found out that vulkan and opencl use these different indices for the same gpu
+  index_opencl: 2
+  index_vulkan: 1
+}
+
+profile {
+  name: "my_profile"
+  # now specify tasks that will run in parallel as this profile is started
+
+  # Task 1: run AlgoEthashCL on all devices
+  task {
+    run_on_all_remaining_devices: true
+    #run this task on every gpu except gpu 1, which will run the task below
+
+    run_algoimpl_with_name: "AlgoEthashCL" 
+    #run the OpenCL ethash AlgoImpl. run riner --list_algoimpls for a list of all available AlgoImpls
+
+    use_device_profile_with_name: "my_default_gpu_profile" 
+    #my_gpu_profile has specific settings for AlgoEthashCL for this gpu type.
+  }
+
+  # Task 1: run AlgoCuckatoo31 on GPU 1 (use --list_devices to find out about indices)
+  task {
+    device_index: 1
+    #gpu 1 will not run the task above, but this one.
+
+    run_algoimpl_with_name: "AlgoCuckatoo31" 
+
+    use_device_profile_with_name: "my_AMD_gpu_profile" 
+    #my_gpu_profile has specified other settings for AlgoCuckatoo31
+  }
+}
+
+device_profile {
+  name: "my_AMD_gpu_profile"
+  #device profile, example name suggests they should be used for AMD gpus
+
+  settings_for_algoimpl {
+    algo_impl: "AlgoEthashCL"
+    #these settings are applied if AlgoEthashCL is started with this gpu profile
+    num_threads: 4
+    work_size: 1024
+  }
+}
+
+device_profile {
+  name: "my_default_gpu_profile"
+  #generic device profile for no particular gpu
+
+  settings_for_algoimpl {
+    algo_impl: "AlgoCuckatoo31" 
+
+    work_size: 2048
+  }
+
+  settings_for_algoimpl {
+    algo_impl: "AlgoEthashCL"
+    
+    num_threads: 4
+    work_size: 1024
+  }
+}
+
+# pools are listed by priority. 
+# e.g. if there are two ethash pools, the top most one will get used first, 
+# if the connection dies, work will get taken from the next ethash pool instead.
+# if the dead pool reawakens, 
+
+pool {
+  pow_type: "ethash" #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
+  host: "127.0.0.1"
+  port: 2345
+  username: "a"
+  password: "x"
+}
+
+pool {
+  pow_type: "grin"
+  host: "127.0.0.1"
+  port: 2346
+  username: "b"
+  password: "y"
+}

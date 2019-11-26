@@ -6,7 +6,7 @@
 
 #include <src/pool/WorkEthash.h>
 #include <src/network/JsonRpcUtil.h>
-#include <src/application/Config.h>
+#include <src/config/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/util/Random.h>
 #include <src/common/Pointers.h>

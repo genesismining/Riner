@@ -4,7 +4,7 @@
 #include "Pool.h"
 #include <future>
 #include <list>
-#include <src/application/Config.h>
+#include <src/config/Config.h>
 
 namespace miner {
 

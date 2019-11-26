@@ -3,7 +3,7 @@
 
 #include <src/pool/WorkQueue.h>
 #include <src/pool/WorkEthash.h>
-#include <src/application/Config.h>
+#include <src/config/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/common/Pointers.h>
 #include <queue>
@@ -22,7 +22,7 @@ namespace miner {
         std::unique_ptr<Work> makeWork() override {
             workTemplate.setEpoch();
             workTemplate.extraNonce++;
-            return std::make_unique<WorkEthash>(workTemplate);
+            return make_unique<WorkEthash>(workTemplate);
         }
 
         ~EthashStratumJob() override = default;

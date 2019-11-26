@@ -5,7 +5,7 @@
 
 #include <src/pool/Pool.h>
 #include <src/pool/WorkEthash.h>
-#include <src/application/Config.h>
+#include <src/config/Config.h>
 #include <src/util/LockUtils.h>
 #include <src/common/Pointers.h>
 #include <queue>

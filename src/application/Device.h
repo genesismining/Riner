@@ -4,7 +4,7 @@
 #include <src/gpu_api/GpuApi.h>
 #include <src/statistics/DeviceRecords.h>
 #include <src/util/Copy.h>
-#include "Config.h"
+#include "src/config/Config.h"
 
 namespace miner {
 
