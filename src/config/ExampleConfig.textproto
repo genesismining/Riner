@@ -1,6 +1,6 @@
 #
 # Riner config file in the google protobuf text format.
-# this file can be used to tell Riner what algorithms to run on which devices
+# this file can be used to tell Riner what algorithms to run on which devices (GPUs/CPUs)
 # and which pools to connect to, as well as some other settings.
 #
 # the layout of riner config files is specified in 'config.proto'.
@@ -25,14 +25,16 @@ global_settings {
 # 
 # PHYSIAL GPUS       | OPENCL_INDEX | VULKAN INDEX
 # (unknown to riner) |              |
-#                  A |            0 | 0
+#                  A |            0 | 3
 #              --> B |            1 | 2 <--
 #                  C |            2 | 1
+#                  D |            3 | 0
 #
 # RINER DEVICE_INDEX | OPENCL INDEX | VULKAN INDEX
-#                  0 |            0 | 0
+#                  0 |            0 | 3
 #                  1 |            1 | 1
 #                  2 |            2 | 2
+#                  3 |            3 | 0
 #
 # compute api implementations may chose their own order of gpus. In an attempt to get a consistent index
 # for every physical gpu, riner creates its own indexing which can be found out via --list_devices
@@ -46,9 +48,10 @@ global_settings {
 # device_index 1 => OpenCL index 1 => Physical GPU B
 # device_index 2 => Vulkan index 2 => Physical GPU B
 #
-# the following device_alias definitions resolve the issue. 
+# the following device_alias definitions resolve this issue.
 # device_aliases can be used manually specify a physical GPU in case we know about such an indexing issue. 
 # in this example tasks must specify the device_alias names "MyGpu1", "MyGpu2" instead of device_indices.
+# since this is just an example, the profile doesn't actually use these aliases.
 
 device_alias {
   name: "MyGpu1"
@@ -108,17 +111,21 @@ device_profile {
   name: "my_default_gpu_profile"
   #generic device profile for no particular gpu
 
-  settings_for_algoimpl {
-    algo_impl: "AlgoCuckatoo31" 
+  settings_for_algoimpl { #key value pairs
+    key: "AlgoCuckatoo31"
 
-    work_size: 2048
+    value: { #settings:
+        work_size: 2048
+    }
   }
 
   settings_for_algoimpl {
-    algo_impl: "AlgoEthashCL"
+    key: "AlgoEthashCL"
     
-    num_threads: 4
-    work_size: 1024
+    value: {
+      num_threads: 4
+      work_size: 1024
+    }
   }
 }
 
