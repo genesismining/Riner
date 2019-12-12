@@ -39,7 +39,7 @@ namespace miner { namespace jrpc {
                 return *this;
             }
 
-            ~JsonRpcUtil() {
+            ~JsonRpcUtil() override {
                 stopIOThread();
             }
 

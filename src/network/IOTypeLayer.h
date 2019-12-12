@@ -11,21 +11,13 @@
 #include <src/common/Assert.h>
 #include <src/util/TemplateUtils.h>
 #include <src/network/SslDesc.h>
+#include <src/network/CxnHandle.h>
 
 namespace miner {
 
     enum class IOMode {
         Tcp,
     };
-
-    class IOConnection;
-
-    /**
-     * Conntection Handle that is safe to be stored by the user and reused.
-     * If the corresponding connection no longer exists, the weak_ptr deals with that behavior safely.
-     * A connection is dropped when no operation is happening on it (e.g. no async read/writes are queued)
-     */
-    using CxnHandle = weak_ptr<IOConnection>;
 
     //function declarations that are used in IO related classes
     template<class T> using IOOnReceiveValueFunc = std::function<void(CxnHandle, const T &)>;
@@ -246,9 +238,10 @@ namespace miner {
          * the first time.
          * @param retryInterval the time duration to wait between the individual tries
          * @param pred the function that should be called repeatedly until it returns `true` for the first time
+         * @param onCancelled the function that should be called if the retrires had to be cancelled (e.g. if the IOTypeLayer got destroyed, or all handlers got aborted due to disconnectAll call). This function is guaranteed to be called after the ioThread is no longer executing (=joined). The function is called from within a user's thread that interacts with this io object (e.g. via its dtor).
          */
-        void retryAsyncEvery(milliseconds retryInterval, std::function<bool()> &&pred) {
-            _layerBelow.retryAsyncEvery(retryInterval, std::move(pred));
+        void retryAsyncEvery(milliseconds retryInterval, std::function<bool()> &&pred, std::function<void()> onCancelled) {
+            _layerBelow.retryAsyncEvery(retryInterval, std::move(pred), std::move(onCancelled));
         }
 
         /**
@@ -293,6 +286,10 @@ namespace miner {
          */
         bool isIoThread() {
             return layerBelow().isIoThread();
+        }
+
+        void disconnectAll() {
+            return layerBelow().disconnectAll();
         }
 
     protected:

@@ -17,10 +17,15 @@ namespace miner {
 
     class IOConnection {
         friend class BaseIO;
+        friend class CxnHandle;
 
         //this function is not exposed to prevent confusion with the type layers
         virtual void asyncWrite(std::string outgoingStr) = 0;
         virtual void asyncRead() = 0;
+
+        //a connection is always associated with a BaseIO instance. This getter is used to catch the error where a
+        //CxnHandle is used with a foreign BaseIO instance by accident
+        virtual uint64_t getAssociatedBaseIOUid() = 0;
     public:
         virtual ~IOConnection() = default;
     };
@@ -64,11 +69,13 @@ namespace miner {
 
         template<class Fn>
         void postAsync(Fn &&func) {
-            asio::post(_ioService, std::forward<Fn>(func));
+            asio::post(*_ioService, std::forward<Fn>(func));
         }
+        void retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred, std::function<void()> &&onCancelled);
 
-        void retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred);
+        uint64_t getUid();
 
+        void disconnectAll();
     protected:
         void stopIOThread(); //blocking, joins the io thread, no parallel handler execution is happening after this function returns
         bool ioThreadRunning() const; //not thread safe
@@ -81,11 +88,20 @@ namespace miner {
 
         IOMode _mode;
 
+        static uint64_t generateUid();
+
+        uint64_t _uid = generateUid(); //uniquely identifies this BaseIO instance, so that the error can be caught where
+        // CxnHandles from another BaseIO instance are used with this BaseIO instance by mistake.
+
         using tcp = asio::ip::tcp;
 
-        void startIoThread();
+        void startIOThread();
         decltype(std::this_thread::get_id()) _ioThreadId;
         void setIoThreadId();
+
+        void abortAllAsyncRetries();
+
+        void resetIoService();
 
         struct AsyncRetry;
         LockGuarded<std::list<shared_ptr<AsyncRetry>>> _activeRetries;
@@ -95,14 +111,16 @@ namespace miner {
         struct AsyncRetry { //used to store state for "retryAsyncEvery(...)" function
             asio::steady_timer timer;
             std::function<bool()> pred;
+            std::function<void()> onCancelled;
             WaitHandler waitHandler;
-            std::list<std::shared_ptr<AsyncRetry>>::iterator it;
         };
 
         IOOnConnectedFunc _onConnected = ioOnConnectedNoop;
         IOOnDisconnectedFunc _onDisconnected = ioOnDisconnectedNoop;
 
-        asio::io_service _ioService; //must be declared after _onDisconnected since stop() may call _onDisconnected()
+        //TODO: refactor the BaseIO object to be just a wrapper around a unique_ptr that owns the actual BaseIO object (and while you're at it, make it 2 different ones for server and client). that way it can all be restarted in a RAII fashion without crazy dependencies like expressed below
+        unique_ptr<asio::io_service> _ioService; //IMPORTANT: sadly, *_ioService refs are stored in the asio::steady_timers inside _activeRetries. abortAllAsyncRetries() must be called before resetting this unique_ptr.
+        // _ioService must be declared after _onDisconnected since stop() may call _onDisconnected().
 
         //socket depends on _ioService. gets moved into new connections as they are constructed
         //can be a plain old tcp::socket or a ssl stream around a tcp::socket

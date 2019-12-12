@@ -56,7 +56,6 @@ namespace miner { namespace jrpc {
             return false;
         }
 
-
         void JsonRpcUtil::setReadAsyncLoopEnabled(bool val) {
             MI_EXPECTS(isIoThread() || !hasLaunched());
             _readAsyncLoopEnabled = val;
@@ -71,7 +70,7 @@ namespace miner { namespace jrpc {
             //this function keeps retrying until the provided lambda returns true
             retryAsyncEvery(freq, [this, cxn = std::move(cxn), //move all the args into the lambda
                                    stillPending, tries, maxTries,
-                                   neverRespondedHandler = std::move(neverRespondedHandler),
+                                   neverRespondedHandler,
                                    request = std::move(request),
                                    handler = std::move(handler)] () mutable -> bool {
 
@@ -102,7 +101,7 @@ namespace miner { namespace jrpc {
                 }
 
                 return !keepTrying;
-            });
+            }, /*onCancelled:*/ neverRespondedHandler);
         }
 
     }}

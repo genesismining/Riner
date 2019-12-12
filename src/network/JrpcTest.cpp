@@ -52,10 +52,10 @@ namespace miner {
         using namespace std;
         atomic_int order{0}; //counted up
         //track the order in which the following things happen:
-        int serverConnected = 0;
-        int serverDisconnected = 0;
-        int clientConnected = 0;
-        int clientDisconnected = 0;
+        int serverConnected    = {0}; //curly braces in case we want to make it an atomic later
+        int serverDisconnected = {0};
+        int clientConnected    = {0};
+        int clientDisconnected = {0};
 
         Barrier barrier;
         std::future_status status;
@@ -66,24 +66,25 @@ namespace miner {
 
             server.launchServer(4029, [&](CxnHandle cxn) {
                 //on connect
-                serverConnected = ++order; //(0 or 1)
+                serverConnected = ++order; //(1 or 2)
                 server.readAsync(cxn);
             }, [&] {
                 //on disconnect
-                serverDisconnected = ++order; //(2 or 3)
+                serverDisconnected = ++order; //(3 or 4)
 
                 barrier.unblock();
             });
 
             client.launchClient("127.0.0.1", 4029, [&](CxnHandle cxn) {
                 //on connect
-                clientConnected = ++order; //(0 or 1)
+                clientConnected = ++order; //(1 or 2)
 
                 //no further actions or response handler that use cxn are added, therefore the connection is dropped
                 client.callAsync(cxn, RequestBuilder{}.method("DummyCall").param(0).done());
+                client.readAsync(cxn);
             }, [&] {
                 //on disconnect
-                clientDisconnected = ++order; //(2 or 3)
+                clientDisconnected = ++order; //(3 or 4)
             });
 
             status = barrier.wait_for(2s);
@@ -289,8 +290,8 @@ namespace miner {
             });
         };
 
-        void launchClient(std::function<void(CxnHandle)> onCxn) {
-            client->launchClient("127.0.0.1", 4031, std::move(onCxn));
+        void launchClient(std::function<void(CxnHandle)> onCxn, std::function<void()> onDc = ioOnDisconnectedNoop) {
+            client->launchClient("127.0.0.1", 4031, std::move(onCxn), std::move(onDc));
         }
 
         template<class Func>
@@ -340,7 +341,8 @@ namespace miner {
         //it does not test whether the ssl stream actually works!
 
 #ifndef HAS_OPENSSL
-        //return; //skip this test if we don't have openssl
+        LOG(INFO) << "skip this test since the binary was compiled without openssl support";
+        return;
 #endif
 
         LockGuarded<Message> msg; //response from server to client
@@ -378,14 +380,17 @@ namespace miner {
         //it does not test whether the wrong password is the reason for the connection
         //not being established, so this test only makes sense together with other tests
 
-#ifndef HAS_OPENSSL
-        //return; //skip this test if we don't have openssl
+        bool hasOpenSsl = false;
+#ifdef HAS_OPENSSL
+        hasOpenSsl = true;
 #endif
+
+        auto testDuration = hasOpenSsl ? 4s : 300ms; //shorter time if timeout is expected due to no openssl support, lets not make this test waste time on expected behavior.
 
         EXPECT_TRUE(initSsl()); //initialize ssl for server and client members
 
         sslDescServer.server->onGetPassword = [] () -> std::string {
-            return "wrong password";
+            return "this is a wrong password";
         };
 
         server->io().enableSsl(sslDescServer);
@@ -395,6 +400,7 @@ namespace miner {
         });
 
         launchServerWithReadLoop();
+
         launchClient([&] (CxnHandle cxn) {
             client->callAsync(cxn, RB{}.id(0).method("method").done(), [&] (CxnHandle cxn, Message res) {});
             client->readAsync(cxn);
@@ -403,8 +409,181 @@ namespace miner {
         bool timeout = waitAndInvoke(barrier, [&] () {
             server.reset();
             client.reset();
+        }, testDuration);
+        LOG(INFO) << "waiting over timeout = " << timeout;
+
+        server.reset();
+        client.reset();
+        LOG(INFO) << "deinit";
+
+        if (hasOpenSsl) //expect openssl == !!timeout
+            EXPECT_FALSE(timeout);
+        else
+            EXPECT_TRUE(timeout);
+    }
+
+    TEST_F(JsonRpcServerClientFixture, JsonRpcKillConnection) {
+
+        // timeline comment (use your IDE's comment folding to hide/unhide)
+        /*
+            thread is shown by the indentation used
+            *--------------*-------------------*------------------
+            | main thread  |  server ioThread  | client ioThread
+            v              v                   v
+
+            > launch server
+            > server.addMethod "method"
+            > launch client
+            > wait for barrier
+            --------------connection established------------------
+                            > nothing ever happens on the server for this test
+                                               > server->disconnectAll() called
+                                               > ioThread stops
+                                               > ~asio::io_service destroys captured Connection sharedPtrs
+                                               > Connection dtor disconnects server from client
+                                               > server->disconnectAll() returned
+                                               > client->callAsync("method")
+                                               > witnesses disconnect from server
+                                               > unblocks barrier before its timeout
+            > server.reset()
+            > client.reset() called
+                                               > client ioThread stops
+            > client.reset() returned
+
+            > no timeout! test succeeded
+        */
+
+        launchServerWithReadLoop();
+
+        Barrier serverBarrier;
+        auto testDuration = 5s; //successful test took 3008ms once
+
+        server->addMethod("method", [&] () {
+            EXPECT_FALSE("should not be processing this call ever, since disconnectAll was called already");
+            serverBarrier.wait_for(testDuration + 10ms);
         });
-        EXPECT_TRUE(timeout);
+
+        launchClient([&] (CxnHandle cxn) {
+            server->io().disconnectAll(); //in this moment the server has already queued a readAsync(), which is expected to be asio::error::operation_abort'ed
+
+            client->callAsync(cxn, RB{}.id(0).method("method").done(), [&] (CxnHandle cxn, Message res) {});
+            client->readAsync(cxn);
+        }, [&] {
+            LOG(INFO) << "test client witnessed that server has disconnected";
+            barrier.unblock();
+        });
+
+        bool timeout = waitAndInvoke(barrier, [&] () {
+            server.reset();
+            client.reset();
+        }, testDuration);
+        EXPECT_FALSE(timeout);
+    }
+
+    TEST_F(JsonRpcServerClientFixture, JsonRpcKillConnectionWhileCallRetryIsQueued) {
+
+        // timeline comment (use your IDE's comment folding to hide/unhide)
+        /*
+            thread is shown by the indentation used
+            *--------------*-------------------*------------------
+            | main thread  |  server ioThread  | client ioThread
+            v              v                   v
+
+            > create shared_ptr of some test objects X, Y
+            > launch server
+            > server.addMethod "method"
+            > launch client
+            > wait for barrier
+            --------------connection established------------------
+                                               > client->call "method" retry every 10 seconds (retry is supposed to never happen in this test)
+                                               > capture shared_ptr X in predicate handler and Y in onCancelled handler
+                            > "method" gets invoked
+                            > client->disconnectAll() called (forces client to join io thread and kill all queued retries)
+                            > client ioThread stops
+                            > client ~io_service() kills all handlers and their captured Connection object
+                            > client disconnect
+                            > client's active retires get destroyed (=> X and Y refcount decrements)
+                            > client's onCancelled gets called
+                            > client->disconnectAll() returns
+                            > server witnesses client disconnect
+                            > unblocks barrier
+            > server.reset()
+            > client.reset() called
+                                               > client ioThread stops
+            > client.reset() returned
+            > check if X and Y refcount == 1 (which means the handlers got properly destroyed)
+            > no timeout! test succeeded
+        */
+
+        auto X = make_shared<int>(1234); //doesn't have to be an int, just some shared ptr instance
+        auto Y = make_shared<int>(5678);
+
+        std::atomic_bool onCancelledHappened {false};
+        std::atomic_bool clientWitnessedServerDc {false};
+
+        launchServerWithReadLoop();
+
+        auto testDuration = 4s;
+
+        server->addMethod("method", [&] () {
+            client->io().disconnectAll();
+            barrier.unblock();
+        });
+
+        launchClient([&] (CxnHandle cxn) {
+            auto maxTries = 5;
+            auto retryInterval = 10s;
+
+            auto predicate = [&, X] (CxnHandle cxn, Message res) {
+                EXPECT_FALSE("predicate: this point should never be reached");
+            };
+
+            auto onCancelled = [&, Y] {
+                EXPECT_GT(X.use_count(), 1); //expect more than one shared_ptr pointing to it
+                EXPECT_GT(Y.use_count(), 1);
+                onCancelledHappened = true;
+            };
+
+            client->callAsyncRetryNTimes(cxn, RB{}.id(0).method("method").done(), maxTries, retryInterval, predicate, onCancelled);
+            client->readAsync(cxn);
+        }, [&] {
+            LOG(INFO) << "test client witnessed that server has disconnected";
+            clientWitnessedServerDc = true;
+        });
+
+        bool timeout = waitAndInvoke(barrier, [&] () {
+            server.reset();
+            client.reset();
+        }, testDuration);
+
+        EXPECT_TRUE(onCancelledHappened);
+        EXPECT_TRUE(clientWitnessedServerDc);
+
+        //check if captured X and Y shared_ptrs got cleaned up properly and only the last instances are remaining
+        EXPECT_EQ(X.use_count(), 1);
+        EXPECT_EQ(Y.use_count(), 1);
+
+        EXPECT_FALSE(timeout);
     }
 
 } // miner
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

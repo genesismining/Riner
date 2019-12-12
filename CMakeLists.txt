@@ -34,9 +34,8 @@ find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 file(GLOB_RECURSE ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 protobuf_generate_cpp(ProtoSources ProtoHeaders ${ProtoFiles})
-message(STATUS "incldirs: ${Protobuf_INCLUDE_DIRS}")
-message(STATUS "ProtoSources: ${ProtoSources}")
-message(STATUS "ProtoHeaders: ${ProtoHeaders}")
+#message(STATUS "ProtoSources: ${ProtoSources}")
+#message(STATUS "ProtoHeaders: ${ProtoHeaders}")
 #add_library(LibMiner STATIC ${ProtoSources} ${ProtoHeaders})
 
 add_library(LibMiner
@@ -76,6 +75,7 @@ add_library(LibMiner
         src/network/JsonRpcUtil.cpp src/network/JsonRpcUtil.h
         src/network/SslDesc.h
         src/network/Socket.cpp src/network/Socket.h
+        src/network/CxnHandle.cpp src/network/CxnHandle.h
         src/pool/Pool.cpp src/pool/Pool.h
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkCuckoo.h
@@ -115,6 +115,7 @@ add_library(LibMiner
         src/util/LockUtils.cpp src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
         src/util/HexString.cpp src/util/HexString.h
+        src/util/AsioErrorUtil.cpp src/util/AsioErrorUtil.h
         src/util/DifficultyTarget.cpp src/util/DifficultyTarget.h
         src/util/DynamicBuffer.h
         src/util/Barrier.cpp src/util/Barrier.h

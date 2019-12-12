@@ -2,6 +2,7 @@
 //
 
 #include <src/common/Assert.h>
+#include <src/util/AsioErrorUtil.h>
 #include "BaseIO.h"
 
 #ifdef HAS_OPENSSL
@@ -12,30 +13,38 @@ namespace miner {
 
     using asio::ip::tcp;
 
+    //TODO: remove IOConnection base class. The Socket abstraction now does what was originally thought to be the responsibility of this
+    //class hierarchy.
     struct Connection : public IOConnection, public std::enable_shared_from_this<Connection> {
         IOOnDisconnectedFunc &_onDisconnected;
         BaseIO::OnReceiveValueFunc &_onRecv;
         unique_ptr<Socket> _socket;
         asio::streambuf _incoming;
+        uint64_t _baseIOUid = 0;
 
-        Connection(decltype(_onDisconnected) &onDisconnected, decltype(_onRecv) &onRecv, unique_ptr<Socket> socket)
-        : _onDisconnected(onDisconnected), _onRecv(onRecv), _socket(std::move(socket)) {
+        Connection(decltype(_onDisconnected) &onDisconnected, decltype(_onRecv) &onRecv, unique_ptr<Socket> socket, uint64_t baseIOUid)
+        : _onDisconnected(onDisconnected), _onRecv(onRecv), _socket(std::move(socket)), _baseIOUid(baseIOUid) {
         };
 
         ~Connection() override {
-            LOG(DEBUG) << this << " closing connection (likely because no read/write operations are queued on it)";
+            LOG(INFO) << this << " closing connection (likely because no read/write operations are queued on it)";
             MI_EXPECTS(_onDisconnected);
             _onDisconnected();
+        }
+
+        uint64_t getAssociatedBaseIOUid() override {
+            MI_EXPECTS(_baseIOUid != 0); //baseIO Uids start at 1, if it's 0, it wasn't set
+            return _baseIOUid;
         }
 
         void asyncWrite(std::string outgoing) override {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
-            //as soon as no async read or write on a connection is queued, the connection will close itself
+            //as soon as no async read or write action is queued on a given connection is, the connection will close itself
             asio::async_write(_socket->get(), asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
                 if (error) {
-                    LOG(INFO) << "async write error #" << error <<
-                              " in TcpLineConnection while trying to send '" << outgoing << "'";
+                    LOG(INFO) << "async write error " << asio_error_name_num(error) <<
+                              " in Connection while trying to send '" << outgoing << "'";
                 }
             });
         }
@@ -43,12 +52,15 @@ namespace miner {
         void asyncRead() override {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
-            //as soon as no async read or write on a connection is queued, the connection will close itself
+            //as soon as no async read or write action is queued on a given connection is, the connection will close itself
+            LOG(INFO) << "ReadUntil queued";
             asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
+                LOG(INFO) << "ReadUntil scheduled";
+
                 if (error) {
-                    LOG(INFO) << "BaseIO connection closed: " << error.message();
+                    LOG(INFO) << "asio error " << asio_error_name_num(error) << " during async_read_until: " << error.message();
                     return;
                 }
 
@@ -62,7 +74,7 @@ namespace miner {
                 MI_EXPECTS(line.size() == strlen(line.c_str()));
 
                 MI_EXPECTS(_onRecv);
-                _onRecv(shared //becomes weak_ptr<IOConnection> aka CxnHandle
+                _onRecv(CxnHandle{shared} //becomes weak_ptr<IOConnection> aka CxnHandle
                         , line);
             });
         }
@@ -70,17 +82,21 @@ namespace miner {
     };
 
     BaseIO::~BaseIO() {
+        MI_EXPECTS(!isIoThread());
         stopIOThread();
+        abortAllAsyncRetries();
+        //handlers get destroyed in _ioService dtor
     }
 
     BaseIO::BaseIO(IOMode mode)
     : _mode(mode)
-    , _ioService() {
-        startIoThread();
+    , _ioService(make_unique<asio::io_service>()) {
+        startIOThread();
     }
 
     void BaseIO::writeAsync(CxnHandle handle, value_type outgoing) {
-        if (auto cxn = handle.lock()) {
+
+        if (auto cxn = handle.lock(*this)) {
             cxn->asyncWrite(std::move(outgoing)); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
@@ -89,12 +105,17 @@ namespace miner {
     }
 
     void BaseIO::readAsync(CxnHandle handle) {
-        if (auto cxn = handle.lock()) {
+        if (auto cxn = handle.lock(*this)) {
             cxn->asyncRead(); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
             LOG(INFO) << "called readAsync on connection that was closed";
         }
+    }
+
+    uint64_t BaseIO::generateUid() {
+        static std::atomic<uint64_t> nextUid = {1};
+        return nextUid++;
     }
 
     void BaseIO::enableSsl(const SslDesc &desc) {
@@ -111,7 +132,7 @@ namespace miner {
         return _sslDesc.has_value();
     }
 
-    void BaseIO::startIoThread() {
+    void BaseIO::startIOThread() {
         MI_EXPECTS(_thread == nullptr);
         if (_thread) {
             LOG(ERROR) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
@@ -122,16 +143,31 @@ namespace miner {
         _thread = std::make_unique<std::thread>([this] () {
             setIoThreadId(); //set this thread id to be the IO Thread
             try {
+
+                std::vector<int> wait_durations_ms = {0, 1, 2, 5, 10, 50, 100, 150, 200, 400, 600, 1000, 2000};
+                size_t current_wait = 0;
+
                 while(true) {
-                    _ioService.run();
+
+                    auto handlers_done = _ioService->run();
+                    //returns whenever stopped or no handlers left to execute
+
+                    if (handlers_done > 0)
+                        current_wait = 0; //reset wait durations if work was done!
 
                     if (_shutdown) {
                         break;
                     } else {
-                        _ioService.restart();
+                        _ioService->restart();
                     }
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                    //returns whenever stopped or no handlers left to execute
+
+                    //wait (happens e.g. if no handlers were queued as soon as the thread got launched)
+
+                    current_wait = std::min(current_wait, wait_durations_ms.size()-1); //clamp to last
+                    auto dur = wait_durations_ms.at(current_wait);
+                    ++current_wait; //wait for longer next time
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(dur));
                 }
             }
             catch (std::exception &e) {
@@ -151,25 +187,25 @@ namespace miner {
         if (_thread) {
             _shutdown = true;
 
-            _ioService.stop();
+            _ioService->stop();
 
             if (_thread) {
                 MI_EXPECTS(_thread->joinable());
                 _thread->join();
-                _thread = nullptr;
+                _thread = nullptr; //so that assert(!_thread) works as expected
             }
             _hasLaunched = false;
+            _shutdown = false;
         }
-
         MI_ENSURES(!_thread);
     }
 
     //used by client and server
     void BaseIO::createCxnWithSocket(unique_ptr<Socket> sock) { //TODO: make method const?
         MI_EXPECTS(sock);
-        auto cxn = make_shared<Connection>(_onDisconnected, _onRecv, std::move(sock));
+        auto cxn = make_shared<Connection>(_onDisconnected, _onRecv, std::move(sock), _uid);
         MI_EXPECTS(_onConnected);
-        _onConnected(cxn); //user is expected to use cxn here with other calls like readAsync(cxn)
+        _onConnected(CxnHandle{cxn}); //user is expected to use cxn here with other calls like readAsync(cxn)
     } //cxn refcount decremented and maybe destroyed if cxn was not used in _onConnected(cxn)
 
     //functions used by server
@@ -177,13 +213,14 @@ namespace miner {
         if (sslEnabledButNotSupported())
             return;
 
+        MI_EXPECTS(_ioService);
         MI_EXPECTS(_thread && !hasLaunched());
         _hasLaunched = true;
         LOG(INFO) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = std::move(onDc);
-        _acceptor = make_unique<tcp::acceptor>(_ioService, tcp::endpoint{tcp::v4(), port});
+        _acceptor = make_unique<tcp::acceptor>(*_ioService, tcp::endpoint{tcp::v4(), port});
 
         bool isClient = false;
         prepareSocket(isClient);
@@ -210,12 +247,21 @@ namespace miner {
         });
     }
 
+    void BaseIO::resetIoService() {
+        abortAllAsyncRetries(); //retries are referencing _ioService, destroy them before resetting the _ioService
+        _socket.reset();
+        _acceptor.reset();
+        _resolver.reset();
+        _ioService = make_unique<asio::io_service>();
+    }
+
     void BaseIO::prepareSocket(bool isClient) {
+        MI_EXPECTS(_ioService);
         if (_sslDesc) { //create ssl socket
-            _socket = make_unique<Socket>(_ioService, isClient, _sslDesc.value());
+            _socket = make_unique<Socket>(*_ioService, isClient, _sslDesc.value());
         }
         else { //create tcp socket
-            _socket = make_unique<Socket>(_ioService, isClient);
+            _socket = make_unique<Socket>(*_ioService, isClient);
         }
     }
 
@@ -224,6 +270,7 @@ namespace miner {
         if (sslEnabledButNotSupported())
             return;
 
+        MI_EXPECTS(_ioService);
         MI_EXPECTS(_thread && !hasLaunched());
         _hasLaunched = true;
         LOG(INFO) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
@@ -236,7 +283,7 @@ namespace miner {
         MI_ENSURES(_onDisconnected);
         MI_ENSURES(_onConnected);
 
-        _resolver = make_unique<tcp::resolver>(_ioService);
+        _resolver = make_unique<tcp::resolver>(*_ioService);
         bool isClient = true;
         prepareSocket(isClient);
 
@@ -282,7 +329,7 @@ namespace miner {
             });
         }
         else {
-            LOG(INFO) << "asio async connect: Error #" << error << ": " << error.message();
+            LOG(INFO) << "asio async connect: Error " << asio_error_name_num(error) << ": " << error.message();
             _onDisconnected();
         }
     }
@@ -338,10 +385,37 @@ namespace miner {
         connect(); //make initial connection
     }
 
-    void BaseIO::retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred) {
+    void BaseIO::disconnectAll() {
+        LOG(INFO) << "BaseIO: disconnectAll";
+        MI_EXPECTS(!isIoThread());
+
+        stopIOThread();
+        resetIoService();
+        startIOThread();
+    }
+
+    void BaseIO::abortAllAsyncRetries() {
+
+        //expect no handlers to be running right now!
+        MI_EXPECTS(!ioThreadRunning());
+        //user has "onNeverResponded" handlers on callAsyncRetryNTimes which uses retryAsyncEvery,
+        //the onCancelled handler must be called at a time where the user can be sure that the ioThread is no longer around
+        //to interact with their resources. Therefore let's guarantee that the ioThread is joined here.
+
+        {auto list = _activeRetries.lock();
+
+            for (auto &retry : *list) {
+                retry->onCancelled();
+            }
+
+            list->clear();
+        }
+    }
+
+    void BaseIO::retryAsyncEvery(milliseconds interval, std::function<bool()> &&pred, std::function<void()> &&onCancelled) {
 
         auto shared = std::shared_ptr<AsyncRetry>(new AsyncRetry {
-                {_ioService, interval}, std::move(pred), {}, {}
+                {*_ioService, interval}, std::move(pred), std::move(onCancelled), {}
         });
 
         auto weak = make_weak(shared);
@@ -349,29 +423,39 @@ namespace miner {
         {//push AsyncRetry object to _activeRetries
             auto list = _activeRetries.lock();
             list->push_front(shared);
-            shared->it = list->begin();
         }
 
         //define function that re-submits asio::steady_timer with this function
         shared->waitHandler = [this, weak, interval] (const asio::error_code &error) {
 
+            if (error == asio::error::operation_aborted) { //TODO: remove
+                LOG(INFO) << "retry handler successfully aborted";
+            }
+
             if (error && error != asio::error::operation_aborted) {
-                LOG(INFO) << "wait handler error " << error;
-                return;
+                LOG(INFO) << "wait handler error " << asio_error_name_num(error);
             }
 
             if (auto shared = weak.lock()) {
 
-                //resubmit this wait handler if predicate is false, otherwise clean up AsyncRetry state
-                if (shared->pred()) {
-                    _activeRetries.lock()->erase(shared->it); //'shared' now has the last ref
+                if (error == asio::error::operation_aborted) {
+                    shared->onCancelled();
+                }
 
-                    //'shared' is the last reference to this function, do not let this
-                    //function continue in a destroyed state
+                //resubmit this wait handler if predicate is false, otherwise clean up AsyncRetry state
+                if (error || shared->pred()) {
+                    {
+                        auto list = _activeRetries.lock();
+                        auto it = std::find(list->begin(), list->end(), shared);
+                            list->erase(it); //'shared' now has the last ref
+                    }
+
+                    //'shared' is the last reference to this function
+                    //destroy it by returning from this function
                     return;
                 }
                 else {
-                    shared->timer = asio::steady_timer{_ioService, interval};
+                    shared->timer = asio::steady_timer{*_ioService, interval};
                     shared->timer.async_wait(shared->waitHandler);
                 }
 
@@ -383,6 +467,10 @@ namespace miner {
         postAsync([shared] {
             shared->waitHandler(asio::error_code());
         });
+    }
+
+    uint64_t BaseIO::getUid() {
+        return _uid;
     }
 
     void BaseIO::setOnReceive(OnReceiveValueFunc &&onRecv) {
