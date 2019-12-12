@@ -294,6 +294,10 @@ namespace miner {
             client->launchClient("127.0.0.1", 4031, std::move(onCxn), std::move(onDc));
         }
 
+        void launchClientAutoReconnect(std::function<void(CxnHandle)> onCxn, std::function<void()> onDc = ioOnDisconnectedNoop) {
+            client->launchClientAutoReconnect("127.0.0.1", 4031, std::move(onCxn), std::move(onDc));
+        }
+
         template<class Func>
         bool waitAndInvoke(Barrier &barrier, Func &&onSuccess, std::chrono::milliseconds timeoutDur = 2s) {
             auto status = barrier.wait_for(timeoutDur);
@@ -530,7 +534,7 @@ namespace miner {
             barrier.unblock();
         });
 
-        launchClient([&] (CxnHandle cxn) {
+        launchClientAutoReconnect([&] (CxnHandle cxn) {
             auto maxTries = 5;
             auto retryInterval = 10s;
 

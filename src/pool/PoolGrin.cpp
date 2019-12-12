@@ -84,7 +84,7 @@ namespace miner {
 
         io.postAsync([this, solution = static_unique_ptr_cast<WorkSolutionCuckatoo31>(std::move(solutionBase))] {
 
-            auto job = solution->getCastedJob<GrinStratumJob>();
+            auto job = solution->tryGetJobAs<GrinStratumJob>();
             if (!job) {
                 LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
@@ -140,14 +140,8 @@ namespace miner {
         });
     }
 
-    PoolGrinStratum::PoolGrinStratum(const PoolConstructionArgs &args)
-            : Pool(args)
-            , io(IOMode::Tcp) {
-
-        //jrpc on-restart handler gets called when the connection is first established, and whenever a reconnect happens
-        //jrpc.setOnRestart([this] {
-        //    restart();
-        //});
+    void PoolGrinStratum::tryConnect() {
+        auto &args = constructionArgs;
 
         JsonIO &jsonLayer = io.io().layerBelow(); //Json layer is below Jrpc layer
 
@@ -180,7 +174,18 @@ namespace miner {
         });
     }
 
+    PoolGrinStratum::PoolGrinStratum(const PoolConstructionArgs &args)
+            : Pool(args)
+            , io(IOMode::Tcp) {
+        tryConnect();
+    }
+
     PoolGrinStratum::~PoolGrinStratum() {
+    }
+
+    void PoolGrinStratum::onDeclaredDead() {
+        io.disconnectAll();
+        tryConnect();
     }
 
 }

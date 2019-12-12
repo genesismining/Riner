@@ -15,7 +15,7 @@ namespace miner {
 
 
     /**
-     * @brief Subclasses save all necessary pool and protocol related data
+     * @brief Subclasses store all necessary pool and protocol related data
      */
     struct PoolJob {
         std::weak_ptr<Pool> pool;
@@ -24,32 +24,38 @@ namespace miner {
         bool expired() const;
         bool valid() const;
 
-        virtual std::unique_ptr<Work> makeWork() = 0;
+        virtual unique_ptr<Work> makeWork() = 0;
         virtual ~PoolJob() = default;
 
         PoolJob() = delete;
-        PoolJob(std::weak_ptr<Pool> pool);
+        explicit PoolJob(weak_ptr<Pool> pool);
     };
 
 
     /** @brief Solution counterpart of the Work class.
      * Every Work subclass is expected to have a corresponding WorkSolution subclass for a given POWtype.
-     * WorkSolutions should be created via a Work's makeWorkSolution<T>() method, filled with the actual proof of work data and then submitted to the Pool
+     * WorkSolutions should be created via a Work's makeWorkSolution<T>() method, then be filled with the actual proof of work data and then submitted to the Pool
      */
     class WorkSolution {
         std::weak_ptr<const PoolJob> job;
 
     protected:
-        WorkSolution(const Work &work);
+        explicit WorkSolution(const Work &work);
 
     public:
+
+        /**
+         * convenience method to get PoolJob cast to one of its subclasses
+         * @tparam T
+         * @return Job as T or nullptr if !this->valid()
+         */
         template<class T>
-        std::shared_ptr<const T> getCastedJob() const {
+        std::shared_ptr<const T> tryGetJobAs() const {
             static_assert(std::is_base_of<PoolJob, T>::value, "");
-            return std::static_pointer_cast<const T>(job.lock()); //T::getPowType() == powType ? std::static_pointer_cast<const T>(job.lock()) : nullptr;
+            return std::static_pointer_cast<const T>(job.lock());
         }
 
-        shared_ptr<const PoolJob> getJob() const {
+        shared_ptr<const PoolJob> tryGetJob() const {
             return job.lock();
         }
 
@@ -130,12 +136,12 @@ namespace miner {
             return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
         }
 
-        inline std::shared_ptr<const PoolJob> getJob() const {
+        inline std::shared_ptr<const PoolJob> tryGetJob() const {
             return job.lock();
         }
 
         /**
-         * @brief checks whether work is the most recent work available to the pool protocol.
+         * @brief checks whether work is no longer the most recent work available to the pool protocol.
          * expired() can be used as hint for algorithms whether new work shall be requested from the pool.
          * Upon expiration it is expected (but not necessary) that an algorithm stops working on this work,
          * if fresh work can be acquired from the pool.

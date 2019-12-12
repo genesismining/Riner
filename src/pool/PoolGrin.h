@@ -47,6 +47,9 @@ namespace miner {
 
         void onMiningNotify (const nl::json &jparams);
         void onConnected(CxnHandle);
+        void tryConnect();
+
+        void onDeclaredDead() override;
 
         LazyWorkQueue queue;
 

@@ -52,16 +52,17 @@ namespace miner {
             auto lastKnownAliveTime = pool->getLastKnownAliveTime();
 
             if (i <= activePoolIndex) {
-                bool dead = now - lastKnownAliveTime > durUntilDeclaredDead;
-                if (dead) {
+                bool isDead = now - lastKnownAliveTime > durUntilDeclaredDead;
+
+                if (isDead) {
                     if (i == activePoolIndex) {
-                        ++activePoolIndex;
+                        ++activePoolIndex; //next pool is now the active pool
 
                         LOG(INFO) << "Pool #" << i << " is inactive, trying next backup pool";
                     }
                 }
                 else {
-                    //if alive, but different pool => assign as new active pool
+                    //if i is alive, but different pool is active => assign i to be the new active pool
                     if (activePoolIndex != i) {
                         activePoolIndex = i;
 
@@ -100,7 +101,7 @@ namespace miner {
     }
 
     void PoolSwitcher::submitSolutionImpl(unique_ptr<WorkSolution> solution) {
-        std::shared_ptr<const PoolJob> job = solution->getJob();
+        std::shared_ptr<const PoolJob> job = solution->tryGetJob();
         if (!job) {
             LOG(INFO) << "work solution is not submitted because its job is stale";
             return;

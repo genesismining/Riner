@@ -14,7 +14,7 @@ namespace miner {
     template<class T, class U>
     unique_ptr<T> static_unique_ptr_cast(unique_ptr<U> uUnique) {
         U *u = uUnique.release(); //drop ownership of *u
-        T *t = u == nullptr ? nullptr : u->template downCast<T>();
+        T *t = u == nullptr ? nullptr : u->template downCast<T>(); //TODO: "downCast" does not belong here. this is a generic unique_ptr function that should not make assumptions about U
         return unique_ptr<T>(t); //make new owning unique_ptr for *t
     }
 

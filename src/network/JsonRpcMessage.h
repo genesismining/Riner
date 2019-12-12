@@ -59,10 +59,18 @@ namespace miner { namespace jrpc {
      */
     ErrorCode toErrorCode(Number n);
 
-    struct Error { //error-specific part of response
-        ErrorCode code = error_code_unknown;
+    struct Error : public std::exception { //error-specific part of response, extends std::exception so linters don't complain that it's thrown
+        ErrorCode code;
         String message;
         nl::json data;
+
+        Error(ErrorCode code = error_code_unknown, String message = "", nl::json data = {})
+        : code(code), message(std::move(message)), data(std::move(data)) {
+        };
+
+        const char *what() const noexcept override {
+            return message.c_str();
+        };
     };
 
     /**

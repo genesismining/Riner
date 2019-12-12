@@ -44,6 +44,8 @@ namespace miner {
 
         void submitSolutionImpl(unique_ptr<WorkSolution>) override;
 
+        void onDeclaredDead() override {};//poolswitcher should no longer subclass Pool
+
         size_t poolCount() const;
 
         std::string getName() const override;

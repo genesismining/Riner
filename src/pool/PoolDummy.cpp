@@ -1,14 +1,27 @@
 //
 //
 
+#include <src/util/HexString.h>
 #include "PoolDummy.h"
+#include "PoolEthash.h"
 
 namespace miner {
 
     PoolDummy::PoolDummy(const PoolConstructionArgs &args)
-            : Pool(args)
+            : Pool(args) //set args in base class, can be accessed via this->constructionArgs
             , io(IOMode::Tcp) {
 
+        tryConnect();
+        //make sure tryConnect() is the final thing you do in this ctor.
+        //things that get initialized after the io operations started are not guaranteed to be ready when
+        //callbacks are getting called from the IoThread
+    }
+
+    void PoolDummy::tryConnect() {
+        auto &args = this->constructionArgs; //get args from base class
+        io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
+            onConnected(cxn);
+        });
         //launch the json rpc 2.0 client
         //the passed lambda will get called once a connection got established. That connection is represented by cxn.
         //the callback happens on the 'IoThread': a single thread that deals with all the IO of this PoolImpl
@@ -16,12 +29,6 @@ namespace miner {
         //io.callAsync and io.readAsync etc.
         //to close the connection just stop calling any of these functions on it
         //for more info see io's documentation
-        io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
-            onConnected(cxn);
-        });
-        //make sure starting the jrpc client is the final thing you do here
-        //things that get initialized after the io operations started are not guaranteed to be ready when
-        //the lambda gets called from the IoThread
     }
 
     PoolDummy::~PoolDummy() {
@@ -97,8 +104,8 @@ namespace miner {
         io.setReadAsyncLoopEnabled(true);
         io.readAsync(cxn); //initiate the readAsync loop
 
-        //since the io object keeps calling readAsync now, the connection will always be kept alive (unless closed from the other side), to close the
-        //connection from this side, a setReadAsyncLoopEnabled(false) is necessary
+        //since the io object keeps calling readAsync from now on, the connection will be kept alive (unless actively closed), to close the
+        //connection from this side, a setReadAsyncLoopEnabled(false) is sufficient.
     }
 
     bool PoolDummy::isExpiredJob(const PoolJob &job) {
@@ -109,11 +116,87 @@ namespace miner {
         return queue.popWithTimeout();
     }
 
-    void PoolDummy::submitSolutionImpl(unique_ptr<WorkSolution> resultBase) {
-
+    void PoolDummy::onDeclaredDead() {
+        io.disconnectAll(); //disconnect if there is still a connection
+        tryConnect(); //try to reconnect so that `onStillAlive()` may get called again (see above) and the pool can wake up again
     }
 
-    void PoolDummy::onMiningNotify (const nl::json &j) {
+    void PoolDummy::submitSolutionImpl(unique_ptr<WorkSolution> solutionBase) {
+        //this function obtains a generic WorkSolution, but our pool knows that it must be a WorkSolutionEthash, because this is an Ethash Pool
+        auto solution = static_unique_ptr_cast<WorkSolutionEthash>(std::move(solutionBase));
+
+        //this function must construct and send a submit message on the ioThread.
+        //to achieve that, enqueue a lambda to the ioThread via io.postAsync
+        //the ioThread will run this lambda as soon as possible.
+        //postAsync does not block, so we can swiftly return from the submitSolutionImpl function.
+        //you should not let this function block for too long.
+
+        io.postAsync([this, solution = move(solution)] { //move capture the solution, so it is alive until submission
+
+            //get the PoolJob as its dynamic type EthashStratumJob, so that we can take the stratum jobId from it
+            auto job = solution->tryGetJobAs<EthashStratumJob>();
+            if (!job) {
+                LOG(INFO) << "ethash solution cannot be submitted because its PoolJob has expired";
+                return; //work has expired, cancel
+            }
+
+            //the json rpc io object provides an id counter, because that is always useful wenn sending json rpcs
+            //here we use that id counter to obtain new jrpc ids that we redefine as our submission (share) ids.
+            //every work solution submission has a unique share id, and thus we can track which shares are accepted/rejected/stale.
+            uint32_t shareId = io.nextId++;
+
+            //build the mining.submit json rpc
+            jrpc::Message submit = jrpc::RequestBuilder{}
+                    .id(shareId)
+                    .method("mining.submit")
+                    .param(constructionArgs.username)
+                    .param(job->jobId)
+                    .param("0x" + HexString(toBytesWithBigEndian(solution->nonce)).str()) //nonce must be big endian
+                    .param("0x" + HexString(solution->header).str())
+                    .param("0x" + HexString(solution->mixHash).str())
+                    .done(); //call "done()" to convert the RequestBuilder to a jrpc::Message
+
+            //this lambda will get called if we get a response, either the share was accepted or rejected
+            auto onResponse = [this, difficulty = solution->jobDifficulty] (CxnHandle cxn, jrpc::Message response) {
+                //
+                records.reportShare(difficulty, response.isResultTrue(), false);
+                std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
+                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
+            };
+
+            //the following lambda gets called if there was no response even after the io object tried to send multiple times.
+            //(the lambda will also get called if the pool gets shutdown before the last try)
+            auto onNeverResponded = [shareId] () {
+                LOG(INFO) << "share with id " << shareId << " got discarded after pool did not respond multiple times";
+            };
+
+            //this call below tries to send the `submit` request.
+            //if there is no response, after the specified amount of seconds, it will try to send again (up to maxTries times)
+            //if there is still no response after the last try, the onNeverResponded lambda gets called.
+            auto maxTries = 5;
+            io.callAsyncRetryNTimes(_cxn, submit, maxTries, seconds(5), onResponse, onNeverResponded);
+
+        });
+    }
+
+    void PoolDummy::onMiningNotify (const nl::json &jparams) {
+
+        bool cleanFlag = jparams.at(4);
+        const auto &jobId = jparams.at(0).get<std::string>();
+
+        auto job = std::make_unique<EthashStratumJob>(_this, jobId);
+        HexString(jparams[1]).getBytes(job->workTemplate.header);
+        HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
+
+        Bytes<32> jobTarget;
+        HexString(jparams[3]).swapByteOrder().getBytes(jobTarget);
+
+        job->workTemplate.setDifficultiesAndTargets(jobTarget);
+
+        //workTemplate->epoch is calculated in EthashStratumJob::makeWork()
+        //so that not too much time is spent on this thread.
+
+        queue.setMaster(std::move(job), cleanFlag);
     }
 
 }

@@ -128,6 +128,8 @@ namespace miner {
             return true;
         }
 
+        virtual void onDeclaredDead() = 0; //override this function to handle trying to reconnect after being declared dead
+
         /**
          * @brief tryGetWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)
          *

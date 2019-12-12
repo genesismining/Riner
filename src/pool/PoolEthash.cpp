@@ -89,7 +89,8 @@ namespace miner {
 
         job->workTemplate.setDifficultiesAndTargets(jobTarget);
 
-        //work->epoch is calculated in the refill thread
+        //workTemplate->epoch is calculated in EthashStratumJob::makeWork()
+        //so that not too much time is spent on this thread.
 
         queue.setMaster(std::move(job), cleanFlag);
     }
@@ -98,7 +99,12 @@ namespace miner {
         return queue.isExpiredJob(job);
     }
 
-    unique_ptr <Work> PoolEthashStratum::tryGetWorkImpl() {
+    void PoolEthashStratum::onDeclaredDead() {
+        io.disconnectAll();
+        tryConnect();
+    }
+
+    unique_ptr<Work> PoolEthashStratum::tryGetWorkImpl() {
         return queue.popWithTimeout();
     }
 
@@ -110,7 +116,7 @@ namespace miner {
 
         io.postAsync([this, result = std::move(result)] {
 
-            auto job = result->getCastedJob<EthashStratumJob>();
+            auto job = result->tryGetJobAs<EthashStratumJob>();
             if (!job) {
                 LOG(INFO) << "work result cannot be submitted because it has expired";
                 return; //work has expired
@@ -145,15 +151,16 @@ namespace miner {
         });
     }
 
-    PoolEthashStratum::PoolEthashStratum(const PoolConstructionArgs &args)
-            : Pool(args) {
-
+    void PoolEthashStratum::tryConnect() {
+        auto &args = constructionArgs;
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
             onConnected(cxn);
-        }, [this] () {
-            connected.store(false, std::memory_order_relaxed);
         });
+    }
 
+    PoolEthashStratum::PoolEthashStratum(const PoolConstructionArgs &args)
+            : Pool(args) {
+        tryConnect();
     }
 
     PoolEthashStratum::~PoolEthashStratum() {

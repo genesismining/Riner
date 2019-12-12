@@ -46,6 +46,9 @@ namespace miner {
     private:
         WorkQueue queue;
 
+        void onDeclaredDead() override;
+        void tryConnect();
+
         // Pool interface
         bool isExpiredJob(const PoolJob &job) override;
         unique_ptr <Work> tryGetWorkImpl() override;

@@ -27,17 +27,40 @@ namespace miner {
 
         // Pool interface
         bool isExpiredJob(const PoolJob &job) override;
-        unique_ptr <Work> tryGetWorkImpl() override;
+        unique_ptr<Work> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution>) override;
+        void onDeclaredDead() override;
 
         jrpc::JsonRpcUtil io; //io utility object
         CxnHandle _cxn; //io connection to pool
 
         void onConnected(CxnHandle cxn);
+        void tryConnect();
 
         bool acceptWorkMessages = false;
 
         void onMiningNotify (const nl::json &j);
+    };
+
+    struct EthashDummyJob : public PoolJob {
+
+        const std::string jobId;
+        WorkEthash workTemplate;
+
+        std::unique_ptr<Work> makeWork() override {
+            workTemplate.setEpoch();
+            workTemplate.extraNonce++;
+            return make_unique<WorkEthash>(workTemplate);
+        }
+
+        ~EthashDummyJob() override = default;
+
+        explicit EthashDummyJob(const std::weak_ptr<Pool> &pool, std::string id)
+                : PoolJob(pool)
+                , jobId(std::move(id))
+                , workTemplate(0) {
+        }
+
     };
 
 }
