@@ -68,7 +68,7 @@ namespace miner {
         job->workTemplate.prePow.resize(powHex.sizeBytes());
         powHex.getBytes(job->workTemplate.prePow);
 
-        queue.setMaster(std::move(job), cleanFlag);
+        queue.pushJob(std::move(job), cleanFlag);
     }
 
     bool PoolGrinStratum::isExpiredJob(const PoolJob &job) {
