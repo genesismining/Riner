@@ -47,6 +47,24 @@ namespace miner {
         clock::time_point getLastKnownAliveTime();
 
         /**
+         * @return the timestamp of when this base class was initialized in an object
+         * this method may be called from any thread
+         */
+        clock::time_point getObjectCreationTime();
+
+        /**
+         * if the lastKnownAliveTime is considered to long ago, this function is called to
+         * declare this object 'dead' (and call onDeclaredDead internally).
+         */
+        void declareDead();
+
+        /**
+         * @return the timestamp of the most recent onDeclaredDead call
+         * this method may be called from any thread
+         */
+        clock::time_point getLatestDeclaredDeadTime();
+
+        /**
          * manually change the timestamp that tracks the most recent onStillAlive call
          * this method may be called from any thread
          * @param time new value that overwrites the existing timestamp value
@@ -59,8 +77,19 @@ namespace miner {
          */
         void onStillAlive();
 
+    protected:
+        /**
+         * gets called when the lastKnownAliveTime is considered to long ago, so the
+         * object is considered 'dead'. The object should try to reestablish the alive status
+         * so it can be used again. (for a pool this means, disconnect and try to
+         * reconnect to the pool)
+         */
+        virtual void onDeclaredDead() = 0;
+
     private:
+        const std::atomic<clock::time_point> objectCreationTime = {clock::now()};
         std::atomic<clock::time_point> lastKnownAliveTime = {clock::time_point::min()};
+        std::atomic<clock::time_point> latestDeclaredDeadTime = {clock::time_point::min()};
     };
 
     /**
@@ -128,7 +157,7 @@ namespace miner {
             return true;
         }
 
-        virtual void onDeclaredDead() = 0; //override this function to handle trying to reconnect after being declared dead
+        virtual void onDeclaredDead() override = 0; //override this function to handle trying to reconnect after being declared dead
 
         /**
          * @brief tryGetWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)

@@ -29,8 +29,23 @@ namespace miner {
         return lastKnownAliveTime;
     }
 
+    StillAliveTrackable::clock::time_point
+    StillAliveTrackable::getObjectCreationTime() {
+        return objectCreationTime;
+    }
+
     void StillAliveTrackable::setLastKnownAliveTime(clock::time_point time) {
         lastKnownAliveTime = time;
+    }
+
+    void StillAliveTrackable::declareDead() {
+        latestDeclaredDeadTime = clock::now();
+        onDeclaredDead();
+    }
+
+    StillAliveTrackable::clock::time_point
+    StillAliveTrackable::getLatestDeclaredDeadTime() {
+        return latestDeclaredDeadTime;
     }
 
     shared_ptr<Pool> Pool::makePool(const PoolConstructionArgs &args, const std::string &poolImplName) {
