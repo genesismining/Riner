@@ -16,10 +16,11 @@ namespace miner {
     AlgoDummy::AlgoDummy(AlgoConstructionArgs argsMoved)
     : _args(std::move(argsMoved)) {
 
+        //assignedDevices contains all the compute devices the algo should use
         for (auto &deviceRef : _args.assignedDevices) {
             auto &device = deviceRef.get();
 
-            //try to obtain an OpenCL device for the assigned device via its id
+            //try to obtain the OpenCL device handle for the assigned device via its id
             if (optional<cl::Device> clDeviceOr = _args.compute.getDeviceOpenCL(device.id)) {
 
                 //prepare everything the device thread is going to need
@@ -36,7 +37,8 @@ namespace miner {
                     deviceThread.run();
                 }, std::move(deviceThread));
 
-                tasks.push_back(std::move(task)); //collect tasks
+                tasks.push_back(std::move(task)); //collect tasks.
+                // since every task is moved into `tasks`, the tasks dtor will act as a thread-join in AlgoDummy's dtor
             }
         }
     }
