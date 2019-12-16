@@ -24,7 +24,7 @@ namespace miner {
         });
         //launch the json rpc 2.0 client
         //the passed lambda will get called once a connection got established. That connection is represented by cxn.
-        //the callback happens on the 'IoThread': a single thread that deals with all the IO of this PoolImpl
+        //the callback happens on the 'IoThread': a single thread that deals with all the IO of this PoolImpl owned by io
         //the connection cxn will only stay open as long as you use it in async io operations such as
         //io.callAsync and io.readAsync etc.
         //to close the connection just stop calling any of these functions on it
@@ -109,10 +109,15 @@ namespace miner {
     }
 
     bool PoolDummy::isExpiredJob(const PoolJob &job) {
+        //ask the workqueue whether job is the most recent job pushed into the queue (via queue.pushJob(...))
         return queue.isExpiredJob(job);
     }
 
     unique_ptr<Work> PoolDummy::tryGetWorkImpl() {
+        //the queue has internally (on its own thread) called job->makeWork() multiple times to create lots of work objects from a
+        //job (that is, only if a job was already pushed via queue.pushJob(...)).
+        //the function 'popWithTimeout' returns one of these Work objects, or returns nullptr if no job was created yet/within the timeout.
+        //since the callee of this function checks for nullptr, we don't have to check for that here.
         return queue.popWithTimeout();
     }
 
@@ -180,6 +185,8 @@ namespace miner {
     }
 
     void PoolDummy::onMiningNotify (const nl::json &jparams) {
+        //parse the jparams and create a PoolJob object
+        //push that PoolJob object into the WorkQueue so it can be divided into individual Work objects
 
         bool cleanFlag = jparams.at(4);
         const auto &jobId = jparams.at(0).get<std::string>();
@@ -193,10 +200,11 @@ namespace miner {
 
         job->workTemplate.setDifficultiesAndTargets(jobTarget);
 
-        //workTemplate->epoch is calculated in EthashStratumJob::makeWork()
+        //workTemplate->epoch will be calculated in EthashStratumJob::makeWork()
         //so that not too much time is spent on this thread.
 
-        queue.setMaster(std::move(job), cleanFlag);
+        queue.pushJob(std::move(job), cleanFlag);
+        //job will now be used (via job->makeWork()) to generate new Work instances for AlgoImpls that call pool.tryGetWork())
     }
 
 }

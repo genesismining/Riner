@@ -47,7 +47,7 @@ namespace miner {
         const std::string jobId;
         WorkEthash workTemplate;
 
-        std::unique_ptr<Work> makeWork() override {
+        std::unique_ptr<Work> makeWork() override { //makeWork is called from another thread (that may or may not be a WorkQueue thread).
             workTemplate.setEpoch();
             workTemplate.extraNonce++;
             return make_unique<WorkEthash>(workTemplate);

@@ -92,7 +92,7 @@ namespace miner {
         //workTemplate->epoch is calculated in EthashStratumJob::makeWork()
         //so that not too much time is spent on this thread.
 
-        queue.setMaster(std::move(job), cleanFlag);
+        queue.pushJob(std::move(job), cleanFlag);
     }
 
     bool PoolEthashStratum::isExpiredJob(const PoolJob &job) {

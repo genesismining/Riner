@@ -24,6 +24,16 @@ namespace miner {
         bool expired() const;
         bool valid() const;
 
+        /*
+         * create a Work(-subclass) object with a unique solutionspace which can be handed out to the AlgoImpl.
+         *
+         * IMPORTANT: makeWork() is usually called by mechanisms that run in various threads which hold a lock while calling into makeWork().
+         * Be cautious if you need to acquire any locks within makeWork().
+         *
+         * If used by a WorkQueue, makeWork is always called sequentially while a lock is held (so no concurrent invocations of makeWork() can exist).
+         *
+         * @return: a unique_ptr to a subclass of Work that was created by this function, based on this PoolJob
+         */
         virtual unique_ptr<Work> makeWork() = 0;
         virtual ~PoolJob() = default;
 
@@ -136,6 +146,7 @@ namespace miner {
             return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
         }
 
+        //may return nullptr
         inline std::shared_ptr<const PoolJob> tryGetJob() const {
             return job.lock();
         }

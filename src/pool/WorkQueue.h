@@ -28,7 +28,7 @@ namespace miner {
 
     public:
 
-        void setMaster(std::unique_ptr<PoolJob> newMaster, bool cleanFlag = false) {
+        void pushJob(std::unique_ptr<PoolJob> newJob, bool cleanFlag = false) {
 
             std::lock_guard<std::mutex> lock(mutex);
             if (cleanFlag) {
@@ -38,8 +38,8 @@ namespace miner {
                 //limit the max. size of the jobQueue so that really old jobs are dropped
                 jobQueue.resize(std::min(jobQueue.size(), size_t(7)));
             }
-            newMaster->id = latestJobId.fetch_add(1, std::memory_order_relaxed) + 1;
-            jobQueue.emplace_front(std::move(newMaster));
+            newJob->id = latestJobId.fetch_add(1, std::memory_order_relaxed) + 1;
+            jobQueue.emplace_front(std::move(newJob));
 
         }
 
@@ -47,7 +47,7 @@ namespace miner {
             std::unique_lock<std::mutex> lock(mutex);
             if (jobQueue.empty())
                 return nullptr;
-            std::unique_ptr<Work> work = jobQueue.front()->makeWork();
+            std::unique_ptr<Work> work = jobQueue.front()->makeWork(); //TODO: this is a callback into user code while a lock is being held! refactor so that no lock is held!
             work->job = jobQueue.front();
             return work;
         }
@@ -78,38 +78,38 @@ namespace miner {
                 std::vector<std::unique_ptr<Work>> toBeFilled;
                 toBeFilled.reserve(maxWorkQueueLength); //rough size guess
                 std::unique_lock<std::mutex> lock(mutex);
-                int64_t lastId = -1;
+                int64_t latestId = -1;
 
                 while (true) {
                     size_t currentSize = 0;
 
                     notifyNeedsRefill.wait(lock, [&] {
-                        bool masterExists = !jobQueue.empty();
-                        bool hasNewMaster = masterExists && lastId != jobQueue.front()->id;
+                        bool jobExists = !jobQueue.empty();
+                        bool hasNewJob = jobExists && latestId != jobQueue.front()->id;
                         bool belowThreshold = buffer.size() < refillThreshold;
 
-                        return (belowThreshold && masterExists) || hasNewMaster || shutdown;
+                        return (belowThreshold && jobExists) || hasNewJob || shutdown;
                     });
 
                     if (shutdown)
                         return; //end this task
 
                     MI_EXPECTS(!jobQueue.empty());
-                    auto master = jobQueue.front();
-                    bool hasNewMaster = lastId != master->id;
-                    lastId = master->id;
+                    auto latestJob = jobQueue.front();
+                    bool hasNewJob = latestId != latestJob->id;
+                    latestId = latestJob->id;
                     currentSize = buffer.size();
 
                     lock.unlock();
-                    for (size_t size = hasNewMaster ? 0 : currentSize; size < maxWorkQueueLength; size++) {
-                        toBeFilled.push_back(master->makeWork());
-                        toBeFilled.back()->job = master;
+                    for (size_t size = hasNewJob ? 0 : currentSize; size < maxWorkQueueLength; size++) {
+                        toBeFilled.push_back(latestJob->makeWork());
+                        toBeFilled.back()->job = latestJob;
                     }
                     lock.lock();
 
-                    //if a new master was set then ignore the newly generated work
-                    if (!jobQueue.empty() && lastId == jobQueue.front()->id) {
-                        if (hasNewMaster) {
+                    //if a new latestJob was set then ignore the newly generated work
+                    if (!jobQueue.empty() && latestId == jobQueue.front()->id) {
+                        if (hasNewJob) {
                             buffer.clear();
                         }
 
@@ -117,8 +117,8 @@ namespace miner {
                             buffer.push_front(std::move(newElement));
                         }
 
-                        if (hasNewMaster) {
-                            latestJobId.store(lastId);
+                        if (hasNewJob) {
+                            latestJobId.store(latestId);
                         }
 
                         notifyNotEmptyAnymore.notify_all(); //notify popTimeout threads they will be able to
@@ -137,10 +137,12 @@ namespace miner {
             notifyNeedsRefill.notify_one(); //wake up refillTask thread so it notices shutdown == true
         }
 
-        //set "gold master" value that will be incremented and replicated by the refillFunc callback once the queue is
-        //too empty. cleanFlag parameter defines whether all existing replica of the previous master should be cleared
-        //while holding the lock
-        void setMaster(std::unique_ptr<PoolJob> newMaster, bool cleanFlag = false) {
+        /*
+         * sets a new most-recent job that "job->makeWork()" will be called upon, to refill the queue if it gets empty.
+         * the cleanFlag can be set to clear all existing contents of the workQueue (while holding the lock), so AlgoImpls
+         * won't get outdated jobs upon calling popWithTimeout().
+         */
+        void pushJob(std::unique_ptr<PoolJob> newJob, bool cleanFlag = false) {
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 if (cleanFlag) {
@@ -151,13 +153,19 @@ namespace miner {
                     //limit the max. size of the jobQueue so that really old jobs are dropped
                     jobQueue.resize(std::min(jobQueue.size(), size_t(7)));
                 }
-                newMaster->id = ++currentId;
-                jobQueue.emplace_front(std::move(newMaster));
+                newJob->id = ++currentId;
+                jobQueue.emplace_front(std::move(newJob));
             }
 
             notifyNeedsRefill.notify_one();
         }
 
+        /**
+         * pops a Work object from the queue, if no work object is available, it will wait for timeoutDuration and returns work if it becomes available in that timeframe.
+         * returns nullptr after timeout.
+         * @param timeoutDuration time to wait for new work to arrive
+         * @return a work object created by jobs in the jobQueue via job->makeWork() or nullptr if timeout happened
+         */
         unique_ptr<Work> popWithTimeout(std::chrono::steady_clock::duration timeoutDuration = std::chrono::milliseconds(100)) {
             size_t currentSize = 0;
             bool hasMaster = false;
@@ -187,6 +195,9 @@ namespace miner {
             return result;
         }
 
+        /**
+         * @return whether the job is the latest job in the jobQueue
+         */
         inline bool isExpiredJob(const PoolJob &job) {
             return latestJobId.load(std::memory_order_relaxed) != job.id;
         }
