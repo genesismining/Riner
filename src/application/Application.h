@@ -6,15 +6,14 @@
 #include <src/pool/Pool.h>
 #include <src/compute/ComputeModule.h>
 #include <src/pool/PoolSwitcher.h>
-#include <src/application/ApiServer.h>
 #include <deque>
 #include <map>
 #include "src/config/Config.h"
 
 namespace miner {
+    class ApiServer;
 
     class Application {
-
         Config config; //referenced by other subsystem, and thus must outlive them
 
         unique_ptr<ComputeModule> compute; //lazy init, depends on config
@@ -27,12 +26,14 @@ namespace miner {
 
         std::list<unique_ptr<Algorithm>> algorithms;
 
-        unique_ptr<ApiServer> apiServer; //lazy init, uses devicesInUse
+        friend ApiServer; //if something is in here, the apiserver probably wants to know anyways
+        unique_ptr<ApiServer> apiServer; //lazy init, stores reference to this `Application` instance
 
         void launchProfile(const Config &config, Config::Profile &prof);
 
     public:
         explicit Application(optional<std::string> configPath);
+        ~Application();
 
         void logLaunchInfo(const std::string &implName, std::vector<std::reference_wrapper<Device>> &assignedDevices) const;
     };

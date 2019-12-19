@@ -6,6 +6,7 @@
 #include <src/util/Logging.h>
 #include <src/common/Json.h>
 #include <src/util/ConfigUtils.h>
+#include <src/application/ApiServer.h>
 #include <thread>
 
 namespace miner {
@@ -31,7 +32,7 @@ namespace miner {
         devicesInUse.lock()->resize(compute->getAllDeviceIds().size());
 
         auto port = config.getGlobalSettings().api_port;
-        apiServer = make_unique<ApiServer>(port, devicesInUse, poolSwitchers);
+        apiServer = make_unique<ApiServer>(port, *this);
 
         auto maybeProf = config.getStartProfile();
         if (!maybeProf) {
@@ -41,6 +42,10 @@ namespace miner {
         auto &prof = *maybeProf;
 
         launchProfile(config, prof);
+    }
+
+    Application::~Application() {
+        //this dtor only exists for type forward declaration reasons (unique_ptr<T>'s std::default_delete<T>)
     }
 
     void Application::launchProfile(const Config &config, Config::Profile &prof) {
@@ -108,7 +113,7 @@ namespace miner {
             AlgoConstructionArgs args{
                     *compute,
                     assignedDeviceRefs,
-                    *lockedPoolSwitchers->at(powType)
+                    *lockedPoolSwitchers->at(powType) //TODO: do the pool switchers actually need to stay locked while calling into the user's algo and pool ctors?
             };
 
             auto algo = Algorithm::makeAlgo(args, implName);

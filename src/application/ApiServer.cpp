@@ -4,6 +4,7 @@
 #include <src/algorithm/Algorithm.h>
 #include <src/common/Assert.h>
 #include <src/common/Chrono.h>
+#include <src/application/Application.h>
 #include <src/pool/PoolSwitcher.h>
 #include <src/statistics/PoolRecords.h>
 
@@ -51,10 +52,8 @@ namespace miner {
         };
     }
 
-    ApiServer::ApiServer(uint16_t port, const SharedLockGuarded<std::deque<optional<Device>>> &devicesInUse,
-            const SharedLockGuarded<std::map<std::string, unique_ptr<PoolSwitcher>>> &poolSwitchers)
-            : devicesInUse(devicesInUse)
-            , poolSwitchers(poolSwitchers)
+    ApiServer::ApiServer(uint16_t port, const Application &app)
+            : _app(app)
             , io(std::make_unique<JsonRpcUtil>(IOMode::Tcp)){
         registerFunctions();
 
@@ -85,7 +84,7 @@ namespace miner {
             nl::json result;
             auto now = clock::now();
 
-            auto devicesInUseLocked = devicesInUse.readLock();
+            auto devicesInUseLocked = _app.devicesInUse.readLock();
 
             size_t i = 0;
             for (const optional<Device> &deviceInUse : *devicesInUseLocked) {
@@ -127,7 +126,7 @@ namespace miner {
 
             nl::json result;
 
-            auto lockedPoolSwitchers = poolSwitchers.readLock();
+            auto lockedPoolSwitchers = _app.poolSwitchers.readLock();
             for (auto &poolSwitcherPair : *lockedPoolSwitchers) {
                 std::string powType = poolSwitcherPair.first;
                 auto &poolSwitcher = poolSwitcherPair.second;
