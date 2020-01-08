@@ -29,7 +29,7 @@ namespace miner {
         friend ApiServer; //if something is in here, the apiserver probably wants to know anyways
         unique_ptr<ApiServer> apiServer; //lazy init, stores reference to this `Application` instance
 
-        void launchProfile(const Config &config, Config::Profile &prof);
+        void launchProfile(const Config &config, const proto::Config_Profile &prof);
 
     public:
         explicit Application(optional<std::string> configPath);

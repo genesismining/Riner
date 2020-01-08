@@ -34,7 +34,7 @@ namespace miner {
             cl::CommandQueue cmdQueue; //for clFinish(queue);
             cl::Buffer header;
             cl::Buffer clOutputBuffer;
-            Device::AlgoSettings settings;
+            AlgoSettings settings;
 
             typedef uint32_t buffer_entry_t;
             constexpr static size_t bufferCount = 0x100;

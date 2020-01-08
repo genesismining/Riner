@@ -46,7 +46,7 @@ namespace miner {
 
     CLProgramLoader &ComputeModule::getProgramLoaderOpenCL() {
         if (!clProgramLoader) {
-            auto kernelDir = config.getGlobalSettings().opencl_kernel_dir;
+            auto kernelDir = config.global_settings().opencl_kernel_dir();
             auto precompiledDir = kernelDir + "precompiled/";
 
             clProgramLoader = std::make_unique<CLProgramLoader>(kernelDir, precompiledDir);

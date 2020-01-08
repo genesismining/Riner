@@ -235,7 +235,7 @@ namespace miner {
             return results;
         }
         state.cmdQueue.finish();
-        //TODO: alternatively for nvidia, use glFlush instead of finish and wait for the cl event of readBuffer command to finish
+        //TODO: alternatively for nvidia, use clFlush instead of finish and wait for the cl event of readBuffer command to finish
 
         auto numFoundNonces = state.outputBuffer.back();
         if (numFoundNonces >= state.bufferCount) {

@@ -9,11 +9,9 @@
 namespace miner {
 
     struct Device {//device interface for usage by Algorithms
-        using AlgoSettings = Config::DeviceProfile::AlgoSettings;
 
         Device(const DeviceId &_id, const AlgoSettings &_settings, size_t _deviceIndex);
-        Device(Device &&)                 = default;
-        Device &operator=(Device &&)      = default;
+        Device(Device &&) = default;
 
         DELETE_COPY(Device);
 

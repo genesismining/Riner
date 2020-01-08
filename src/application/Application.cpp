@@ -15,14 +15,14 @@ namespace miner {
         using namespace std::chrono;
 
         if (configPath) {
-            config = configUtils::loadConfig(*configPath);
+            if (auto configOr = configUtils::loadConfig(*configPath))
+                config = std::move(*configOr);
+            else {
+                LOG(ERROR) << "no valid config available";
+                return;
+            }
         } else {
             LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
-            return;
-        }
-
-        if (!config) {
-            LOG(ERROR) << "no valid config available";
             return;
         }
 
@@ -31,24 +31,23 @@ namespace miner {
         //init devicesInUse
         devicesInUse.lock()->resize(compute->getAllDeviceIds().size());
 
-        auto port = config.getGlobalSettings().api_port;
+        auto port = config.global_settings().api_port();
         apiServer = make_unique<ApiServer>(port, *this);
 
-        auto maybeProf = config.getStartProfile();
-        if (!maybeProf) {
+        auto startProfileOr = getStartProfile(config);
+        if (!startProfileOr) {
             LOG(WARNING) << "no start profile configured";
             return;
         }
-        auto &prof = *maybeProf;
 
-        launchProfile(config, prof);
+        launchProfile(config, *startProfileOr);
     }
 
     Application::~Application() {
         //this dtor only exists for type forward declaration reasons (unique_ptr<T>'s std::default_delete<T>)
     }
 
-    void Application::launchProfile(const Config &config, Config::Profile &prof) {
+    void Application::launchProfile(const Config &config, const proto::Config_Profile &prof) {
         //TODO: this function is basically the constructor of a not yet existent "Profile" class
         using namespace configUtils;
 
@@ -61,7 +60,7 @@ namespace miner {
         //find all Algo Implementations that need to be launched
         auto allRequiredImplNames = getUniqueAlgoImplNamesForProfile(prof, allIds);
 
-        LOG(INFO) << "starting profile '" << prof.name << "'";
+        LOG(INFO) << "starting profile '" << prof.name() << "'";
 
         auto lockedPoolSwitchers = poolSwitchers.lock();
         lockedPoolSwitchers->clear();
@@ -79,17 +78,18 @@ namespace miner {
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
 
-                PoolConstructionArgs args {p.host, p.port, p.username, p.password};
+                MI_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
+                PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
-                const std::string &poolImplName = Pool::getPoolImplNameForPowAndProtocolType(powType, p.protocolType);
+                const std::string &poolImplName = Pool::getPoolImplNameForPowAndProtocolType(powType, p.protocol());
                 if (poolImplName.empty()) {
                     LOG(ERROR) << "no pool implementation available for algo type "
                                << powType << " in combination with protocol type "
-                               << p.protocolType;
+                               << p.protocol();
                     continue;
                 }
 
-                LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host << " on port " << p.port;
+                LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host() << " on port " << p.port();
 
                 poolSwitcher->tryAddPool(args, poolImplName);
             }

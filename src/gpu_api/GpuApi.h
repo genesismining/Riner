@@ -17,8 +17,6 @@ namespace miner {
         }
 
     public:
-        using GpuSettings = Config::DeviceProfile::GpuSettings;
-
         struct CtorArgs {
             DeviceId id;
             GpuSettings settings;

@@ -5,11 +5,11 @@
 #include <src/compute/DeviceId.h>
 #include <src/common/Optional.h>
 #include <src/common/Span.h>
+#include <src/config/Config.h>
 #include <vector>
 
 namespace miner {
     class CLProgramLoader;
-    class Config;
 
     class ComputeModule {
         std::vector<DeviceId> allDevices;

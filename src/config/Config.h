@@ -6,14 +6,49 @@
 #include <src/common/Optional.h>
 #include <src/common/JsonForward.h>
 
+#include <config.pb.h> //protobuf generated header for LegacyConfig.proto
+
 namespace miner {
 
-    class Config {
+    using Config = proto::Config;
+    optional<Config> parseConfig(const std::string &txtProto);
+    optional_cref<proto::Config_Profile> getStartProfile(const Config &);
+    optional_cref<proto::Config_DeviceProfile> getDeviceProfile(const Config &c, const std::string &devProfileName);
+
+    struct GpuSettings {
+        optional<uint32_t>
+                core_clock_MHz_min, //engine_min
+                core_clock_MHz_max, //engine_max
+                core_clock_MHz,
+                memory_clock_MHz,
+                power_limit_W, //power limit is either expressed in watts or percentage
+                power_limit_percent,
+                core_voltage_mV,
+                core_voltage_offset_mV;
+    };
+
+    struct AlgoSettings {
+        AlgoSettings() = default;
+        AlgoSettings(const proto::Config_DeviceProfile_AlgoSettings &, const std::string &algoImplName);
+
+        std::string algoImplName;
+
+        GpuSettings gpuSettings;
+
+        uint32_t
+                num_threads = 0,
+                work_size = 0,
+                raw_intensity = 0;
+    };
+
+    optional<AlgoSettings> getAlgoSettings(const proto::Config_DeviceProfile &dp, const std::string &algoImplName);
+
+    class LegacyConfig {// renaming the old config was wrong. instead use the config class as a wrapper around the protobuf as is recommended by the protobuf documentation
     public:
 
-        Config() {}; //invalid config
-        explicit Config(const std::string &configStr);
-        explicit Config(const nl::json &configJson);
+        LegacyConfig() = default; //invalid config
+        explicit LegacyConfig(const std::string &configStr);
+        explicit LegacyConfig(const nl::json &configJson);
 
         struct GlobalSettings {
             optional<int>
@@ -64,7 +99,7 @@ namespace miner {
 
             std::list<AlgoSettings> algoSettings;
 
-            optional_cref<Config::DeviceProfile::AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
+            optional_cref<LegacyConfig::DeviceProfile::AlgoSettings> getAlgoSettings(const std::string &algoImplName) const;
         };
 
         struct Profile {

@@ -57,7 +57,7 @@ protected:
         vendor = deviceId->getVendor();
         context = cl::Context(device);
 
-        Device::AlgoSettings algoSettings;
+        AlgoSettings algoSettings;
         Device algoDevice = {*deviceId, algoSettings, 0};
 
         CuckatooSolver::Options options {algoDevice, tasks};

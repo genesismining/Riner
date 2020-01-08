@@ -46,7 +46,7 @@ message Config {
             oneof device_name { //the device on which the task should be run
                 uint64 device_index = 1; //gpu index, arbitrarily chosen, order of gpus is printed at application startup.
                 string device_alias_name = 2; //name of a device alias specified in device_aliases
-                bool run_on_all_remaining_devices = 3; //set to true if this task should run on all devices that have no task assigned to them in any other way. if set to false it is ignored (protobuf doesn't seem to have a single-state type, so i chose bool)
+                bool run_on_all_remaining_devices = 3; //set to true if this task should run on all devices that have no task assigned to them in any other way. if set to false it is ignored (protobuf doesn't seem to have a unit type, so i chose bool)
             }
 
             optional string use_device_profile_with_name = 4;
@@ -61,13 +61,23 @@ message Config {
         map<string, AlgoSettings> settings_for_algoimpl = 2; //string key is the name of the AlgoImpl e.g. "AlgoEthashCL" for which the provided AlgoSettings should be used.
 
         message AlgoSettings {
-            optional uint32 core_clock_mhz_min = 1 [default = 700];
-            optional uint32 core_clock_mhz_max = 2 [default = 1129];
-            optional uint32 memclock = 3 [default = 2040];
-            optional uint32 powertune = 4 [default = 120];
-            optional uint32 num_threads = 5 [default = 1];
-            optional uint32 work_size = 6 [default = 128];
-            optional uint32 raw_intensity = 7 [default = 1048576];
+            optional uint32 core_clock_MHz_min = 1;// [default = 700];
+            optional uint32 core_clock_MHz_max = 2;// [default = 1129];
+            optional uint32 core_clock_MHz = 3;
+
+            optional uint32 memory_clock_MHz = 4;// [default = 2040];
+
+            optional uint32 core_voltage_mV = 5;
+            optional uint32 core_voltage_offset_mV = 6;
+
+            oneof power_limit {
+                uint32 power_limit_W = 7; //[default = 120];
+                uint32 power_limit_percent = 8;
+            }
+
+            optional uint32 num_threads = 9 [default = 1];
+            optional uint32 work_size = 10 [default = 128];
+            optional uint32 raw_intensity = 11 [default = 1048576];
         }
 
     }

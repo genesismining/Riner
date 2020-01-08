@@ -11,16 +11,16 @@ namespace miner {
 
     namespace configUtils {
 
-        Config loadConfig(const std::string &configPath);
+        optional<Config> loadConfig(const std::string &configPath);
 
-        std::vector<std::string> getUniqueAlgoImplNamesForProfile(Config::Profile &prof, const std::vector<DeviceId> &deviceIds);
+        std::vector<std::string> getUniqueAlgoImplNamesForProfile(const proto::Config_Profile &prof, const std::vector<DeviceId> &deviceIds);
 
-        std::vector<std::reference_wrapper<const Config::Pool>> getConfigPoolsForPowType(const Config &config,
-                                                                                         const std::string &algoType);
+        std::vector<std::reference_wrapper<const proto::Config_Pool>> getConfigPoolsForPowType(const proto::Config &config,
+                                                                                         const std::string &powType);
 
-        Config::Profile::Mapping getMappingForDevice(Config::Profile &prof, size_t deviceIndex);
+        optional_cref<proto::Config_Profile_Task> getTaskForDevice(const proto::Config_Profile &prof, size_t deviceIndex);
 
-        std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName, const Config &config, Config::Profile &prof, std::deque<optional<Device>> &devicesInUse, const std::vector<DeviceId> &allIds);
+        std::vector<std::reference_wrapper<Device>> prepareAssignedDevicesForAlgoImplName(const std::string &implName, const Config &config, const proto::Config_Profile &prof, std::deque<optional<Device>> &devicesInUse, const std::vector<DeviceId> &allIds);
 
     }
 }
