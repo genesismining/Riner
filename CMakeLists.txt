@@ -130,6 +130,8 @@ target_link_libraries(Miner LibMiner)
 
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+set(JSON_BuildTests OFF CACHE BOOL "build json tests") #disable building json tests by default
+
 #add subdirectories
 add_subdirectory("lib/gsl")
 add_subdirectory("lib/json")
