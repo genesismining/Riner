@@ -196,8 +196,9 @@ add_executable(tests
     src/config/ConfigTest.cpp
     src/pool/WorkCuckatoo31Test.cpp
     src/network/JrpcTest.cpp
-)
-target_link_libraries(tests gtest gtest_main gmock  Threads::Threads ${OpenCL_LIBRARY})
+        src/application/LoggingMain.cpp
+        src/application/TestMain.cpp)
+target_link_libraries(tests gtest gmock  Threads::Threads ${OpenCL_LIBRARY})
 target_link_libraries(tests LibMiner)
 target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
