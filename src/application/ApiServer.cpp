@@ -69,6 +69,7 @@ namespace miner {
     void ApiServer::registerFunctions() {
         //json exceptions will get caught by io
 
+        //example divide method
         io->addMethod("divide", [] (float a, float b) {
 
             if (b == 0)
@@ -97,6 +98,7 @@ namespace miner {
                     MI_EXPECTS(i == d.deviceIndex); //just to be sure
 
                     auto data = d.records.read();
+
                     j = {
                             {"index", d.deviceIndex},
                             {"isInUse", true},

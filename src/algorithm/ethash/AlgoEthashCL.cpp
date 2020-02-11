@@ -14,13 +14,17 @@ namespace miner {
     AlgoEthashCL::AlgoEthashCL(AlgoConstructionArgs args)
             : pool(args.workProvider)
             , clProgramLoader(args.compute.getProgramLoaderOpenCL()) {
+
         LOG(INFO) << "launching " << args.assignedDevices.size() << " gpu-tasks";
 
         for (auto &device : args.assignedDevices) {
             if (auto clDevice = args.compute.getDeviceOpenCL(device.get().id)) {
+                size_t i = gpuTasks.size();
 
-                gpuTasks.push_back(std::async(std::launch::async, &AlgoEthashCL::gpuTask, this,
-                                              std::move(*clDevice), device));
+                gpuTasks.push_back(std::async(std::launch::async, [=] () {
+                    setThreadName(std::stringstream{} << "EthashCL gpu task#" << i);
+                    gpuTask(i, *clDevice, device.get());
+                }));
             }
         }
     }
@@ -30,7 +34,7 @@ namespace miner {
         //implicitly waits for gpuTasks and submitTasks to finish
     }
 
-    void AlgoEthashCL::gpuTask(cl::Device clDevice, Device &device) {
+    void AlgoEthashCL::gpuTask(size_t taskIndex, cl::Device clDevice, Device &device) {
         const auto &settings = device.settings;
         const unsigned numGpuSubTasks = settings.num_threads;
 
@@ -88,11 +92,14 @@ namespace miner {
 
             LOG(INFO) << "launching " << numGpuSubTasks << " gpu-subtasks for the current gpu-task";
 
-            std::vector<std::future<void>> tasks(numGpuSubTasks);
+            std::vector<std::future<void>> tasks;
 
-            for (auto &task : tasks) {
-                task = std::async(std::launch::async, &AlgoEthashCL::gpuSubTask, this,
-                                  std::ref(plat), std::ref(clDevice), std::ref(dag), std::ref(device));
+            for (size_t i = 0; i < numGpuSubTasks; ++i) {
+
+                tasks.push_back(std::async(std::launch::async, [&, i] () {
+                    setThreadName(std::stringstream{} << "EthashCL gpu#" << taskIndex << " subtask#" << i);
+                    gpuSubTask(i, plat, clDevice, dag, device);
+                }));
             }
 
             //tasks destructor waits
@@ -101,7 +108,7 @@ namespace miner {
 
     }
 
-    void AlgoEthashCL::gpuSubTask(PerPlatform &plat, cl::Device &clDevice, DagFile &dag, Device &device) {
+    void AlgoEthashCL::gpuSubTask(size_t /*subTaskIndex*/, PerPlatform &plat, cl::Device &clDevice, DagFile &dag, Device &device) {
         cl_int err = 0;
 
         PerGpuSubTask state;
@@ -157,7 +164,10 @@ namespace miner {
                 auto resultNonces = runKernel(state, dag, *work, nonceBegin, nonceEnd);
 
                 for (uint64_t resultNonce : resultNonces) {
-                    tasks.addTask(std::bind(&AlgoEthashCL::submitShare, this, work, resultNonce, std::ref(device)));
+                    tasks.addTask([=, &device] () {
+                        setThreadName("EthashCL submit share");
+                        submitShare(work, resultNonce, device);
+                    });
                 }
                 device.records.reportScannedNoncesAmount(raw_intensity);
 
@@ -235,6 +245,7 @@ namespace miner {
             return results;
         }
         state.cmdQueue.finish();
+
         //TODO: alternatively for nvidia, use clFlush instead of finish and wait for the cl event of readBuffer command to finish
 
         auto numFoundNonces = state.outputBuffer.back();

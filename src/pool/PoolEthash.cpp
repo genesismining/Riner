@@ -154,6 +154,7 @@ namespace miner {
     void PoolEthashStratum::tryConnect() {
         auto &args = constructionArgs;
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
+            setThreadName("poolethash#" + std::to_string(poolUid) + " io");
             onConnected(cxn);
         });
     }

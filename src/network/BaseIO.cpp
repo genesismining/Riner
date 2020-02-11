@@ -27,7 +27,7 @@ namespace miner {
         };
 
         ~Connection() override {
-            LOG(INFO) << this << " closing connection (likely because no read/write operations are queued on it)";
+            VLOG(0) << "closing Connection(" << this << ") (likely because no read/write operations are queued on it)";
             MI_EXPECTS(_onDisconnected);
             _onDisconnected();
         }
@@ -43,7 +43,7 @@ namespace miner {
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
             asio::async_write(_socket->get(), asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
                 if (error) {
-                    LOG(INFO) << "async write error " << asio_error_name_num(error) <<
+                    LOG(WARNING) << "async write error " << asio_error_name_num(error) <<
                               " in Connection while trying to send '" << outgoing << "'";
                 }
             });
@@ -53,14 +53,14 @@ namespace miner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
-            LOG(INFO) << "ReadUntil queued";
+            VLOG(0) << "ReadUntil queued";
             asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
-                LOG(INFO) << "ReadUntil scheduled";
+                VLOG(0) << "ReadUntil scheduled";
 
                 if (error) {
-                    LOG(INFO) << "asio error " << asio_error_name_num(error) << " during async_read_until: " << error.message();
+                    LOG(WARNING) << "asio error " << asio_error_name_num(error) << " during async_read_until: " << error.message();
                     return;
                 }
 
@@ -100,7 +100,7 @@ namespace miner {
             cxn->asyncWrite(std::move(outgoing)); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
-            LOG(INFO) << "called writeAsync on connection that was closed";
+            VLOG(0) << "called writeAsync on connection that was closed";
         }
     }
 
@@ -109,7 +109,7 @@ namespace miner {
             cxn->asyncRead(); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
-            LOG(INFO) << "called readAsync on connection that was closed";
+            VLOG(0) << "called readAsync on connection that was closed";
         }
     }
 
@@ -121,7 +121,7 @@ namespace miner {
     void BaseIO::enableSsl(const SslDesc &desc) {
         _sslDesc = desc;
 #ifndef HAS_OPENSSL
-        LOG(ERROR) << "cannot enableSsl() on BaseIO since binary was compiled without OpenSSL support. Recompilation with OpenSSL required.";
+        LOG(WARNING) << "cannot enableSsl() on BaseIO since binary was compiled without OpenSSL support. Recompilation with OpenSSL required.";
 #endif
     }
 
@@ -141,6 +141,7 @@ namespace miner {
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
+            setThreadName(std::stringstream{} << "io#" << _uid);
             setIoThreadId(); //set this thread id to be the IO Thread
             _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 
@@ -179,7 +180,7 @@ namespace miner {
             _ioThreadId = {}; //reset io thread id
         });
         MI_ENSURES(_thread);
-        LOG(INFO) << "BaseIO::startIOThread";
+        VLOG(1) << "BaseIO::startIOThread";
     }
 
     void BaseIO::stopIOThread() { //TODO: atm subclasses are required to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
@@ -219,7 +220,7 @@ namespace miner {
         MI_EXPECTS(_thread);
         MI_EXPECTS(!hasLaunched());
         _hasLaunched = true;
-        LOG(INFO) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
+        VLOG(0) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = std::move(onDc);
@@ -277,7 +278,7 @@ namespace miner {
         MI_EXPECTS(_thread);
         MI_EXPECTS(!hasLaunched());
         _hasLaunched = true;
-        LOG(INFO) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
+        VLOG(0) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = [&, onDc = std::move(onDc)] () {
@@ -301,7 +302,7 @@ namespace miner {
                 });
             }
             else {
-                LOG(ERROR) << "asio could not async resolve query. Error #" << error.value() << ", " << error.message();
+                LOG(ERROR) << "asio could not resolve query. Error #" << error.value() << ", " << error.message();
                 _onDisconnected();
             }
         });
@@ -310,7 +311,7 @@ namespace miner {
     void BaseIO::clientIterateEndpoints(const asio::error_code &error, tcp::resolver::iterator it) {
         MI_EXPECTS(_resolver);
         if (!error) {
-            LOG(INFO) << "successfully connected to " << it->host_name() << ':' << it->service_name();
+            LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
             //std::function that the upcoming lambda will be converted to demands copyability. so no unique_ptrs may be captured.
             auto suSock = make_shared<unique_ptr<Socket>>(move(_socket));
@@ -326,14 +327,14 @@ namespace miner {
             _socket->get().close(); //socket operation
 
             tcp::endpoint endpoint = *it;
-            LOG(INFO) << "asio error while trying this endpoint: " << error.value() << " , " << error.message();
-            LOG(INFO) << "connecting: trying different endpoint with ip: " << endpoint.address().to_string();
+            VLOG(0) << "asio error while trying this endpoint: " << error.value() << " , " << error.message();
+            VLOG(0) << "connecting: trying different endpoint with ip: " << endpoint.address().to_string();
             _socket->get().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
                 clientIterateEndpoints(error, next);
             });
         }
         else {
-            LOG(INFO) << "asio async connect: Error " << asio_error_name_num(error) << ": " << error.message();
+            VLOG(0) << "asio async connect: Error " << asio_error_name_num(error) << ": " << error.message();
             _onDisconnected();
         }
     }
@@ -344,12 +345,12 @@ namespace miner {
     void BaseIO::handshakeHandler(const asio::error_code &error, unique_ptr<Socket> sock) { //TODO: make method const?
         if (!error) {
             if (_sslDesc) //if ssl is enabled a handshake happened successfully, otherwise nothing happened... successfully!
-                LOG(INFO) << "successfully performed handshake";
+                VLOG(0) << "successfully performed handshake";
             createCxnWithSocket(std::move(sock));
         }
         else {
             if (error)
-                LOG(INFO) << "asio async " << (sock->isClient() ? "client" : "server") << " handshake: Error #" << error << ": " << error.message();
+                VLOG(0) << "asio async " << (sock->isClient() ? "client" : "server") << " handshake: Error #" << error << ": " << error.message();
             _onDisconnected();
         }
     }

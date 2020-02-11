@@ -177,11 +177,11 @@ namespace miner {
                     .done(), [&] (CxnHandle cxn, Message msg) {
                         EXPECT_TRUE(msg.isResponse());
                         EXPECT_TRUE(msg.getIfResult());
-                        ++counter; LOG(INFO) << "return from method 1";
+                        ++counter; VLOG(0) << "return from method 1";
 
                         if (auto result = msg.getIfResult()) {
                             EXPECT_EQ(*result, 4);
-                            ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                            ++counter; VLOG(0) << "got to line: " << __LINE__;
                         }
 
                         client.callAsync(cxn, RB{}.id(3)
@@ -190,11 +190,11 @@ namespace miner {
                         .done(), [&] (CxnHandle cxn, Message msg) {
                             EXPECT_TRUE(msg.isResponse());
                             EXPECT_TRUE(msg.getIfResult());
-                            ++counter; LOG(INFO) << "return from method 2";
+                            ++counter; VLOG(0) << "return from method 2";
 
                             if (auto result = msg.getIfResult()) {
                                 EXPECT_EQ(*result, 8);
-                                ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                                ++counter; VLOG(0) << "got to line: " << __LINE__;
                             }
 
                             client.callAsync(cxn, RB{}.id(4)
@@ -204,11 +204,11 @@ namespace miner {
                             .done(), [&] (CxnHandle cxn, Message msg) {
                                 EXPECT_TRUE(msg.isResponse());
                                 EXPECT_TRUE(msg.getIfResult());
-                                ++counter; LOG(INFO) << "return from method 3";
+                                ++counter; VLOG(0) << "return from method 3";
 
                                 if (auto result = msg.getIfResult()) {
                                     EXPECT_EQ(*result, 9);
-                                    ++counter; LOG(INFO) << "got to line: " << __LINE__;
+                                    ++counter; VLOG(0) << "got to line: " << __LINE__;
                                 }
 
                                 client.setReadAsyncLoopEnabled(false); //drop connection, schedule no new readAsync() call on that cxn

@@ -6,35 +6,9 @@
 #include <future>
 #include <condition_variable>
 #include <src/util/Logging.h>
+#include <src/application/CLI.h>
 
 namespace miner {
-
-    //this function is used to get a config path until we have a proper argc argv parser
-    optional<std::string> getPathAfterArg(const std::string &minusminusArg, int argc, const char **argv) {
-        //minusminusArg is something like "--config"
-        int pathI = 0;
-        for (int i = 1; i < argc; ++i) {
-            if (argv[i] == minusminusArg) {
-                pathI = i + 1; //path starts at next arg
-                break;
-            }
-        }
-        if (pathI <= 0)
-            return nullopt;
-
-        std::string path = argv[pathI];
-
-        //if path contains escaped spaces
-        while (!path.empty() && path.back() == '\\') {
-            path.back() = ' '; //add space
-            ++pathI;
-            if (pathI < argc)
-                path += argv[pathI];
-        }
-
-        return path;
-    }
-
 
     struct ShutdownState {
 
@@ -101,18 +75,44 @@ void sigintHandler(int signum) {
 int main(int argc, const char *argv[]) {
     using namespace miner;
 
-    START_EASYLOGGINGPP(argc, argv);
+    initLogging(argc, argv);
+    setThreadName("main");
 
     shutdownState = std::make_unique<ShutdownState>();
     signal(SIGINT, sigintHandler); //uses shutdownState
     signal(SIGTERM, sigintHandler);
 
-    auto configPath = getPathAfterArg("--config", argc, argv);
+    //CLI
+    if (hasArg({"--help", "-h"}, argc, argv)) {
+        std::cout << commandEmpty();
+    }
 
-    {
-        Application app(configPath);
-        shutdownState->waitUntilShutdownRequested();
-    }//app destructor
+    if (hasArg({"--list-devices", "-l"}, argc, argv)) {
+        std::cout << commandListDevices();
+    }
+
+    if (hasArg({"--list-algoimpls", "-l"}, argc, argv)) {
+        std::cout << commandListAlgoImpls();
+    }
+
+    if (hasArg({"--list-poolimpls", "-l"}, argc, argv)) {
+        std::cout << commandListPoolImpls();
+    }
+
+    if (optional<std::string> configPath = getPathAfterArg("--config", argc, argv)) {
+
+        if (optional<Config> config = configUtils::loadConfig(*configPath)) {
+
+            Application app{std::move(*config)};
+            shutdownState->waitUntilShutdownRequested();
+
+        } //app destructor
+        else {
+            LOG(ERROR) << "no valid config available";
+        }
+    } else {
+        LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
+    }
 
     shutdownState->confirmAppHasClosed();
     shutdownState.reset(); //joins 'shutdownWithTimeoutTask' thread

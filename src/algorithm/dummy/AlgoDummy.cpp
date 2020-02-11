@@ -34,6 +34,7 @@ namespace miner {
                 //start a new thread
                 auto task = std::async(std::launch::async, [&] (auto deviceThread) {
                     //deviceThread object now lives on the stack of this thread
+                    setThreadName("Dummy device"); //give it a name that will show up in all its log messages
                     deviceThread.run();
                 }, std::move(deviceThread));
 

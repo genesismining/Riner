@@ -1,8 +1,16 @@
 #pragma once
 
+#define ELPP_UTC_DATETIME
 #include <easylogging++.h>
 
 namespace miner {
+
+    //implemented in LoggingMain.cpp
+    void setThreadName(const std::string &name);
+    void setThreadName(const std::stringstream &sstream);
+    std::string getThreadName();
+
+    void initLogging(int argc, const char **argv);
 
     template<class ... Args>
     std::string printfStr(const char *format, Args &&... args) {

@@ -43,6 +43,7 @@ add_library(LibMiner
         src/application/Application.cpp src/application/Application.h
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
+        src/application/CLI.cpp src/application/CLI.h
         src/application/LoggingMain.cpp
         src/config/Config.cpp src/config/Config.h
         src/config/ConfigTest.cpp

@@ -61,7 +61,7 @@ namespace miner {
         end = std::min(end, (int) settings.table.size());
         for (int state = begin; state < end; state++)
             ss << state << " ";
-        std::string output = std::move(ss.str());
+        std::string output = ss.str();
         if (!output.empty()) {
             output.resize(output.size() - 1);
             success = writeToFile(settings.dpm, output);

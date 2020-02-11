@@ -15,7 +15,10 @@ namespace miner {
             , checkInterval(checkInterval)
             , durUntilDeclaredDead(durUntilDeclaredDead) {
 
-        periodicAliveCheckTask = std::async(std::launch::async, &PoolSwitcher::periodicAliveCheck, this);
+        periodicAliveCheckTask = std::async(std::launch::async, [this, powType] () {
+            setThreadName("poolswitcher " + powType);
+            periodicAliveCheck();
+        });
     }
 
     PoolSwitcher::~PoolSwitcher() {

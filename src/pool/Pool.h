@@ -135,6 +135,10 @@ namespace miner {
 
     public:
 
+        static const auto &factoryEntries() {
+            return getEntries();
+        }
+
         Pool() = delete;
 
         const PoolConstructionArgs constructionArgs;

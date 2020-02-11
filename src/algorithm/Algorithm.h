@@ -72,6 +72,11 @@ namespace miner {
         //returns empty string if algoImplName doesn't match any algo
         static std::string powTypeForAlgoImplName(const std::string &algoImplName);
 
+
+        static const auto &factoryEntries() {
+            return getEntries();
+        }
+
     protected:
         Algorithm() = default;
 

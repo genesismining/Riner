@@ -250,7 +250,7 @@ namespace miner {
          * @param port port to connect to
          * @param onCxn function that gets called on the io thread when a successful connection was established. A `CxnHandle` is provided
          * as a parameter to enqueue further operations on that connection.
-         * @param onDc function that gets called (not necessarily on the io thread!) when the connection was either closed on the other side, lost, or closed on this side
+         * @param onDc function that gets called (not necessarily on the io thread!) when the connection was either closed on the other side, lost, closed on this side, or unable to be established in the first place
          * by no longer enqueueing any async read/write operations on the `CxnHandle` after it was successfully connected.
          */
         void launchClient(std::string host, uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {

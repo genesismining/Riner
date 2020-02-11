@@ -49,10 +49,10 @@ namespace miner {
         std::vector<std::future<void>> gpuTasks; //one task per gpu
 
         //gets called once for each gpu
-        void gpuTask(cl::Device clDevice, Device &device);
+        void gpuTask(size_t taskIndex, cl::Device clDevice, Device &device);
 
         //gets called numGpuSubTasks times from each gpuTask
-        void gpuSubTask(PerPlatform &, cl::Device &, DagFile &dag, Device &deviceSettings);
+        void gpuSubTask(size_t subTaskIndex, PerPlatform &, cl::Device &, DagFile &dag, Device &deviceSettings);
 
         //gets called by gpuSubTask for each nonce found
         void submitShare(std::shared_ptr<const WorkEthash> work, uint64_t nonce, Device &device);
