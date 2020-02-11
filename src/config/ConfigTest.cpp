@@ -4,20 +4,64 @@
 #include <gmock/gmock.h>
 #include <chrono>
 #include <src/util/FileUtils.h>
+#include <src/application/Application.h>
 #include <src/common/Pointers.h>
 #include <src/util/Logging.h>
 
 #include <config.pb.h>
 
 #include <google/protobuf/text_format.h>
-
-
-
+#include <google/protobuf/util/message_differencer.h>
+#include <src/config/ConfigDefaultValues.h>
 
 namespace miner {
+    using namespace proto;
+
+    TEST(Config, ParseDefaults) {
+        using TextFormat = google::protobuf::TextFormat;
+        std::string str = defaultConfigCStr;
+
+        Config config;
+        EXPECT_TRUE(TextFormat::ParseFromString(str, &config));
+
+        std::string str2;
+        EXPECT_TRUE(TextFormat::PrintToString(config, &str2));
+
+        LOG(INFO) << "stripped default config: " << str2;
+
+        Config config2;
+        EXPECT_TRUE(TextFormat::ParseFromString(str2, &config2));
+
+        EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(config, config2));
+    }
+
+    TEST(Config, LaunchApp) {
+        optional<Config> config = parseConfig(R"(version: "0.1"
+global_settings {
+    api_port: 4028
+    opencl_kernel_dir: ""
+    start_profile_name: "example_profile"
+}
+
+profile {
+    name: "prof_0"
+}
+)");
+        ASSERT_TRUE(config);
+        Application app{*config};
+
+        {auto lock = app.devicesInUse.lock();
+            for (auto &dev : *lock) {
+                if (dev)
+                    LOG(INFO) << dev->settings.algoImplName;
+            }
+        }
+
+        EXPECT_EQ(config->global_settings().api_port(), 4028);
+        EXPECT_EQ(app.algorithms.size(), 1);
+    }
 
     TEST(Config, GenerateProtoMessage) {
-        using namespace proto;
 
         Config c;
         c.set_version("0.1");

@@ -10,15 +10,17 @@
 namespace miner {
 
     ComputeModule::ComputeModule(const Config &config)
-    : allDevices(gatherAllDeviceIds())
-    , config(config) {
+    : allDevices(gatherAllDeviceIds()) {
+        auto kernelDir = config.global_settings().opencl_kernel_dir();
+        auto precompiledDir = kernelDir + "precompiled/";
+        clProgramLoader = std::make_unique<CLProgramLoader>(kernelDir, precompiledDir);
     }
 
     ComputeModule::~ComputeModule() {
         //this empty destructor enables forward declaration of types contained in member unique_ptrs
     }
 
-    const std::vector<DeviceId> &ComputeModule::getAllDeviceIds() {
+    const std::vector<DeviceId> &ComputeModule::getAllDeviceIds() const {
         return allDevices;
     }
 
@@ -45,12 +47,6 @@ namespace miner {
     }
 
     CLProgramLoader &ComputeModule::getProgramLoaderOpenCL() {
-        if (!clProgramLoader) {
-            auto kernelDir = config.global_settings().opencl_kernel_dir();
-            auto precompiledDir = kernelDir + "precompiled/";
-
-            clProgramLoader = std::make_unique<CLProgramLoader>(kernelDir, precompiledDir);
-        }
         MI_ENSURES(clProgramLoader);
         return *clProgramLoader;
     }

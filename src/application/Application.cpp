@@ -4,35 +4,21 @@
 #include "Application.h"
 #include <src/util/FileUtils.h>
 #include <src/util/Logging.h>
-#include <src/common/Json.h>
 #include <src/util/ConfigUtils.h>
 #include <src/application/ApiServer.h>
 #include <thread>
 
 namespace miner {
 
-    Application::Application(optional<std::string> configPath) {
-        using namespace std::chrono;
-
-        if (configPath) {
-            if (auto configOr = configUtils::loadConfig(*configPath))
-                config = std::move(*configOr);
-            else {
-                LOG(ERROR) << "no valid config available";
-                return;
-            }
-        } else {
-            LOG(ERROR) << "no config path command line argument (--config /path/to/config.json)";
-            return;
-        }
-
-        compute = std::make_unique<ComputeModule>(config);
+    Application::Application(Config movedConfig)
+    : config(std::move(movedConfig))
+    , compute(config) {
 
         //init devicesInUse
-        devicesInUse.lock()->resize(compute->getAllDeviceIds().size());
+        devicesInUse.lock()->resize(compute.getAllDeviceIds().size());
 
-        auto port = config.global_settings().api_port();
-        apiServer = make_unique<ApiServer>(port, *this);
+        auto api_port = config.global_settings().api_port();
+        apiServer = make_unique<ApiServer>(api_port, *this);
 
         auto startProfileOr = getStartProfile(config);
         if (!startProfileOr) {
@@ -55,7 +41,7 @@ namespace miner {
         algorithms.clear(); //algos call into pools => clear algos before pools!
 
         //launch profile
-        auto &allIds = compute->getAllDeviceIds();
+        auto &allIds = compute.getAllDeviceIds();
 
         //find all Algo Implementations that need to be launched
         auto allRequiredImplNames = getUniqueAlgoImplNamesForProfile(prof, allIds);
@@ -69,6 +55,11 @@ namespace miner {
         for (auto &implName : allRequiredImplNames) {
 
             auto powType = Algorithm::powTypeForAlgoImplName(implName);
+            if (powType == "") {
+                LOG(INFO) << "no PowType found for AlgoImpl '" << implName << "'. skipping.";
+                continue;
+            }
+
             auto configPools = getConfigPoolsForPowType(config, powType);
 
             auto &poolSwitcher = lockedPoolSwitchers->emplace(
@@ -95,7 +86,8 @@ namespace miner {
             }
 
             if (poolSwitcher->poolCount() == 0) {
-                LOG(ERROR) << "no pools available for algoType of " << implName << ". Cannot launch algorithm";
+                LOG(ERROR) << "no pools available for PowType '" << powType << "' of '" << implName << "'. Cannot launch algorithm. skipping";
+                continue;
             }
 
             MI_ENSURES(lockedPoolSwitchers->count(powType));
@@ -111,7 +103,7 @@ namespace miner {
             logLaunchInfo(implName, assignedDeviceRefs);
 
             AlgoConstructionArgs args{
-                    *compute,
+                    compute,
                     assignedDeviceRefs,
                     *lockedPoolSwitchers->at(powType) //TODO: do the pool switchers actually need to stay locked while calling into the user's algo and pool ctors?
             };

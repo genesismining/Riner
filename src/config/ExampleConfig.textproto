@@ -88,10 +88,10 @@ profile {
     device_index: 1
     #gpu 1 will not run the task above, but this one.
 
-    run_algoimpl_with_name: "AlgoCuckatoo31" 
+    run_algoimpl_with_name: "AlgoCuckatoo31Cl"
 
     use_device_profile_with_name: "my_AMD_gpu_profile" 
-    #my_gpu_profile has specified other settings for AlgoCuckatoo31
+    #my_gpu_profile has specified other settings for AlgoCuckatoo31Cl
   }
 }
 

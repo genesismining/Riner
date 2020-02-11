@@ -14,9 +14,10 @@ namespace miner {
     class ApiServer;
 
     class Application {
+    public: //everything public, makes introspection from tests simpler
         Config config; //referenced by other subsystem, and thus must outlive them
 
-        unique_ptr<ComputeModule> compute; //lazy init, depends on config
+        ComputeModule compute; //lazy init, depends on config
 
         //This below is implicitly assuming that the same Gpu cannot be used by 2 AlgoImpls simultaneoulsy since they share the AlgoSettings. If this ever changes this vector must be something else
         SharedLockGuarded<std::deque<optional<Device>>> devicesInUse; //nullopt if device is not used by any algo, same indexing as ConfigModule::getAllDeviceIds()
@@ -26,16 +27,14 @@ namespace miner {
 
         std::list<unique_ptr<Algorithm>> algorithms;
 
-        friend ApiServer; //if something is in here, the apiserver probably wants to know anyways
         unique_ptr<ApiServer> apiServer; //lazy init, stores reference to this `Application` instance
 
         void launchProfile(const Config &config, const proto::Config_Profile &prof);
 
-    public:
-        explicit Application(optional<std::string> configPath);
-        ~Application();
-
         void logLaunchInfo(const std::string &implName, std::vector<std::reference_wrapper<Device>> &assignedDevices) const;
+
+        explicit Application(Config config);
+        ~Application();
     };
 
 }

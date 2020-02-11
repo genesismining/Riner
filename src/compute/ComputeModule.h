@@ -13,15 +13,14 @@ namespace miner {
 
     class ComputeModule {
         std::vector<DeviceId> allDevices;
-        const Config &config;
 
-        unique_ptr<CLProgramLoader> clProgramLoader; //lazy initialization
+        unique_ptr<CLProgramLoader> clProgramLoader;
 
     public:
-        ComputeModule(const Config &);
+        ComputeModule(const Config &config);
         ~ComputeModule();
 
-        const std::vector<DeviceId> &getAllDeviceIds();
+        const std::vector<DeviceId> &getAllDeviceIds() const;
 
         optional<cl::Device> getDeviceOpenCL(const DeviceId &);
         //optional<vk::Device> getDeviceVulkan(const DeviceId &)
