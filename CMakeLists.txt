@@ -125,7 +125,6 @@ add_library(LibMiner
         src/util/TestSslData.h
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         )
-)
 
 target_include_directories (LibMiner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
