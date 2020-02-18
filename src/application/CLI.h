@@ -10,10 +10,10 @@
 namespace miner {
     class ComputeModule;
 
-    std::string commandEmpty();
-    std::string commandListDevices();
-    std::string commandListAlgoImpls();
-    std::string commandListPoolImpls();
+    std::string commandList(bool asJson);
+    std::string commandListDevices(bool asJson);
+    std::string commandListAlgoImpls(bool asJson);
+    std::string commandListPoolImpls(bool asJson);
 
     /**
      * searches for argName in argv.
