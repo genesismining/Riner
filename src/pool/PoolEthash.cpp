@@ -50,7 +50,7 @@ namespace miner {
             });
 
             records.resetInterval();
-            connected.store(true, std::memory_order_relaxed);
+            connected = true;
         });
 
         io.addMethod("mining.notify", [this] (nl::json params) {

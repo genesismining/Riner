@@ -51,6 +51,7 @@ device_profile {
 
 pool {
     pow_type: "ethash"
+    protocol: "stratum2"
     host: "127.0.0.1"
     port: 2345
     username: "a"
@@ -59,6 +60,7 @@ pool {
 
 pool {
     pow_type: "grin"
+    protocol: "stratum"
     host: "127.0.0.1"
     port: 2346
     username: "b"

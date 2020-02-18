@@ -5,6 +5,7 @@
 #include <future>
 #include <list>
 #include <src/config/Config.h>
+#include <src/application/Registry.h>
 
 namespace miner {
 
@@ -25,8 +26,8 @@ namespace miner {
         ~PoolSwitcher() override;
 
         //the provided pool records will get connected to the total records of this PoolSwitcher
-        std::shared_ptr<Pool> tryAddPool(const PoolConstructionArgs &args, const std::string &poolImplName) {
-            std::shared_ptr<Pool> pool = Pool::makePool(args, poolImplName);
+        std::shared_ptr<Pool> tryAddPool(const PoolConstructionArgs &args, const char *poolImplName, const Registry &registry = Registry{}) {
+            std::shared_ptr<Pool> pool = registry.makePool(poolImplName, args);
             MI_EXPECTS(pool != nullptr);
 
             pool->addRecordsListener(records);

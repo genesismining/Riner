@@ -30,11 +30,11 @@ namespace miner {
 
     private:
 
-        friend class GpuApi;
+        friend class Registry;
         /**
          * tries to instantiate AmdgpuApi and if the API is not available, then nullptr is returned
          */
-        static std::unique_ptr<GpuApi> tryMake(const CtorArgs &id);
+        static std::unique_ptr<GpuApi> tryMake(const GpuApiConstructionArgs &id);
 
     protected:
 

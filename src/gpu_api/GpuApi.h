@@ -9,19 +9,13 @@
 
 namespace miner {
 
+    struct GpuApiConstructionArgs {
+        DeviceId id;
+        GpuSettings settings;
+    };
+
     class GpuApi {
-
-        static auto &getApis() {
-            static std::list<std::function<std::unique_ptr<GpuApi>(const CtorArgs &)>> apis;
-            return apis;
-        }
-
     public:
-        struct CtorArgs {
-            DeviceId id;
-            GpuSettings settings;
-        };
-
         virtual ~GpuApi() = default;
         GpuApi(const GpuApi &) = delete;
         GpuApi &operator=(const GpuApi &) = delete;
@@ -46,18 +40,7 @@ namespace miner {
          * internally DerivedClass::tryMake is called for each DerivedClass registered with
          * GpuApi::Registry<DerivedClass>() while DerivedClass::tryMake returns nullptr
          */
-        static std::unique_ptr<GpuApi> tryCreate(const CtorArgs &args);
-
-        template<typename D>
-        struct Registry {
-            explicit Registry(const std::string &name) noexcept {
-                LOG(DEBUG) << "register GpuApi: " << name;
-                getApis().push_back(&D::tryMake);
-            }
-
-            Registry() = delete;
-            DELETE_COPY_AND_MOVE(Registry);
-        };
+        static std::unique_ptr<GpuApi> tryCreate(const GpuApiConstructionArgs &args);
 
     protected:
         GpuApi() = default; // only factory function of derived class shall instantiate the class

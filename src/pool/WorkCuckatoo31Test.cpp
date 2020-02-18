@@ -11,6 +11,7 @@
 #include <gmock/gmock.h>
 
 #include <algorithm>
+#include <src/application/Registry.h>
 
 namespace miner {
 namespace {
@@ -30,7 +31,8 @@ protected:
     std::unique_ptr<WorkSolutionCuckatoo31> latestSolution;
 
     GrinJobs() {
-        auto typeErasedPool = Pool::makePool(args, "Cuckatoo31Stratum");
+        Registry registry;
+        auto typeErasedPool = registry.makePool("Cuckatoo31Stratum", args);
         pool = std::static_pointer_cast<PoolGrinStratum>(typeErasedPool);
 
         nl::json job = {{"height", 10}, {"job_id", 2}, {"difficulty", 1}, {"pre_pow", "00"}};

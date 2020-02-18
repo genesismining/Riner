@@ -94,56 +94,31 @@ namespace miner {
 
     /**
      * @brief common base class for all Pool protocol implementations
-     * contains facilities for registering Pool Impls in a global list, so that the appropriate PoolImpl class can be
-     * selected and instantiated based on a name string
-     * when subclassing Pool, do not forget to add your PoolImpl class to the registry in 'Algorithm.cpp'
+     * when subclassing Pool, do not forget to add your PoolImpl class to the registry in 'Registry.cpp'
      */
     class Pool : public StillAliveTrackable {
-
-        static std::atomic_uint64_t poolCounter;
-
-        /**
-         * Entry in the global registry of Pool subclasses (aka PoolImpls)
-         * it associates a makeFunc (a function that can instantiate a certain subclass)
-         * with runtime string arguments as they would come from the config
-         */
-        struct Entry {
-            const std::string poolImplName;
-            const std::string powType;
-            const std::string protocolType;
-            const std::string protocolTypeAlias;
-            std::function<shared_ptr<Pool>(const PoolConstructionArgs &)> makeFunc;
-        };
-
-        static std::list<Entry> &getEntries() {
-            static std::list<Entry> entries {};
-            static_assert(std::is_same<std::list<Entry>, decltype(entries)>::value, "reminder that elements of entries get pointed to by pool instances, make sure you use a type like std::list with persistent element addresses");
-            return entries;
-        }
-
-        static optional_ref<Entry> entryWithName(const std::string &poolImplName);
-
-        //info points to the actual Entry in the global registry. it gets assigned in Entry::makeFunc TODO: refactor, just copy it instead
-        const Entry *info = nullptr;
-
     protected:
 
         explicit Pool(PoolConstructionArgs args);
-        std::weak_ptr<Pool> _this;
+        std::weak_ptr<Pool> _this; //assigned in Registry's initFunc lambda, which creates the shared_ptr, which is ok because even if the Pool ctor starts iothreads which use _this before it is assigned, the mechanisms that use it are nullptr safe.
+        const char *_poolImplName = ""; //assigned in Registry...
+        const char *_powType = ""; //assigned in Registry...
         std::atomic_bool connected {false};
         PoolRecords records;
 
     public:
-
-        static const auto &factoryEntries() {
-            return getEntries();
-        }
-
         Pool() = delete;
 
         const PoolConstructionArgs constructionArgs;
 
-        const uint64_t poolUid {poolCounter.fetch_add(1, std::memory_order_relaxed)};
+        static void postInit(std::shared_ptr<Pool> w, const char *poolImplName, const char *powType) { //inits private/protected base class members without requiring the user to pass them through
+            w->_this = w;
+            w->_poolImplName = poolImplName;
+            w->_powType = powType;
+        }
+        static uint64_t generateUid();
+
+        const uint64_t poolUid = generateUid();
 
         inline auto readRecords() const {
             return records.read();
@@ -226,14 +201,14 @@ namespace miner {
          * @return whether a connection is established
          */
         inline bool isConnected() const {
-            return connected.load(std::memory_order_relaxed);
+            return connected;
         }
 
         /**
          * @return string name of the Pool subclass (aka PoolImpl) as it can be passed to makePool
          */
         inline std::string getPoolImplName() const {
-            return info->poolImplName;
+            return _poolImplName;
         }
 
         /**
@@ -242,54 +217,8 @@ namespace miner {
          * @return this pool's supported POWtype as a string
          */
         inline std::string getPowType() const {
-            return info->powType;
+            return _powType;
         }
-
-        template<typename T>
-        struct Registry {
-
-            /**
-             * Registers a new PoolImpl globally, so it can be identified and instantiated based on user provided config arguments
-             *
-             * @param poolImplName string that uniquely identifies the Pool subclass (= PoolImpl)
-             * @param powType powType (e.g. "ethash") that this PoolImpl generates Work/accepts solutions for
-             * @param protocolType name of the protocol as it will be called by the user in the config file
-             * @param protocolTypeAlias optionally an alternative name for the protocol that gets mapped to the actual name above
-             */
-            Registry(const std::string &poolImplName, const std::string &powType, std::string protocolType, std::string protocolTypeAlias = "") noexcept {
-                LOG(DEBUG) << "register Pool: " << poolImplName;
-
-                getEntries().emplace_back(Entry{
-                    poolImplName, powType, std::move(protocolType), std::move(protocolTypeAlias)});
-
-                auto *entry = &getEntries().back();
-                //create type erased creation function
-                entry->makeFunc = [entry] (const PoolConstructionArgs &args) {
-                    auto pool = std::make_shared<T>(args);
-                    pool->info = entry;
-                    pool->_this = pool;
-                    return pool;
-                };
-            }
-
-            Registry() = delete;
-            DELETE_COPY_AND_MOVE(Registry);
-        };
-
-        //returns nullptr if no matching PoolImpl subclass was found
-        static shared_ptr<Pool> makePool(const PoolConstructionArgs &args, const std::string &poolImplName);
-        //returns emptyString if no matching poolImplName was found
-        static std::string getPoolImplNameForPowAndProtocolType(const std::string &powType, const std::string &protocolType);
-
-        //returns empty string if powType doesn't match any registered poolImpl
-        static std::string getPowTypeForPoolImplName(const std::string &powType);
-
-        //returns empty string if poolImplName doesn't match any registered poolImpl
-        static std::string getProtocolTypeForPoolImplName(const std::string &poolImplName);
-
-        static bool hasPowType(const std::string &powType);
-
-        static bool hasProtocolType(const std::string &protocolType);
 
         ~Pool() override = default;
 

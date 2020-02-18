@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "Application.h"
+#include "Registry.h"
 #include <src/util/FileUtils.h>
 #include <src/util/Logging.h>
 #include <src/util/ConfigUtils.h>
@@ -37,6 +38,8 @@ namespace miner {
         //TODO: this function is basically the constructor of a not yet existent "Profile" class
         using namespace configUtils;
 
+        Registry factory; //registry is used as a factory for algo and pools
+
         //clear old state
         algorithms.clear(); //algos call into pools => clear algos before pools!
 
@@ -54,7 +57,7 @@ namespace miner {
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            auto powType = Algorithm::powTypeForAlgoImplName(implName);
+            const std::string powType = factory.powTypeOfAlgoImpl(implName.c_str());
             if (powType == "") {
                 LOG(INFO) << "no PowType found for AlgoImpl '" << implName << "'. skipping.";
                 continue;
@@ -72,17 +75,17 @@ namespace miner {
                 MI_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
                 PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
-                const std::string &poolImplName = Pool::getPoolImplNameForPowAndProtocolType(powType, p.protocol());
+                const std::string poolImplName = factory.poolImplForProtocolAndPowType(powType.c_str(), p.protocol().c_str());
                 if (poolImplName.empty()) {
-                    LOG(ERROR) << "no pool implementation available for algo type "
-                               << powType << " in combination with protocol type "
-                               << p.protocol();
+                    LOG(ERROR) << "no pool implementation available for powType '"
+                               << powType << "' in combination with protocolType '"
+                               << p.protocol() << "'";
                     continue;
                 }
 
                 LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host() << " on port " << p.port();
 
-                poolSwitcher->tryAddPool(args, poolImplName);
+                poolSwitcher->tryAddPool(args, poolImplName.c_str(), factory);
             }
 
             if (poolSwitcher->poolCount() == 0) {
@@ -108,7 +111,7 @@ namespace miner {
                     *lockedPoolSwitchers->at(powType) //TODO: do the pool switchers actually need to stay locked while calling into the user's algo and pool ctors?
             };
 
-            auto algo = Algorithm::makeAlgo(args, implName);
+            unique_ptr<Algorithm> algo = factory.makeAlgo(implName.c_str(), args);
 
             algorithms.emplace_back(std::move(algo));
         }

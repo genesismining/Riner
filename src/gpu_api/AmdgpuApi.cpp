@@ -237,7 +237,7 @@ namespace miner {
         setPowerProfile("auto");
     }
 
-    std::unique_ptr<GpuApi> AmdgpuApi::tryMake(const CtorArgs &args) {
+    std::unique_ptr<GpuApi> AmdgpuApi::tryMake(const GpuApiConstructionArgs &args) {
 #ifdef __linux__
         auto api = std::unique_ptr<AmdgpuApi>(new AmdgpuApi());
         if (auto optPciId = args.id.getIfPcieIndex()) {

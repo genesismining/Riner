@@ -41,6 +41,8 @@ protobuf_generate_cpp(ProtoSources ProtoHeaders ${ProtoFiles})
 add_library(LibMiner
         ${ProtoSources} ${ProtoHeaders}
         src/application/Application.cpp src/application/Application.h
+        src/application/Registry.cpp src/application/Registry.h src/application/RegistryImpl.cpp
+        src/application/ShutdownState.cpp src/application/ShutdownState.h
         src/application/ApiServer.cpp src/application/ApiServer.h
         src/application/Device.cpp src/application/Device.h
         src/application/CLI.cpp src/application/CLI.h
@@ -123,6 +125,7 @@ add_library(LibMiner
         src/util/TestSslData.h
         lib/easyloggingpp/src/easylogging++.cc #TODO: this doesn't seem to belong here, figure out how to get easylogging working via the add_subdirectory
         )
+)
 
 target_include_directories (LibMiner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
