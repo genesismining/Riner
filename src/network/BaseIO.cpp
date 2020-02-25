@@ -22,12 +22,19 @@ namespace miner {
         asio::streambuf _incoming;
         uint64_t _baseIOUid = 0;
 
+        static size_t generateConnectionUid() {
+            static std::atomic<uint64_t> nextUid = {1};
+            return nextUid++;
+        }
+
+        uint64_t _connectionUid = generateConnectionUid();
+
         Connection(decltype(_onDisconnected) &onDisconnected, decltype(_onRecv) &onRecv, unique_ptr<Socket> socket, uint64_t baseIOUid)
         : _onDisconnected(onDisconnected), _onRecv(onRecv), _socket(std::move(socket)), _baseIOUid(baseIOUid) {
         };
 
         ~Connection() override {
-            VLOG(0) << "closing Connection(" << this << ") (likely because no read/write operations are queued on it)";
+            VLOG(0) << "closing connection #" << _connectionUid << " (likely because no read/write operations are queued on it)";
             MI_EXPECTS(_onDisconnected);
             _onDisconnected();
         }
@@ -35,6 +42,11 @@ namespace miner {
         uint64_t getAssociatedBaseIOUid() override {
             MI_EXPECTS(_baseIOUid != 0); //baseIO Uids start at 1, if it's 0, it wasn't set
             return _baseIOUid;
+        }
+
+        uint64_t getConnectionUid() override {
+            MI_EXPECTS(_connectionUid != 0); //connection uids start at 1. this one was not initiailzed!
+            return _connectionUid;
         }
 
         void asyncWrite(std::string outgoing) override {
@@ -53,14 +65,19 @@ namespace miner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
-            VLOG(0) << "ReadUntil queued";
+            VLOG(1) << "ReadUntil queued";
             asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
-                VLOG(0) << "ReadUntil scheduled";
-
+                VLOG(1) << "ReadUntil scheduled";
                 if (error) {
-                    LOG(WARNING) << "asio error " << asio_error_name_num(error) << " during async_read_until: " << error.message();
+                    if (error.value() == asio::error::eof) {
+                        LOG(INFO) << "connection #" << _connectionUid << " closed from other side (eof)";
+                    }
+                    else {
+                        LOG(WARNING) << "asio error " << asio_error_name_num(error) << " during async_read_until: "
+                                     << error.message();
+                    }
                     return;
                 }
 
@@ -141,7 +158,7 @@ namespace miner {
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
-            setThreadName(std::stringstream{} << "io#" << _uid);
+            setThreadName(std::stringstream{} << "io#" << _uid); //thread name shows BaseIO's uid
             setIoThreadId(); //set this thread id to be the IO Thread
             _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 

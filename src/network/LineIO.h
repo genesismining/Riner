@@ -24,12 +24,12 @@ namespace miner {
         using IOTypeLayer::IOTypeLayer; //expose base ctors
 
         std::string convertIncoming(std::string line) override {
-            LOG(INFO) << "                                   " << "<-- " << line;
+            VLOG(0) << "                                   " << "<-- " << line;
             return line;
         };
 
         std::string convertOutgoing(std::string line) override {
-            LOG(INFO) << "                                   " << "--> " << line;
+            VLOG(0) << "                                   " << "--> " << line;
             return line;
         };
 

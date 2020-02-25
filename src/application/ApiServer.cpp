@@ -11,6 +11,29 @@
 namespace miner {
     using namespace jrpc;
 
+    ApiServer::ApiServer(uint16_t port, const Application &app)
+            : _app(app)
+            , io(std::make_unique<JsonRpcUtil>(IOMode::Tcp)){
+        registerFunctions();
+
+        io->launchServer(port, [this] (CxnHandle cxn) {
+            //on connected
+            VLOG(0) << "ApiServer connection #" << cxn.id() << " accepted";
+            io->setReadAsyncLoopEnabled(true);
+            io->readAsync(cxn);
+        }, [] {
+            VLOG(0) << "ApiServer connection closed";
+        });
+
+        LOG(INFO) << "started api server on port " << port;
+    }
+
+    ApiServer::~ApiServer() {
+        // manually destroy jrpc first, so the registered functions don't access
+        // destroyed members asynchronously by accident
+        io.reset();
+    }
+
     static nl::json jsonSerialize(const decltype(DeviceRecords::Data::scannedNonces) &avg, clock::time_point time) {
         return {
                 {"totalHashes", avg.mean.getTotalWeight()},
@@ -52,20 +75,6 @@ namespace miner {
         };
     }
 
-    ApiServer::ApiServer(uint16_t port, const Application &app)
-            : _app(app)
-            , io(std::make_unique<JsonRpcUtil>(IOMode::Tcp)){
-        registerFunctions();
-
-        io->launchServer(port, [this] (CxnHandle cxn) {
-            //on connected
-            io->setReadAsyncLoopEnabled(true);
-            io->readAsync(cxn);
-        });
-
-        LOG(INFO) << "started api server on port " << port;
-    }
-
     void ApiServer::registerFunctions() {
         //json exceptions will get caught by io
 
@@ -79,7 +88,6 @@ namespace miner {
 
         }, "a", "b");
 
-        // TODO: refactor and cleanup
         io->addMethod("getGpuStats", [&] () {
 
             nl::json result;
@@ -160,12 +168,6 @@ namespace miner {
             return result;
         });
 
-    }
-
-    ApiServer::~ApiServer() {
-        // manually destroy jrpc first, so the registered functions don't access
-        // destroyed members asynchronously by accident
-        io.reset();
     }
 
 }

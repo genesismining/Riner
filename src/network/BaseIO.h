@@ -26,6 +26,7 @@ namespace miner {
         //a connection is always associated with a BaseIO instance. This getter is used to catch the error where a
         //CxnHandle is used with a foreign BaseIO instance by accident
         virtual uint64_t getAssociatedBaseIOUid() = 0;
+        virtual uint64_t getConnectionUid() = 0;
     public:
         virtual ~IOConnection() = default;
     };

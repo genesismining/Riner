@@ -18,17 +18,19 @@ void sigintHandler(int signum) {
 int main(int argc, const char *argv[]) {
     using namespace miner;
 
-    initLogging(argc, argv);
+    bool format_as_json = hasArg({"--json"}, argc, argv);
+    bool use_log_colors = hasArg({"--color", "--colors"}, argc, argv);
+    bool use_log_emojis = hasArg({"--emoji", "--emojis"}, argc, argv);
+    initLogging(argc, argv, use_log_colors, use_log_emojis);
     setThreadName("main");
 
+    //register signal handlers that respond to ctrl+c abort
+    //abort code can be found in ShutdownState
     shutdownState = std::make_unique<ShutdownState>();
     signal(SIGINT, sigintHandler); //uses shutdownState
     signal(SIGTERM, sigintHandler);
 
-    bool did_respond_already = false;
-
-    //CLI
-    bool format_as_json = hasArg({"--json"}, argc, argv);
+    bool did_respond_already = false; //if we responded to something we won't complain about e.g. "--config" missing
 
     if (hasArg({"--help", "-h"}, argc, argv)) {
         std::cout << commandList(format_as_json);
@@ -72,7 +74,7 @@ int main(int argc, const char *argv[]) {
         }
     }
     else {
-        if (!did_respond_already)
+        if (!did_respond_already) //no other valid command line arg was used that we responded to, so tell the user what to do.
             LOG(ERROR) << "no config path command line argument (--config /path/to/config.textproto)";
     }
 

@@ -11,7 +11,7 @@ namespace miner {
         notifyOnAbort.notify_one();
 
         auto timeout = std::chrono::seconds(10);
-        std::cout << "waiting for application to close" << std::endl;
+        std::cout << "\nwaiting for application to close" << std::endl;
 
         //unlock mut
         notifyOnAppHasClosed.wait_for(lock, timeout, [this] {

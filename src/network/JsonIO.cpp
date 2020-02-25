@@ -12,8 +12,7 @@ namespace miner {
         auto j = nl::json::parse(line, nullptr, allowExceptions);
 
         if (j.is_discarded()) {
-            j = {}; //return empty json
-            LOG(ERROR) << "JsonIO: json got discarded: '" << line << "'";
+            throw IOConversionError(std::string("JsonIO invalid json: '") + line + "'");
         }
 
         return j;

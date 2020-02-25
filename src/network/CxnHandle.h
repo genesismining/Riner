@@ -19,14 +19,15 @@ namespace miner {
     class CxnHandle {
         weak_ptr<IOConnection> _weakPtr;
         shared_ptr<IOConnection> lock(BaseIO &);
+        size_t ioConnectionUidCopy = 0;
     public:
         friend class BaseIO; //can only be locked by baseIO
 
         CxnHandle() = default;
 
-        explicit CxnHandle(weak_ptr<IOConnection> w)
-        : _weakPtr(std::move(w)) {
-        };
+        size_t id() const {return ioConnectionUidCopy;} //for debugging
+
+        explicit CxnHandle(weak_ptr<IOConnection> movedArg);
 
     };
 

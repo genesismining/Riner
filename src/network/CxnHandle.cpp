@@ -14,4 +14,10 @@ namespace miner {
         return nullptr;
     };
 
+
+    CxnHandle::CxnHandle(weak_ptr<IOConnection> movedArg)
+    : _weakPtr(std::move(movedArg))
+    , ioConnectionUidCopy(_weakPtr.lock()->getConnectionUid()) {
+    };
+
 }

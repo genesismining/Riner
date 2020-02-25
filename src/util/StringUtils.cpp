@@ -3,6 +3,7 @@
 
 #include "StringUtils.h"
 #include <algorithm>
+#include <type_traits>
 
 namespace miner {
 
@@ -27,6 +28,5 @@ namespace miner {
                        [] (char c) { return static_cast<char>(std::tolower(c)); });
         return str;
     }
-
 
 }

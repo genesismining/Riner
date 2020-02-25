@@ -199,8 +199,7 @@ namespace miner {
                     onRecv(cxn, processIncoming(std::move(lbt)));
                 }
                 catch(const IOConversionError &e) {
-                    LOG(WARNING) << "IO conversion failed on receive in IOTypeLayer for "
-                                 << typeid(value_type).name() << ": " << e.what();
+                    LOG(WARNING) << "IOTypeLayer conversion failed on receive: " << e.what();
                 }
             });
         };
@@ -218,8 +217,7 @@ namespace miner {
                 _layerBelow.writeAsync(cxn, processOutgoing(std::move(t)));
             }
             catch(const IOConversionError &e) {
-                LOG(WARNING) << "IO conversion failed on asyncWrite in IOTypeLayer for "
-                             << typeid(value_type).name() << ": " << e.what();
+                LOG(WARNING) << "IOTypeLayer conversion failed on asyncWrite: " << e.what();
             }
         }
 

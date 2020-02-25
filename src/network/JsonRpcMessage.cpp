@@ -167,6 +167,10 @@ namespace miner { namespace jrpc {
             return getIfError().has_value();
         }
 
+        bool Message::isErrorWithCode(jrpc::ErrorCode c) const {
+            return isError() && getIfError()->code == c;
+        }
+
         std::string Message::str() const {
             return toJson().dump();
         }

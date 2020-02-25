@@ -1,6 +1,8 @@
 #pragma once
 
-#define ELPP_UTC_DATETIME
+#include <iostream>
+#define ELPP_CUSTOM_COUT std::cout
+#define ELPP_CUSTOM_COUT_LINE(msg) miner::fancifyLog(msg)
 #include <easylogging++.h>
 
 namespace miner {
@@ -10,7 +12,9 @@ namespace miner {
     void setThreadName(const std::stringstream &sstream);
     std::string getThreadName();
 
-    void initLogging(int argc, const char **argv);
+    void initLogging(int argc, const char **argv, bool color = false, bool emojis = false);
+    bool fancyLogEnabled();
+    std::string &fancifyLog(std::string &msg);
 
     template<class ... Args>
     std::string printfStr(const char *format, Args &&... args) {

@@ -18,7 +18,8 @@ namespace miner { namespace jrpc {
                         response = Message{Response{Error{internal_error, "json exception in invoked method"}}, msg.id};
                     }
 
-                    if (!msg.isNotification()) //don't respond to notifications
+                    //respond only if its not a notification or if a notification called a method that wasn't found
+                    if (!msg.isNotification() || response.isErrorWithCode(jrpc::method_not_found))
                         writeAsync(cxn, std::move(response));
                 }
                 else if (msg.isResponse()) {

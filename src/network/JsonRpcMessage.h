@@ -184,6 +184,11 @@ namespace miner { namespace jrpc {
         bool isError() const;
 
         /**
+         * returns whether this `Message` is a `Response` that is an `Error` with an error code equal to c
+         */
+        bool isErrorWithCode(jrpc::ErrorCode c) const;
+
+        /**
          * returns whether this `Message` is a `Requeset` that has the same `method` name as the provided `name` argument.
          */
         bool hasMethodName(const char *name) const; //returns whether the message is a request and has the same method name as provided

@@ -115,7 +115,7 @@ namespace miner { namespace jrpc {
     using WrappedFunc = std::function<Message(const Message &request)>;
 
     //converts a C++ callable T(Rs...) to a function jrpc::Message(jrpc::Message request)
-    //arg name strings must be passed as expected from a calling Request.
+    //arg name strings must be passed the way they are expected from a calling Request.
     //if the C++ callable takes a single nl::json as an argument and no argname is provided, the contents of the request's "params" key will be passed into the invocation directly (without further parasing).
     template<class FuncWithCppArgs, class ... ArgNames>
     auto wrapFunc(FuncWithCppArgs &&func, ArgNames &&... argNames) {
