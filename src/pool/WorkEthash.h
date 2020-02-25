@@ -20,8 +20,7 @@ namespace miner {
     class WorkEthash : public Work, public HasPowTypeEthash {
     public:
 
-        WorkEthash(uint32_t extraNonce)
-                : Work(getPowType()), extraNonce(extraNonce) {
+        WorkEthash() : Work(getPowType()) {
         }
 
         Bytes<32> header;

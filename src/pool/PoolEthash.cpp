@@ -15,8 +15,6 @@
 
 namespace miner {
 
-    const uint32_t EthashStratumJob::uniqueNonce{static_cast<uint32_t>(std::random_device()())};
-
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
         LOG(DEBUG) << "onConnected";
         acceptMiningNotify = false;
@@ -83,6 +81,7 @@ namespace miner {
         const auto &jobId = jparams.at(0).get<std::string>();
         auto job = std::make_unique<EthashStratumJob>(_this, jobId);
 
+        job->workTemplate.extraNonce = static_cast<uint32_t>(std::random_device()()); //generate random number for extranonce
         HexString(jparams[1]).getBytes(job->workTemplate.header);
         HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
         HexString(jparams[3]).swapByteOrder().getBytes(jobTarget);

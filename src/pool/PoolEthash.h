@@ -29,8 +29,7 @@ namespace miner {
 
         explicit EthashStratumJob(const std::weak_ptr<Pool> &pool, std::string id)
                 : PoolJob(pool)
-                , jobId(std::move(id))
-                , workTemplate(uniqueNonce) {
+                , jobId(std::move(id)) {
         }
 
     private:
