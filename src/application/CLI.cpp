@@ -41,7 +41,9 @@ namespace miner {
     }
 
     std::string commandListDevices(bool useJson) {
+        VLOG(5) << "creating compute...";
         ComputeModule compute(Config{});
+        VLOG(5) << "creating compute...done";
         auto &allIds = compute.getAllDeviceIds();
         size_t i = 0;
 
@@ -146,9 +148,9 @@ namespace miner {
                 arg   = raw_arg.substr(0, firstEqPos - 0);
                 value = raw_arg.substr(firstEqPos + 1);
             }
-
-            if (toLower(arg) == toLower(argName))
+            if (toLower(arg) == toLower(argName)) {
                 return value;
+            }
         }
         return nullopt;
     }

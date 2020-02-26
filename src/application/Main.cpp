@@ -29,9 +29,7 @@ int main(int raw_argc, const char *raw_argv[]) {
     initLogging(argc, argv, use_log_colors, use_log_emojis);
     setThreadName("main");
 
-    VLOG(0) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
-    VLOG(1) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
-    VLOG(2) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
+    VLOG(5) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
 
     //register signal handlers that respond to ctrl+c abort
     //abort code can be found in ShutdownState
@@ -42,7 +40,8 @@ int main(int raw_argc, const char *raw_argv[]) {
     bool did_respond_already = false; //if we responded to something we won't complain about e.g. "--config" missing
 
     if (hasArg({"--help", "-h"}, argc, argv)) {
-        std::cout << commandList(format_as_json);
+        LOG(ERROR) << "help command not implemented yet";
+        //std::cout << commandList(format_as_json);
         did_respond_already = true;
     }
 

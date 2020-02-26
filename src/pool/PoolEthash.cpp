@@ -4,7 +4,6 @@
 #include <src/util/Logging.h>
 #include <src/util/HexString.h>
 #include <src/common/Json.h>
-#include <src/common/Endian.h>
 #include <src/common/portable_endian.h>
 #include <chrono>
 #include <random>
@@ -43,8 +42,10 @@ namespace miner {
                 .done();
 
             io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {
-                acceptMiningNotify = true;
-                _cxn = cxn; //store connection for submit
+                if (response.isResultTrue()) {
+                    acceptMiningNotify = true;
+                    _cxn = cxn; //store connection for submit
+                }
             });
 
             records.resetInterval();
@@ -85,7 +86,6 @@ namespace miner {
         HexString(jparams[1]).getBytes(job->workTemplate.header);
         HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
         HexString(jparams[3]).swapByteOrder().getBytes(jobTarget);
-
         job->workTemplate.setDifficultiesAndTargets(jobTarget);
 
         //workTemplate->epoch is calculated in EthashStratumJob::makeWork()

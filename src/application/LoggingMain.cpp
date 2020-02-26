@@ -30,11 +30,6 @@ namespace miner {
         g_log_extras.colorEnabled  = color;
         g_log_extras.emojisEnabled = emojis;
 
-        bool force_disable_verbose = true; //didn't quickly figure out how to disable VLOG(0) otherwise
-        if (hasArg({"-v", "--verbose"}, argc, argv) || getValueAfterArgWithEqualsSign({"-v", "--verbose"}, argc, argv).has_value())  {
-            force_disable_verbose = false;
-        }
-
         START_EASYLOGGINGPP(argc, argv);
 
         using namespace el;
@@ -43,18 +38,40 @@ namespace miner {
         Configurations c;
         c.setToDefault();
 
-        std::string fmt  = "%datetime %level [%thread] %msg"; //if you change this, make sure to also adjust the fancified log (see void fancifyLog(std::string &msg))
-        std::string fmtv = "%datetime %level%vlevel[%thread] %msg"; //for verbose
+        std::string fmt = "%datetime %level [%thread] %msg"; //if you change this, make sure to also adjust the fancified log (see void fancifyLog(std::string &msg))
+        std::string fmtv = "%datetime %level%vlevel [%thread] %msg"; //for verbose
 
         c.setGlobally(CT::Format, fmt);
         c.set(Level::Verbose, CT::Format, fmtv);
 
-        if (force_disable_verbose)
+        Loggers::reconfigureLogger("default", c); //reconfigure now, for logs that may happen when failing to parse verbose args, then reconfigure again
+
+        optional<std::string> logLevelStr = getValueAfterArgWithEqualsSign({"-v", "--verbose"}, argc, argv);
+        SetThreadNameStream{} << "log init"; //thread has name "log init" to show a non-confusing name when something happens before the thread name is set
+
+        if (hasArg({"-v", "--verbose"}, argc, argv) || logLevelStr.has_value())  {
+            c.set(Level::Verbose, CT::Enabled, "true");
+            if (logLevelStr) {
+                try {
+                    auto level = stol(*logLevelStr);
+                    if (0 <= level && level < 10) {
+                        Loggers::setVerboseLevel(level);
+                    }
+                    else {
+                        throw std::exception(); //goto catch
+                    }
+                }
+                catch (const std::exception &) {
+                    //both exceptions mean invalid argument for verbose, so just catch all
+                    LOG(WARNING) << "invalid log level argument '" << *logLevelStr << "'. using max log level instead. (if you want max log level you can also omit the argument)";
+                }
+            }
+        }
+        else { // !hasArg
             c.set(Level::Verbose, CT::Enabled, "false");
+        }
 
         Loggers::reconfigureLogger("default", c);
-
-        //Loggers::setVerboseLevel(0);
     }
 
     std::string &fancifyLog(std::string &msg) {
@@ -72,11 +89,11 @@ namespace miner {
 
                 const char *levels[][4] = {
                         {"VERBOSE", "V", u8"\u27b0", GRAY},
-                        {"INFO"   , "I", u8"\u2796", RESET},
-                        {"DEBUG"  , "D", u8"\xF0\x9F\x8C\x80", BLUE}, //U+1F300
-                        {"WARNING", "W", u8"\u26a0", ORANGE},
-                        {"ERROR"  , "E", u8"\u274c", RED},
-                        {"FATAL"  , "F", u8"\u2623️", REDBOLD}
+                        {"INFO"   , "I ", u8"\u2796 ", RESET},
+                        {"DEBUG"  , "D ", u8"\xF0\x9F\x8C\x80 ", BLUE}, //U+1F300
+                        {"WARNING", "W ", u8"\u26a0\ufe0f ", ORANGE},
+                        {"ERROR"  , "E ", u8"\u274c ", RED},
+                        {"FATAL"  , "F ", u8"\u2623\ufe0f️ ", REDBOLD}
                 };
 
                 for (auto &level : levels) {
