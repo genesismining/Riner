@@ -123,10 +123,13 @@ namespace miner {
     };
 
     std::vector<DeviceId> gatherAllDeviceIds() {
+        VLOG(5) << "gatherAllDeviceIds...";
         std::vector<DeviceId> result;
 
         std::vector<cl::Platform> clPlatforms;
+        VLOG(5) << "cl::Platform::get...";
         cl::Platform::get(&clPlatforms);
+        VLOG(5) << "cl::Platform::get...done";
 
         if (clPlatforms.empty()) {
             LOG(INFO) << "no OpenCL platforms found when trying to obtain all device ids";
@@ -134,18 +137,24 @@ namespace miner {
 
         for (auto &clPlatform : clPlatforms) {
             std::vector<cl::Device> clDevices;
+            VLOG(5) << "clPlatform.getDevices for CL_DEVICE_TYPE_GPU...";
             clPlatform.getDevices(CL_DEVICE_TYPE_GPU, &clDevices);
+            VLOG(5) << "clPlatform.getDevices for CL_DEVICE_TYPE_GPU...done";
 
+            VLOG(5) << "iterating over devices...";
             for (auto &clDevice : clDevices) {
+                VLOG(5) << "obtainDeviceIdFromOpenCLDevice...";
                 if (auto deviceId = obtainDeviceIdFromOpenCLDevice(clDevice)) {
                     result.push_back(*deviceId);
                 }
                 else {
                     LOG(INFO) << "unable to obtain device id for clDevice at " << clDevice();
                 }
+                VLOG(5) << "obtainDeviceIdFromOpenCLDevice...done";
             }
+            VLOG(5) << "iterating over devices...done";
         }
-
+        VLOG(5) << "gatherAllDeviceIds...done";
         return result;
     }
 }

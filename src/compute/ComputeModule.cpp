@@ -11,9 +11,13 @@ namespace miner {
 
     ComputeModule::ComputeModule(const Config &config)
     : allDevices(gatherAllDeviceIds()) {
+        VLOG(5) << "compute ctor scope...";
         auto kernelDir = config.global_settings().opencl_kernel_dir();
         auto precompiledDir = kernelDir + "precompiled/";
+        VLOG(5) << "CLProgramLoader make_unique...";
         clProgramLoader = std::make_unique<CLProgramLoader>(kernelDir, precompiledDir);
+        VLOG(5) << "CLProgramLoader make_unique...done";
+        VLOG(5) << "compute ctor scope...done";
     }
 
     ComputeModule::~ComputeModule() {
