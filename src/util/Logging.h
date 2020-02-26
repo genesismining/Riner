@@ -9,7 +9,14 @@ namespace miner {
 
     //implemented in LoggingMain.cpp
     void setThreadName(const std::string &name);
-    void setThreadName(const std::stringstream &sstream);
+
+    //use a stringstream as a convenient setThreadName alternative
+    //usage:
+    //SetThreadNameStream{} << "string " << number;
+    struct SetThreadNameStream : public std::stringstream {
+        ~SetThreadNameStream() {setThreadName(str());}
+    };
+
     std::string getThreadName();
 
     void initLogging(int argc, const char **argv, bool color = false, bool emojis = false);

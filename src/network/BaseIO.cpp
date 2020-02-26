@@ -158,7 +158,7 @@ namespace miner {
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
-            setThreadName(std::stringstream{} << "io#" << _uid); //thread name shows BaseIO's uid
+            SetThreadNameStream{} << "io#" << _uid; //thread name shows BaseIO's uid
             setIoThreadId(); //set this thread id to be the IO Thread
             _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 

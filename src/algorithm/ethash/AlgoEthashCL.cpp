@@ -22,7 +22,7 @@ namespace miner {
                 size_t i = gpuTasks.size();
 
                 gpuTasks.push_back(std::async(std::launch::async, [=] () {
-                    setThreadName(std::stringstream{} << "EthashCL gpu task#" << i);
+                    SetThreadNameStream{} << "EthashCL gpu task#" << i;
                     gpuTask(i, *clDevice, device.get());
                 }));
             }
@@ -97,7 +97,7 @@ namespace miner {
             for (size_t i = 0; i < numGpuSubTasks; ++i) {
 
                 tasks.push_back(std::async(std::launch::async, [&, i] () {
-                    setThreadName(std::stringstream{} << "EthashCL gpu#" << taskIndex << " subtask#" << i);
+                    SetThreadNameStream{} << "EthashCL gpu#" << taskIndex << " subtask#" << i;
                     gpuSubTask(i, plat, clDevice, dag, device);
                 }));
             }
