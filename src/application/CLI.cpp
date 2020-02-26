@@ -129,8 +129,76 @@ namespace miner {
 
     optional<size_t> argIndex(const std::string &argName, int argc, const char **argv) {
         for (int i = 1; i < argc; ++i) {
-            if (std::string{argv[i]} == toLower(argName))
+            if (toLower(std::string{argv[i]}) == toLower(argName))
                 return i;
+        }
+        return nullopt;
+    }
+
+    optional<std::string> argValueAfterEqualsSign(const std::string &argName, int argc, const char **argv) {
+        for (int i = 1; i < argc; ++i) {
+            std::string raw_arg = argv[i];
+            std::string arg = raw_arg;
+            auto firstEqPos = arg.find_first_of('=');
+
+            optional<std::string> value;
+            if (firstEqPos != std::string::npos) {
+                arg   = raw_arg.substr(0, firstEqPos - 0);
+                value = raw_arg.substr(firstEqPos + 1);
+            }
+
+            if (toLower(arg) == toLower(argName))
+                return value;
+        }
+        return nullopt;
+    }
+
+    CommandLineArgs copyArgsAndExpandSingleDashCombinedArgs(int argc, const char **argv) {
+        CommandLineArgs res;
+        res.argc = 0;
+        if (argc <= 0)
+            return res;
+
+        for (int i = 0; i < argc; ++i) {
+            std::string arg = argv[i];
+            bool singleMinus = arg.size() >= 2 && arg[0] == '-' && arg[1] != '-';
+
+            //whether its something like -v=0
+            bool equalsSignAt2 = arg.size() >= 3 && arg[2] == '=';
+
+            if (singleMinus && !equalsSignAt2) {
+                //it is something like -abcd
+                for (char c : arg) {
+                    if (c != '=' && c != '-')
+                        res.strings.push_back(std::string("-") + c);
+                }
+            }
+            else { //its something like --something or -a=something
+                res.strings.push_back(arg);
+            }
+        }
+        //fill other members of result struct
+        res.argc = (int)res.strings.size();
+        for (auto &str : res.strings) {
+            bool isFirstPathArg = &str == &res.strings.front();
+            bool isLastArg      = &str == &res.strings.back();
+
+            if (!isFirstPathArg) {
+                res.allArgsAsOneString += str;
+                if (!isLastArg)
+                    res.allArgsAsOneString += " ";
+            }
+
+            res.ptrs.push_back(str.c_str());
+            res.argv = res.ptrs.data();
+        }
+        return res;
+    }
+
+    optional<std::string> getValueAfterArgWithEqualsSign(const std::vector<std::string> &argNames, int argc, const char **argv) {
+        for (auto &name : argNames) {
+            if (auto optValue = argValueAfterEqualsSign(name, argc, argv))
+                return optValue;
         }
         return nullopt;
     }

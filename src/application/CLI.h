@@ -15,6 +15,18 @@ namespace miner {
     std::string commandListAlgoImpls(bool asJson);
     std::string commandListPoolImpls(bool asJson);
 
+    struct CommandLineArgs {
+        std::string allArgsAsOneString; //"-a -b --foo"
+        std::vector<std::string> strings; //{"-a", "-b", "--foo"}
+        std::vector<const char *> ptrs; //{data[0].c_str(), data[1].c_str(), ... }
+
+        const char **argv = nullptr; //&ptrs[0]
+        int argc = 0; //data.size()
+    };
+
+    //takes {"-a" "-bcd" "-e" "-fg" "--hij"} and returns {"-a", "-b", "-c", "-d", "-e" "-f" "-g" "--hij"}
+    CommandLineArgs copyArgsAndExpandSingleDashCombinedArgs(int argc, const char **argv);
+
     /**
      * searches for argName in argv.
      * @param argc amount of elements in argv array
@@ -28,5 +40,8 @@ namespace miner {
 
     //this function is used to get a config path until we have a proper argc argv parser
     optional<std::string> getPathAfterArg(const std::string &minusminusArg, int argc, const char **argv);
+
+    //if an arg has an equals sign (e.g. -v=3) returns the string of the part after the equals sign (e.g. "3") or nullopt if the arg has no equals sign (empty string if it has an equals sign but nothing behind it)
+    optional<std::string> getValueAfterArgWithEqualsSign(const std::vector<std::string> &argNames, int argc, const char **argv);
 
 }

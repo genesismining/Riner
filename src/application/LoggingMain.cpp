@@ -1,5 +1,7 @@
 #include <src/util/Logging.h>
 
+#include <src/application/CLI.h>
+
 #include <easylogging++.cc>
 INITIALIZE_EASYLOGGINGPP
 
@@ -28,6 +30,11 @@ namespace miner {
         g_log_extras.colorEnabled  = color;
         g_log_extras.emojisEnabled = emojis;
 
+        bool force_disable_verbose = true; //didn't quickly figure out how to disable VLOG(0) otherwise
+        if (hasArg({"-v", "--verbose"}, argc, argv) || getValueAfterArgWithEqualsSign({"-v", "--verbose"}, argc, argv).has_value())  {
+            force_disable_verbose = false;
+        }
+
         START_EASYLOGGINGPP(argc, argv);
 
         using namespace el;
@@ -41,10 +48,13 @@ namespace miner {
 
         c.setGlobally(CT::Format, fmt);
         c.set(Level::Verbose, CT::Format, fmtv);
-        //c.set(Level::Verbose, CT::Enabled, "false");
+
+        if (force_disable_verbose)
+            c.set(Level::Verbose, CT::Enabled, "false");
+
         Loggers::reconfigureLogger("default", c);
 
-        Loggers::setVerboseLevel(0);
+        //Loggers::setVerboseLevel(0);
     }
 
     std::string &fancifyLog(std::string &msg) {
@@ -61,12 +71,12 @@ namespace miner {
             if (prefix_end != std::string::npos) {
 
                 const char *levels[][4] = {
-                        {"VERBOSE", "V", "➰", GRAY},
-                        {"INFO"   , "I", "➖", RESET},
-                        {"DEBUG"  , "D", "🌀", BLUE},
-                        {"WARNING", "W", "⚠️ ", ORANGE},
-                        {"ERROR"  , "E", "❌", RED},
-                        {"FATAL"  , "F", "☣️", REDBOLD}
+                        {"VERBOSE", "V", u8"\u27b0", GRAY},
+                        {"INFO"   , "I", u8"\u2796", RESET},
+                        {"DEBUG"  , "D", u8"\xF0\x9F\x8C\x80", BLUE}, //U+1F300
+                        {"WARNING", "W", u8"\u26a0", ORANGE},
+                        {"ERROR"  , "E", u8"\u274c", RED},
+                        {"FATAL"  , "F", u8"\u2623️", REDBOLD}
                 };
 
                 for (auto &level : levels) {

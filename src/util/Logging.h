@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #define ELPP_CUSTOM_COUT std::cout
 #define ELPP_CUSTOM_COUT_LINE(msg) miner::fancifyLog(msg)
 #include <easylogging++.h>
@@ -14,7 +15,7 @@ namespace miner {
     //usage:
     //SetThreadNameStream{} << "string " << number;
     struct SetThreadNameStream : public std::stringstream {
-        ~SetThreadNameStream() {setThreadName(str());}
+        ~SetThreadNameStream() override {setThreadName(str());}
     };
 
     std::string getThreadName();

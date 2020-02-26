@@ -57,8 +57,7 @@ namespace miner {
 
         explicit EthashDummyJob(const std::weak_ptr<Pool> &pool, std::string id)
                 : PoolJob(pool)
-                , jobId(std::move(id))
-                , workTemplate(0) {
+                , jobId(std::move(id)) {
         }
 
     };

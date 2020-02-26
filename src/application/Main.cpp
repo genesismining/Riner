@@ -15,14 +15,23 @@ void sigintHandler(int signum) {
     miner::shutdownState->launchShutdownTask(signum);
 }
 
-int main(int argc, const char *argv[]) {
+int main(int raw_argc, const char *raw_argv[]) {
     using namespace miner;
+
+    //expand args like -abc to -a -b -c
+    auto expandedArgs = copyArgsAndExpandSingleDashCombinedArgs(raw_argc, raw_argv);
+    int          argc = expandedArgs.argc;
+    const char **argv = expandedArgs.argv;
 
     bool format_as_json = hasArg({"--json"}, argc, argv);
     bool use_log_colors = hasArg({"--color", "--colors"}, argc, argv);
     bool use_log_emojis = hasArg({"--emoji", "--emojis"}, argc, argv);
     initLogging(argc, argv, use_log_colors, use_log_emojis);
     setThreadName("main");
+
+    VLOG(0) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
+    VLOG(1) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
+    VLOG(2) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
 
     //register signal handlers that respond to ctrl+c abort
     //abort code can be found in ShutdownState
@@ -62,8 +71,13 @@ int main(int argc, const char *argv[]) {
 
             if (optional<Config> config = configUtils::loadConfig(*configPath)) {
 
-                Application app{std::move(*config)};
-                shutdownState->waitUntilShutdownRequested();
+                try {
+                    Application app{std::move(*config)};
+                    shutdownState->waitUntilShutdownRequested();
+                }
+                catch(const std::exception &e) {
+                    LOG(ERROR) << "uncaught exception: " << e.what();
+                }
 
             } //app destructor
             else {

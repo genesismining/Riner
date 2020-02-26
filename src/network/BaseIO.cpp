@@ -152,7 +152,7 @@ namespace miner {
     void BaseIO::startIOThread() {
         MI_EXPECTS(_thread == nullptr);
         if (_thread) {
-            LOG(ERROR) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
+            LOG(WARNING) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
             return;
         }
 
@@ -197,7 +197,7 @@ namespace miner {
             _ioThreadId = {}; //reset io thread id
         });
         MI_ENSURES(_thread);
-        VLOG(1) << "BaseIO::startIOThread";
+        VLOG(2) << "BaseIO::startIOThread";
     }
 
     void BaseIO::stopIOThread() { //TODO: atm subclasses are required to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
@@ -233,11 +233,12 @@ namespace miner {
         if (sslEnabledButNotSupported())
             return;
 
+        VLOG(2) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
+
         MI_EXPECTS(_ioService);
         MI_EXPECTS(_thread);
         MI_EXPECTS(!hasLaunched());
         _hasLaunched = true;
-        VLOG(0) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = std::move(onDc);

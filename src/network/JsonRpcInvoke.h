@@ -13,6 +13,8 @@ namespace miner { namespace jrpc {
 
         template<class T>
         T extractSingleArg(const nl::json &jArgs, const std::string &argName) {
+            if (!jArgs.count(argName))
+                throw jrpc::Error{ErrorCode::invalid_params, std::string() + "missing argument '" + argName + "'"};
             return jArgs.at(argName).get<T>();
         }
 
@@ -56,7 +58,7 @@ namespace miner { namespace jrpc {
                 if (sizeof...(Args) > 0) {
 
                     auto msgJson = request.toJson();
-                    if (!msgJson.count("params")) {
+                    if (!msgJson.count("params")) { //in the current implementation a messsage json created from request.toJson() always contains "params" so this check is not needed
                         //function has args since sizeof...(Args) > 0, but request doesn't have a "params" key
                         return Message{Response{Error{jrpc::invalid_params}}, request.id};
                     }

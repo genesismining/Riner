@@ -15,7 +15,8 @@ namespace miner {namespace configUtils {
             return {};
         }
 
-        VLOG(1) << "parsing config string:\n" << configStr.value();
+        VLOG(0) << "parsing config string";
+        VLOG(3) << "config string:\n" << configStr.value();
         return parseConfig(configStr.value());
     }
 
