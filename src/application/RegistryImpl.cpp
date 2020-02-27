@@ -85,13 +85,16 @@ namespace riner {
     const char *Registry::poolImplForProtocolAndPowType(const char *protocolType, const char *powType) const {
         if (0 != strcmp(protocolType, "")) { //don't accidentally match "" with an unspecified protocolTypeAlias
             for (auto &pair : _poolWithName) {
-                bool samePow = 0 == strcmp(pair.second.powType, powType);
+                const char *poolImplName = pair.first;
+                const EntryPool &e = pair.second;
+                bool samePow = 0 == strcmp(e.powType, powType);
 
-                bool sameProto = 0 == strcasecmp(pair.second.protocolType     , protocolType);
-                     sameProto|= 0 == strcasecmp(pair.second.protocolTypeAlias, protocolType);
+                bool sameProto = false;
+                sameProto |= 0 == strcasecmp(e.protocolType     , protocolType);
+                sameProto |= 0 == strcasecmp(e.protocolTypeAlias, protocolType);
 
                 if (sameProto && samePow) {
-                    return pair.first; //poolImplName
+                    return poolImplName;
                 }
             }
         }

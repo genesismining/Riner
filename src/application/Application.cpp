@@ -58,16 +58,15 @@ namespace riner {
         for (auto &implName : allRequiredImplNames) {
 
             const std::string powType = factory.powTypeOfAlgoImpl(implName.c_str());
-            if (powType == "") {
+            if (powType.empty()) {
                 LOG(INFO) << "no PowType found for AlgoImpl '" << implName << "'. skipping.";
                 continue;
             }
 
             auto configPools = getConfigPoolsForPowType(config, powType);
 
-            auto &poolSwitcher = lockedPoolSwitchers->emplace(
-                    std::make_pair(powType, std::make_unique<PoolSwitcher>(powType))
-                    ).first->second;
+            lockedPoolSwitchers->emplace(std::make_pair(powType, std::make_unique<PoolSwitcher>(powType)));
+            auto &poolSwitcher = lockedPoolSwitchers->at(powType);
 
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
@@ -75,7 +74,7 @@ namespace riner {
                 RNR_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
                 PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
-                const std::string poolImplName = factory.poolImplForProtocolAndPowType(powType.c_str(), p.protocol().c_str());
+                const std::string poolImplName = factory.poolImplForProtocolAndPowType(p.protocol().c_str(), powType.c_str());
                 if (poolImplName.empty()) {
                     LOG(ERROR) << "no pool implementation available for powType '"
                                << powType << "' in combination with protocolType '"
