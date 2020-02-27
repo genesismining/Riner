@@ -64,7 +64,7 @@ namespace riner {
     std::vector<const char *> Registry::listGpuApis() const {
         std::vector<const char *> ret;
 
-        for (auto &pair : _poolWithName) {
+        for (auto &pair : _gpuApiWithName) {
             ret.emplace_back(pair.first);
         }
         return ret;
