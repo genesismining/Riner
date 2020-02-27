@@ -5,7 +5,7 @@
 #include <set>
 #include <deque>
 
-namespace miner {namespace configUtils {
+namespace riner {namespace configUtils {
 
     optional<Config> loadConfig(const std::string &configPath) {
 

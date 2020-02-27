@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace miner {
+namespace riner {
 
 class TaskExecutorPool;
 

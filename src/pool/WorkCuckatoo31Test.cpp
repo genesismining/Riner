@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <src/application/Registry.h>
 
-namespace miner {
+namespace riner {
 namespace {
 
 class GrinJobs : public testing::Test {

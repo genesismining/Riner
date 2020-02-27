@@ -3,10 +3,10 @@
 #include <iostream>
 #include <sstream>
 #define ELPP_CUSTOM_COUT std::cout
-#define ELPP_CUSTOM_COUT_LINE(msg) miner::fancifyLog(msg)
+#define ELPP_CUSTOM_COUT_LINE(msg) riner::fancifyLog(msg)
 #include <easylogging++.h>
 
-namespace miner {
+namespace riner {
 
     //implemented in LoggingMain.cpp
     void setThreadName(const std::string &name);

@@ -7,7 +7,7 @@
 #include <src/util/Logging.h>
 #include <condition_variable>
 
-namespace miner {
+namespace riner {
 
     CLProgramLoader::CLProgramLoader(std::string clSourceDir, std::string precompiledKernelDir)
     : clSourceDir(std::move(clSourceDir))

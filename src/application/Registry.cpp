@@ -12,7 +12,7 @@
 
 #include <src/gpu_api/AmdgpuApi.h>
 
-namespace miner {
+namespace riner {
 
     //add new AlgoImpls/PoolImpls or GpuApis in the member functions below
 

@@ -6,7 +6,7 @@
 #include <src/util/Bytes.h>
 #include <cmath>
 
-namespace miner {
+namespace riner {
 
     double targetToDifficultyApprox(Bytes<32> targetBytes);
 

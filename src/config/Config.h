@@ -7,7 +7,7 @@
 
 #include <config.pb.h> //protobuf generated header for LegacyConfig.proto
 
-namespace miner {
+namespace riner {
 
     using Config = proto::Config;
     optional<Config> parseConfig(const std::string &txtProto);

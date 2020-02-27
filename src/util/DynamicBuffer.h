@@ -6,7 +6,7 @@
 
 #include <type_traits>
 
-namespace miner {
+namespace riner {
 
     //simple replacement for std::vector<char> in situations where huge
     //allocations happen, since the standard doesn't define how

@@ -3,7 +3,7 @@
 #include "PoolEthash.h"
 #include "PoolGrin.h"
 
-namespace miner {
+namespace riner {
 
     Pool::Pool(PoolConstructionArgs args)
             : constructionArgs(std::move(args)) {

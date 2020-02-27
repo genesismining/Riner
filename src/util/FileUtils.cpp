@@ -6,7 +6,7 @@
 #include <streambuf>
 #include <src/util/Logging.h>
 
-namespace miner {namespace file {
+namespace riner {namespace file {
 
         template<class T>
         inline static optional<T> readFileInto(const std::string &filePath) {

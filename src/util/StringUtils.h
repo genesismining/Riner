@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iterator>
 
-namespace miner {
+namespace riner {
 
     struct ParsePoolAddressResult {
         std::string host;
@@ -19,6 +19,8 @@ namespace miner {
 
     //returns lowercase version of inStr
     std::string toLower(const std::string &inStr);
+
+    optional<int64_t> strToInt64(const char *str);
 
     bool startsWith(const std::string& string, const std::string& prefix);
 

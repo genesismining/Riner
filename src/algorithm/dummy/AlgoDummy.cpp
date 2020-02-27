@@ -8,7 +8,7 @@
 #include <src/pool/WorkEthash.h>
 #include <src/pool/Pool.h>
 
-namespace miner {
+namespace riner {
     using namespace std::chrono;
     using namespace std::chrono_literals;
     using namespace std::this_thread;

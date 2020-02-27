@@ -10,7 +10,7 @@
 
 #include <vector>
 
-namespace miner {
+namespace riner {
 
 namespace {
 constexpr uint64_t remainingEdges[8] =
@@ -103,7 +103,7 @@ const std::future<void> &CuckatooSolver::solve(const SiphashKeys &keys, ResultFn
         VLOG(1) << "Bulding Graph";
         Graph graph(opts_.n, opts_.n - 13, opts_.n - 13); // TODO this should be determined by the estimate of remaining edges
 
-        miner::foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &graph, &debugActive](uint32_t edge) {
+        riner::foreachActiveEdge(opts_.n, edges.data(), [this, &keys, &graph, &debugActive](uint32_t edge) {
             uint32_t u = getNode(keys, edge, 0);
             uint32_t v = getNode(keys, edge, 1);
             graph.addUToV(u, v);
@@ -240,9 +240,9 @@ void CuckatooSolver::prepare() {
     // TODO proper error handling
 
     std::string options = "-DBUCKET_BIT_SHIFT=" + std::to_string(bucketBitShift);
-    MI_EXPECTS(opts_.programLoader);
+    RNR_EXPECTS(opts_.programLoader);
     auto programOr = opts_.programLoader->loadProgram(opts_.context, files, options);
-    MI_EXPECTS(programOr);
+    RNR_EXPECTS(programOr);
     program_ = programOr.value();
 
     bufferActiveEdges_ = cl::Buffer(opts_.context, CL_MEM_READ_WRITE, edgeCount_ / 8);

@@ -7,7 +7,7 @@
 #include <src/util/TemplateUtils.h>
 #include <src/common/Assert.h>
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     namespace detail {
 

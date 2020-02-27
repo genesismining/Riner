@@ -5,7 +5,7 @@
 #include <src/util/Logging.h>
 #include <src/util/StringUtils.h>
 
-namespace miner {
+namespace riner {
 
     std::string stringFromVendorEnum(VendorEnum e) {
         switch(e) {

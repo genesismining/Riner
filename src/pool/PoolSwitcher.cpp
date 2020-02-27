@@ -6,7 +6,7 @@
 #include <src/common/Assert.h>
 #include <src/algorithm/Algorithm.h>
 
-namespace miner {
+namespace riner {
 
 
     PoolSwitcher::PoolSwitcher(std::string powType, clock::duration checkInterval, clock::duration durUntilDeclaredDead)
@@ -99,7 +99,7 @@ namespace miner {
         if (activePoolIndex >= pools.size())
             return nullptr;
         auto pool = pools[activePoolIndex];
-        MI_EXPECTS(pool != nullptr);
+        RNR_EXPECTS(pool != nullptr);
         return pool;
     }
 

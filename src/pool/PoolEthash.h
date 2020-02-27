@@ -12,7 +12,7 @@
 #include <atomic>
 #include <src/network/JsonRpcUtil.h>
 
-namespace miner {
+namespace riner {
 
     struct EthashStratumJob : public PoolJob {
 

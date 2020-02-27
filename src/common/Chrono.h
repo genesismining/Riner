@@ -3,7 +3,7 @@
 
 #include <chrono>
 
-namespace miner {
+namespace riner {
 
     using clock = std::chrono::steady_clock;
     using std::chrono::seconds;

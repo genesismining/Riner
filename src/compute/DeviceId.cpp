@@ -6,7 +6,7 @@
 #include <string>
 #include <cstdio>
 
-namespace miner {
+namespace riner {
 
     DeviceId::DeviceId(VendorEnum vendorEnum, const decltype(id) &idVariant, std::string name)
         : vendorEnum(vendorEnum)

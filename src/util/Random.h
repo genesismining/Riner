@@ -2,7 +2,7 @@
 
 #include <random>
 
-namespace miner {
+namespace riner {
 
 class Random {
 public:

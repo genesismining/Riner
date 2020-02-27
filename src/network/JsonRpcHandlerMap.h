@@ -10,7 +10,7 @@
 #include <src/network/BaseIO.h>
 #include <src/network/JsonRpcMessage.h>
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     using ResponseHandler = std::function<void(CxnHandle, const Message &response)>;
     void responseHandlerNoop(CxnHandle, const Message &);

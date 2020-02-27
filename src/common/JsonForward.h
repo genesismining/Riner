@@ -6,7 +6,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-namespace miner {
+namespace riner {
 
     namespace nl = nlohmann;
 

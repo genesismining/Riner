@@ -3,7 +3,7 @@
 
 #include "JsonRpcUtil.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
         JsonRpcUtil::JsonRpcUtil(IOMode mode) : Base(mode) {
 
@@ -44,7 +44,7 @@ namespace miner { namespace jrpc {
         }
 
         void JsonRpcUtil::callAsync(CxnHandle cxn, Message request, ResponseHandler &&handler) {
-            MI_EXPECTS(request.isRequest());
+            RNR_EXPECTS(request.isRequest());
             _pending.addForId(request.id, std::move(handler));
             writeAsync(cxn, std::move(request)); //send rpc call
         }
@@ -58,7 +58,7 @@ namespace miner { namespace jrpc {
         }
 
         void JsonRpcUtil::setReadAsyncLoopEnabled(bool val) {
-            MI_EXPECTS(isIoThread() || !hasLaunched());
+            RNR_EXPECTS(isIoThread() || !hasLaunched());
             _readAsyncLoopEnabled = val;
         }
 
@@ -95,7 +95,7 @@ namespace miner { namespace jrpc {
                     if (*stillPending) {
                         //clean up pending handler
                         auto _ = _pending.tryPopForId(request.id);
-                        MI_EXPECTS(_.has_value()); //this handler is supposed to exist, since *stillPending is true
+                        RNR_EXPECTS(_.has_value()); //this handler is supposed to exist, since *stillPending is true
 
                         neverRespondedHandler(); //notify callee that there was no response
                     }

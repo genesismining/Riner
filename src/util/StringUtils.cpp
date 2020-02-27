@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <type_traits>
 
-namespace miner {
+namespace riner {
 
     ParsePoolAddressResult parsePoolAddress(const char *cstr) {
         ParsePoolAddressResult res;
@@ -20,6 +20,15 @@ namespace miner {
             res.port = str.substr(colonPos+1);
         }
         return res;
+    }
+
+    optional<int64_t> strToInt64(const char *str) {
+        try {
+            return std::stoll(str);
+        }
+        catch (const std::invalid_argument &) {}
+        catch (const std::out_of_range &) {}
+        return nullopt;
     }
 
     std::string toLower(const std::string &inStr) {

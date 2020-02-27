@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace miner {
+namespace riner {
 
 /**
  * All struct HasPowType* used by PoolGrin have to implement int edgeBits()

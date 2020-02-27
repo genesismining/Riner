@@ -8,7 +8,7 @@
 #include <src/config/Config.h>
 #include <vector>
 
-namespace miner {
+namespace riner {
     class CLProgramLoader;
 
     class ComputeModule {

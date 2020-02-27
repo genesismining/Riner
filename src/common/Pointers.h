@@ -3,7 +3,7 @@
 
 #include <memory>
 
-namespace miner {
+namespace riner {
 
     using std::unique_ptr;
     using std::shared_ptr;

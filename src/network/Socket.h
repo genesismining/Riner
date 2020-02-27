@@ -15,7 +15,7 @@
 #include <lib/asio/asio/include/asio/ssl/stream.hpp>
 #endif
 
-namespace miner {
+namespace riner {
 
     using asio::ip::tcp;
 

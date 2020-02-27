@@ -3,6 +3,6 @@
 
 #include "Algorithm.h"
 
-namespace miner {
+namespace riner {
 
 }

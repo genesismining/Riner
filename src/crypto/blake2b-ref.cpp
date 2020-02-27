@@ -20,7 +20,7 @@
 #include "blake2.h"
 #include "blake2-impl.h"
 
-namespace miner {
+namespace riner {
 
 namespace {
 

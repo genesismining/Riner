@@ -7,7 +7,7 @@
 #include <src/common/Assert.h>
 #include <src/util/Copy.h>
 
-namespace miner {
+namespace riner {
 
     template<class T, class Mutex = std::mutex>
     class LockGuarded;
@@ -77,7 +77,7 @@ namespace miner {
         inline operator bool() const {return lock;}
 
         inline std::conditional_t<std::is_const<T>::value, std::add_const_t<value_t>, value_t> &operator*() {
-            MI_EXPECTS(lock);
+            RNR_EXPECTS(lock);
             return guarded.get().t;
         }
         inline std::conditional_t<std::is_const<T>::value, std::add_const_t<value_t>, value_t> *operator->() {
@@ -85,7 +85,7 @@ namespace miner {
         }
 
         inline const value_t *operator->() const {
-            MI_EXPECTS(lock);
+            RNR_EXPECTS(lock);
             return guarded.get().t;
         }
         inline const value_t &operator *() const {

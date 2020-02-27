@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace miner {
+namespace riner {
 
     class IOConnection;
     class BaseIO;

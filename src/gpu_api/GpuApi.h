@@ -7,7 +7,7 @@
 #include <list>
 #include <memory>
 
-namespace miner {
+namespace riner {
 
     struct GpuApiConstructionArgs {
         DeviceId id;

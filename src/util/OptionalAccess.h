@@ -4,7 +4,7 @@
 #include <src/common/Optional.h>
 #include <src/common/Span.h>
 
-namespace miner {
+namespace riner {
 
     //functions for accessing container elements that return optional<Reftype> instead of references
     //naming scheme based on std::get_if

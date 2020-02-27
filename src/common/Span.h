@@ -2,7 +2,7 @@
 
 #include <gsl/span>
 
-namespace miner {
+namespace riner {
     
     template<class T, std::ptrdiff_t Extent = gsl::dynamic_extent>
     using span = gsl::span<T, Extent>;

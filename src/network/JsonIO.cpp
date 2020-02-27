@@ -3,7 +3,7 @@
 
 #include "JsonIO.h"
 
-namespace miner {
+namespace riner {
 
     nl::json JsonIO::convertIncoming(std::string line) {
 

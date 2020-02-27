@@ -7,7 +7,7 @@
 #include <vector>
 #include <thread>
 
-namespace miner {
+namespace riner {
 
 class AlgoCuckatoo31Cl: public Algorithm {
 

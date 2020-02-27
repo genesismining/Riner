@@ -11,7 +11,7 @@
 #include <src/util/FileUtils.h>
 #include <src/util/TestSslData.h>
 
-namespace miner {
+namespace riner {
     using namespace jrpc;
     using testing::AnyOf;
     using namespace std::chrono_literals;

@@ -3,7 +3,7 @@
 
 #include "AsioErrorUtil.h"
 
-namespace miner {
+namespace riner {
 
 #define ASIO_ERR_CASE(x) case asio::error:: x: return "error::" #x ;
 

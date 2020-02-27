@@ -9,7 +9,7 @@
 
 #include <vector>
 
-namespace miner {
+namespace riner {
 
     /**
      * @brief Args passed into every Algorithm subclass ctor

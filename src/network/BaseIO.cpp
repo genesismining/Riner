@@ -9,7 +9,7 @@
 #include <asio/ssl.hpp>
 #endif
 
-namespace miner {
+namespace riner {
 
     using asio::ip::tcp;
 
@@ -35,17 +35,17 @@ namespace miner {
 
         ~Connection() override {
             VLOG(0) << "closing connection #" << _connectionUid << " (likely because no read/write operations are queued on it)";
-            MI_EXPECTS(_onDisconnected);
+            RNR_EXPECTS(_onDisconnected);
             _onDisconnected();
         }
 
         uint64_t getAssociatedBaseIOUid() override {
-            MI_EXPECTS(_baseIOUid != 0); //baseIO Uids start at 1, if it's 0, it wasn't set
+            RNR_EXPECTS(_baseIOUid != 0); //baseIO Uids start at 1, if it's 0, it wasn't set
             return _baseIOUid;
         }
 
         uint64_t getConnectionUid() override {
-            MI_EXPECTS(_connectionUid != 0); //connection uids start at 1. this one was not initiailzed!
+            RNR_EXPECTS(_connectionUid != 0); //connection uids start at 1. this one was not initiailzed!
             return _connectionUid;
         }
 
@@ -65,11 +65,11 @@ namespace miner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
-            VLOG(1) << "ReadUntil queued";
+            VLOG(3) << "ReadUntil queued";
             asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
-                VLOG(1) << "ReadUntil scheduled";
+                VLOG(3) << "ReadUntil scheduled";
                 if (error) {
                     if (error.value() == asio::error::eof) {
                         LOG(INFO) << "connection #" << _connectionUid << " closed from other side (eof)";
@@ -88,9 +88,9 @@ namespace miner {
                     std::getline(stream, line);
                 }
 
-                MI_EXPECTS(line.size() == strlen(line.c_str()));
+                RNR_EXPECTS(line.size() == strlen(line.c_str()));
 
-                MI_EXPECTS(_onRecv);
+                RNR_EXPECTS(_onRecv);
                 _onRecv(CxnHandle{shared} //becomes weak_ptr<IOConnection> aka CxnHandle
                         , line);
             });
@@ -99,7 +99,7 @@ namespace miner {
     };
 
     BaseIO::~BaseIO() {
-        MI_EXPECTS(!isIoThread());
+        RNR_EXPECTS(!isIoThread());
         stopIOThread();
         abortAllAsyncRetries();
         //handlers get destroyed in _ioService dtor
@@ -117,7 +117,7 @@ namespace miner {
             cxn->asyncWrite(std::move(outgoing)); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
-            VLOG(0) << "called writeAsync on connection that was closed";
+            VLOG(2) << "called writeAsync on connection that was closed";
         }
     }
 
@@ -126,7 +126,7 @@ namespace miner {
             cxn->asyncRead(); //cxn shared_ptr is captured inside this func's async handler (which prolongs it's lifetime)
         }
         else {
-            VLOG(0) << "called readAsync on connection that was closed";
+            VLOG(2) << "called readAsync on connection that was closed";
         }
     }
 
@@ -150,7 +150,7 @@ namespace miner {
     }
 
     void BaseIO::startIOThread() {
-        MI_EXPECTS(_thread == nullptr);
+        RNR_EXPECTS(_thread == nullptr);
         if (_thread) {
             LOG(WARNING) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
             return;
@@ -196,8 +196,8 @@ namespace miner {
 
             _ioThreadId = {}; //reset io thread id
         });
-        MI_ENSURES(_thread);
-        VLOG(2) << "BaseIO::startIOThread";
+        RNR_ENSURES(_thread);
+        VLOG(3) << "BaseIO::startIOThread";
     }
 
     void BaseIO::stopIOThread() { //TODO: atm subclasses are required to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
@@ -210,21 +210,21 @@ namespace miner {
             _ioService->stop();
 
             if (_thread) {
-                MI_EXPECTS(_thread->joinable());
+                RNR_EXPECTS(_thread->joinable());
                 _thread->join();
                 _thread = nullptr; //so that assert(!_thread) works as expected
             }
             _hasLaunched = false;
             //_shutdown = false; //shutdown should NOT be set to false here, since the onDisconnect handler checks _shutdown to decide whether to autoReconnect. Instead it gets set to false upon iothread restart
         }
-        MI_ENSURES(!_thread);
+        RNR_ENSURES(!_thread);
     }
 
     //used by client and server
     void BaseIO::createCxnWithSocket(unique_ptr<Socket> sock) { //TODO: make method const?
-        MI_EXPECTS(sock);
+        RNR_EXPECTS(sock);
         auto cxn = make_shared<Connection>(_onDisconnected, _onRecv, std::move(sock), _uid);
-        MI_EXPECTS(_onConnected);
+        RNR_EXPECTS(_onConnected);
         _onConnected(CxnHandle{cxn}); //user is expected to use cxn here with other calls like readAsync(cxn)
     } //cxn refcount decremented and maybe destroyed if cxn was not used in _onConnected(cxn)
 
@@ -235,9 +235,9 @@ namespace miner {
 
         VLOG(2) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
-        MI_EXPECTS(_ioService);
-        MI_EXPECTS(_thread);
-        MI_EXPECTS(!hasLaunched());
+        RNR_EXPECTS(_ioService);
+        RNR_EXPECTS(_thread);
+        RNR_EXPECTS(!hasLaunched());
         _hasLaunched = true;
 
         _onConnected    = std::move(onCxn);
@@ -250,8 +250,8 @@ namespace miner {
     }
 
     void BaseIO::serverListen() {
-        MI_EXPECTS(_acceptor);
-        MI_EXPECTS(_socket);
+        RNR_EXPECTS(_acceptor);
+        RNR_EXPECTS(_socket);
         _acceptor->async_accept(_socket->get(), [this] (const asio::error_code &error) { //socket operation
             if (!error) {
                 bool isClient = false;
@@ -278,7 +278,7 @@ namespace miner {
     }
 
     void BaseIO::prepareSocket(bool isClient) {
-        MI_EXPECTS(_ioService);
+        RNR_EXPECTS(_ioService);
         if (_sslDesc) { //create ssl socket
             _socket = make_unique<Socket>(*_ioService, isClient, _sslDesc.value());
         }
@@ -292,19 +292,19 @@ namespace miner {
         if (sslEnabledButNotSupported())
             return;
 
-        MI_EXPECTS(_ioService);
-        MI_EXPECTS(_thread);
-        MI_EXPECTS(!hasLaunched());
+        RNR_EXPECTS(_ioService);
+        RNR_EXPECTS(_thread);
+        RNR_EXPECTS(!hasLaunched());
         _hasLaunched = true;
-        VLOG(0) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
+        VLOG(3) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = [&, onDc = std::move(onDc)] () {
             _hasLaunched = false;
             onDc();
         };
-        MI_ENSURES(_onDisconnected);
-        MI_ENSURES(_onConnected);
+        RNR_ENSURES(_onDisconnected);
+        RNR_ENSURES(_onConnected);
 
         _resolver = make_unique<tcp::resolver>(*_ioService);
         bool isClient = true;
@@ -327,7 +327,7 @@ namespace miner {
     }
 
     void BaseIO::clientIterateEndpoints(const asio::error_code &error, tcp::resolver::iterator it) {
-        MI_EXPECTS(_resolver);
+        RNR_EXPECTS(_resolver);
         if (!error) {
             LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
@@ -374,7 +374,7 @@ namespace miner {
     }
 
     void BaseIO::launchClientAutoReconnect(std::string host, uint16_t port, IOOnConnectedFunc &&onConnected, IOOnDisconnectedFunc &&onDisconnected) {
-        MI_EXPECTS(_thread && !hasLaunched());
+        RNR_EXPECTS(_thread && !hasLaunched());
         auto failedTriesToConnect = make_shared<int>(0);
 
         _onConnected = [onConnected = std::move(onConnected), failedTriesToConnect] (CxnHandle cxn) {
@@ -403,14 +403,14 @@ namespace miner {
             connect(); //then attempt reconnect
         };
 
-        MI_ENSURES(_onDisconnected);
-        MI_ENSURES(_onConnected);
+        RNR_ENSURES(_onDisconnected);
+        RNR_ENSURES(_onConnected);
         connect(); //make initial connection
     }
 
     void BaseIO::disconnectAll() {
-        LOG(INFO) << "BaseIO: disconnectAll";
-        MI_EXPECTS(!isIoThread());
+        VLOG(2) << "io#" << _uid << " disconnect if connected";
+        RNR_EXPECTS(!isIoThread());
 
         stopIOThread();
         resetIoService();
@@ -420,7 +420,7 @@ namespace miner {
     void BaseIO::abortAllAsyncRetries() {
 
         //expect no handlers to be running right now!
-        MI_EXPECTS(!ioThreadRunning());
+        RNR_EXPECTS(!ioThreadRunning());
         //user has "onNeverResponded" handlers on callAsyncRetryNTimes which uses retryAsyncEvery,
         //the onCancelled handler must be called at a time where the user can be sure that the ioThread is no longer around
         //to interact with their resources. Therefore let's guarantee that the ioThread is joined here.

@@ -10,7 +10,7 @@
 #include "JsonRpcMessage.h"
 #include "JsonRpcInvoke.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     //message = wrapped function with a name
     class Method {
@@ -24,12 +24,12 @@ namespace miner { namespace jrpc {
 
         //only matches method name, no parameter check for function overloading
         bool matches(const Message &request) const {
-            MI_EXPECTS(request.isRequest());
+            RNR_EXPECTS(request.isRequest());
             return _name == var::get<Request>(request.var).method;
         }
 
         Message invoke(const Message &request) const {
-            MI_EXPECTS(request.isRequest());
+            RNR_EXPECTS(request.isRequest());
             return _wrappedFunc(request);
         }
 

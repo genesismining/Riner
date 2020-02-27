@@ -6,7 +6,7 @@
 #include "LineIO.h"
 #include <src/common/Json.h>
 
-namespace miner {
+namespace riner {
 
     /**
      * `IOTypeLayer` for nl::json, see `IOTypeLayer` for more information.

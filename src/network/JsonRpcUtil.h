@@ -11,7 +11,7 @@
 #include <src/util/LockUtils.h>
 #include <deque>
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
         class JsonRpcUtil : private JsonRpcIO { //inherit privately instead of having a member to expose certain parts of JsonRpcIO's api via using Base::method
             using Base = JsonRpcIO;
@@ -57,7 +57,7 @@ namespace miner { namespace jrpc {
 
             template<class Func, class ... ArgNames>
             void addMethod(const char *name, Func &&func, ArgNames &&... argNames) {
-                MI_EXPECTS(!hasMethod(name)); //method overloading not supported
+                RNR_EXPECTS(!hasMethod(name)); //method overloading not supported
 
                 //method overloading not supported, same-name methods are likely added after reconnect
                 _methods.erase(std::remove_if(_methods.begin(), _methods.end(), [name] (const Method &method) {

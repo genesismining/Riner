@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace miner {
+namespace riner {
 
     enum CompApi {
         kOpenCL,

@@ -1,7 +1,7 @@
 
 #include "Device.h"
 
-namespace miner {
+namespace riner {
 
     Device::Device(const DeviceId &_id, const AlgoSettings &_settings, size_t _deviceIndex)
     : id(_id)

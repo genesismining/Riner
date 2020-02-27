@@ -15,7 +15,7 @@
 #include <src/network/JsonRpcUtil.h>
 #include "WorkQueue.h"
 
-namespace miner {
+namespace riner {
 
     class PoolDummy : public Pool {
     public:

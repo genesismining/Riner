@@ -3,7 +3,7 @@
 #include <src/statistics/Average.h>
 #include <src/statistics/StatisticNode.h>
 
-namespace miner {
+namespace riner {
 
     class PoolRecords {
 

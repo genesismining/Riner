@@ -9,7 +9,7 @@
 #include <src/common/Future.h>
 #include <memory>
 
-namespace miner {
+namespace riner {
 
     AlgoEthashCL::AlgoEthashCL(AlgoConstructionArgs args)
             : pool(args.workProvider)
@@ -208,7 +208,7 @@ namespace miner {
         cl_uint size = dag.getSize();
         cl_uint isolate = UINT32_MAX;
         uint64_t target64 = 0;
-        MI_EXPECTS(work.deviceTarget.size() - 24 == sizeof(target64));
+        RNR_EXPECTS(work.deviceTarget.size() - 24 == sizeof(target64));
         memcpy(&target64, work.deviceTarget.data() + 24, work.deviceTarget.size() - 24);
 
         err = state.cmdQueue.enqueueWriteBuffer(state.header, CL_FALSE, 0, work.header.size(), work.header.data());
@@ -263,7 +263,7 @@ namespace miner {
             }
         }
 
-        MI_EXPECTS(results.size() == numFoundNonces);
+        RNR_EXPECTS(results.size() == numFoundNonces);
         return results;
     }
 

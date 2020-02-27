@@ -4,7 +4,7 @@
 
 #include "JsonRpcMessage.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     /**
      * Builder pattern convenience class for creating a `jrpc::Request`

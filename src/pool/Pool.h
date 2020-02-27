@@ -11,7 +11,7 @@
 #include <atomic>
 #include <chrono>
 
-namespace miner {
+namespace riner {
 
     /**
      * @brief Args passed into every Pool subclass ctor
@@ -176,7 +176,7 @@ namespace miner {
         unique_ptr<WorkT> tryGetWork() {
             auto work = tryGetWorkImpl();
             if (work) {
-                MI_EXPECTS(work->powType == WorkT::getPowType());
+                RNR_EXPECTS(work->powType == WorkT::getPowType());
                 return static_unique_ptr_cast<WorkT>(std::move(work));
             }
             return nullptr;
@@ -192,7 +192,7 @@ namespace miner {
          */
         template<class WorkSolutionT>
         void submitSolution(unique_ptr<WorkSolutionT> result) {
-            MI_EXPECTS(result != nullptr && result->powType == WorkSolutionT::getPowType());
+            RNR_EXPECTS(result != nullptr && result->powType == WorkSolutionT::getPowType());
 
             submitSolutionImpl(static_unique_ptr_cast<WorkSolutionT>(std::move(result)));
         }

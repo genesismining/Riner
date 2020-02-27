@@ -7,7 +7,7 @@
 #include <src/common/OpenCL.h>
 #include <src/util/LockUtils.h>
 
-namespace miner {
+namespace riner {
 
     class AlgoDummy : public Algorithm {
 

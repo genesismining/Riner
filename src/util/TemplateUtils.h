@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-namespace miner {
+namespace riner {
 
     template<class T>
     struct void_ {

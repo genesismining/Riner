@@ -7,7 +7,7 @@
 #include <src/common/JsonForward.h>
 #include <string>
 
-namespace miner {
+namespace riner {
 
     //class for extracting bytes from hex-string
     //common usage:

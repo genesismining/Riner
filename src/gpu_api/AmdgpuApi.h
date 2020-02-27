@@ -5,7 +5,7 @@
 #include <fstream>
 #include <mutex>
 
-namespace miner {
+namespace riner {
 
     class AmdgpuApi : public GpuApi {
 

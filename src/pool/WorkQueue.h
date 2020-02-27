@@ -15,7 +15,7 @@
 #include <future>
 
 
-namespace miner {
+namespace riner {
 
     class LazyWorkQueue {
 
@@ -94,7 +94,7 @@ namespace miner {
                     if (shutdown)
                         return; //end this task
 
-                    MI_EXPECTS(!jobQueue.empty());
+                    RNR_EXPECTS(!jobQueue.empty());
                     auto latestJob = jobQueue.front();
                     bool hasNewJob = latestId != latestJob->id;
                     latestId = latestJob->id;

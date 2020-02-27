@@ -14,7 +14,7 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <src/config/ConfigDefaultValues.h>
 
-namespace miner {
+namespace riner {
     using namespace proto;
 
     TEST(Config, ParseDefaults) {

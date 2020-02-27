@@ -14,7 +14,7 @@
 
 #include <mutex>
 
-namespace miner {
+namespace riner {
 
     class AlgoEthashCL : public Algorithm {
 

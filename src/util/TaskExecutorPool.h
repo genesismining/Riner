@@ -7,7 +7,7 @@
 #include <list>
 
 
-namespace miner {
+namespace riner {
 
 	class TaskExecutorPool {
 

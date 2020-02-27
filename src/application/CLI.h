@@ -7,7 +7,7 @@
 #include <src/common/Optional.h>
 #include <vector>
 
-namespace miner {
+namespace riner {
     class ComputeModule;
 
     std::string commandList(bool asJson);

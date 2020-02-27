@@ -15,7 +15,7 @@
 
 #include <algorithm>
 
-namespace miner {
+namespace riner {
 namespace {
 
 constexpr bool kEnableOpenClTests = true;

@@ -1,6 +1,6 @@
 #include "TaskExecutorPool.h"
 
-namespace miner {
+namespace riner {
 
     void TaskExecutorPool::spawnTaskExecutor() {
         workers.emplace_back(std::async(std::launch::async, [this]() {

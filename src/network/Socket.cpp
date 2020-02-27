@@ -7,7 +7,7 @@
 
 #include "Socket.h"
 
-namespace miner {
+namespace riner {
     using namespace asio;
 
     Socket::Socket(asio::io_service &ioService, bool isClient)
@@ -58,7 +58,7 @@ namespace miner {
             if (desc.server) {
                 auto &info = desc.server.value();
 
-                MI_EXPECTS(desc.server->onGetPassword); //expect password callback to exist
+                RNR_EXPECTS(desc.server->onGetPassword); //expect password callback to exist
                 auto onGetPassword = desc.server->onGetPassword;
 
                 ctx.set_password_callback([onGetPassword = move(onGetPassword)] (size_t max_length, c::password_purpose purp) {
@@ -165,7 +165,7 @@ namespace miner {
             });
 #endif
 
-        MI_EXPECTS(result);
+        RNR_EXPECTS(result);
         return *result;
     }
 

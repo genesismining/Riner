@@ -8,7 +8,7 @@
 #include <vector>
 #include <src/util/Logging.h>
 
-namespace miner {
+namespace riner {
 
     /**
      * This descriptor is used in the IOTypeLayer's enableSsl(desc) method.

@@ -8,7 +8,7 @@
 #include <src/pool/PoolSwitcher.h>
 #include <src/statistics/PoolRecords.h>
 
-namespace miner {
+namespace riner {
     using namespace jrpc;
 
     ApiServer::ApiServer(uint16_t port, const Application &app)
@@ -103,7 +103,7 @@ namespace miner {
                 if (deviceInUse) {
                     const Device &d = *deviceInUse;
 
-                    MI_EXPECTS(i == d.deviceIndex); //just to be sure
+                    RNR_EXPECTS(i == d.deviceIndex); //just to be sure
 
                     auto data = d.records.read();
 
@@ -141,7 +141,7 @@ namespace miner {
                 std::string powType = poolSwitcherPair.first;
                 auto &poolSwitcher = poolSwitcherPair.second;
 
-                MI_EXPECTS(poolSwitcher->getPowType() == powType);
+                RNR_EXPECTS(poolSwitcher->getPowType() == powType);
 
                 nl::json switcheri;
 

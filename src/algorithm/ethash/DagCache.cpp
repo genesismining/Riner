@@ -274,7 +274,7 @@ static inline uint32_t fnvReduce(uint32_t v[4]) {
 }
 
 
-namespace miner {
+namespace riner {
 
     uint32_t calculateEthEpoch(cByteSpan<32> seedHash) {
         uint8_t testSeedHash[32] = {0};
@@ -298,7 +298,7 @@ namespace miner {
 
         try {
             LOG(INFO) << "calculating dag cache for epoch = " << epoch;
-            MI_EXPECTS(epoch == calculateEthEpoch(seedHash));
+            RNR_EXPECTS(epoch == calculateEthEpoch(seedHash));
             const uint32_t numNodes = cacheSize[epoch];
             buffer = DynamicBuffer<node_t>(numNodes);
             auto nodes = buffer.data();

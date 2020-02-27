@@ -6,7 +6,7 @@
 #include <src/util/Copy.h>
 #include "src/config/Config.h"
 
-namespace miner {
+namespace riner {
 
     struct Device {//device interface for usage by Algorithms
 

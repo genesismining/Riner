@@ -10,7 +10,7 @@
 #include <src/common/Pointers.h>
 #include <src/util/Logging.h>
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     //typedefs for mapping more directly to the Json Rpc spec
     /**

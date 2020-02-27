@@ -5,7 +5,7 @@
 #include <src/crypto/blake2.h>
 #include <src/pool/WorkCuckoo.h>
 
-namespace miner {
+namespace riner {
 
 AlgoCuckatoo31Cl::AlgoCuckatoo31Cl(AlgoConstructionArgs args) :
         terminate_(false), args_(std::move(args)) {

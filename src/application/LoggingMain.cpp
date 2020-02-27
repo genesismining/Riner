@@ -5,7 +5,7 @@
 #include <easylogging++.cc>
 INITIALIZE_EASYLOGGINGPP
 
-namespace miner {
+namespace riner {
 
     namespace {
         struct {

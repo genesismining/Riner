@@ -13,7 +13,7 @@
 #include <atomic>
 #include <vector>
 
-namespace miner {
+namespace riner {
 
     struct GrinStratumJob : public PoolJob {
 

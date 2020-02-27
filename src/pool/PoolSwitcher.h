@@ -7,7 +7,7 @@
 #include <src/config/Config.h>
 #include <src/application/Registry.h>
 
-namespace miner {
+namespace riner {
 
     //maintains connections to multiple Pools in descending priority order.
     //tryGetWork always fetches work from the highest priority Pool that does not

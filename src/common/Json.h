@@ -5,7 +5,7 @@
 
 //for forward declarations include "JsonForward.h" instead
 
-namespace miner {
+namespace riner {
 
     namespace nl = nlohmann;
 

@@ -7,7 +7,7 @@
 #include <src/common/Assert.h>
 #include <list>
 
-namespace miner {
+namespace riner {
 
     //TODO: write some nice documentation about StatisticNode because theres a lot of stuff going on
     //TODO: should this node use Ctor/Dtor to call AddListener/RemoveListener instead of relying on weak_ptrs that clean up on iteration?
@@ -83,26 +83,26 @@ namespace miner {
         StatisticNode &operator=(StatisticNode &&) noexcept = default;
 
         inline void addListener(StatisticNode<T> &listener) {
-            MI_EXPECTS(_node);
+            RNR_EXPECTS(_node);
             _node->addListener(listener._node);
         }
 
         void removeListener(const StatisticNode<T> &listener) {
-            MI_EXPECTS(_node);
+            RNR_EXPECTS(_node);
             _node->removeListener(listener._node);
         }
 
         //use this function to modify the T instance of this node and all child nodes by the same func.
         //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
         void lockedForEach(std::function<void(T &)> &&func) {
-            MI_EXPECTS(_node);
+            RNR_EXPECTS(_node);
             _node->lockedForEach(std::move(func));
         }
 
         //use this function in case you want to modify the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
         //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
         void lockedApply(std::function<void(T &)> &&func) {
-            MI_EXPECTS(_node);
+            RNR_EXPECTS(_node);
             auto content = _node->_content.lock();
             func(*content);
         }
@@ -110,7 +110,7 @@ namespace miner {
         //use this function in case you want to read the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
         //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
         void lockedApply(std::function<void(const T &)> &&func) const {
-            MI_EXPECTS(_node);
+            RNR_EXPECTS(_node);
             auto content = _node->_content.lock();
             func(*content);
         }

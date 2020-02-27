@@ -18,7 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace miner {
+namespace riner {
 
 #if defined(_MSC_VER)
 #define BLAKE2_PACKED(x) __pragma(pack(push, 1)) x __pragma(pack(pop))

@@ -10,7 +10,7 @@
 #include <functional>
 #include <asio.hpp>
 
-namespace miner {
+namespace riner {
 
     void PoolGrinStratum::onConnected(CxnHandle cxn) {
 

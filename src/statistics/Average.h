@@ -4,7 +4,7 @@
 #include <cmath>
 #include <utility>
 
-namespace miner {
+namespace riner {
 
     class ExpAverage {
         seconds decay_exp;

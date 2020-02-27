@@ -5,7 +5,7 @@
 #include "JsonIO.h"
 #include "JsonRpcMessage.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     /**
      * `IOTypeLayer` for jrpc::Message, see `IOTypeLayer` for more information.

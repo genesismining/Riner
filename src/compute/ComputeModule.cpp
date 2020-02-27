@@ -7,7 +7,7 @@
 #include <src/compute/opencl/CLProgramLoader.h>
 #include <src/config/Config.h>
 
-namespace miner {
+namespace riner {
 
     ComputeModule::ComputeModule(const Config &config)
     : allDevices(gatherAllDeviceIds()) {
@@ -51,7 +51,7 @@ namespace miner {
     }
 
     CLProgramLoader &ComputeModule::getProgramLoaderOpenCL() {
-        MI_ENSURES(clProgramLoader);
+        RNR_ENSURES(clProgramLoader);
         return *clProgramLoader;
     }
 

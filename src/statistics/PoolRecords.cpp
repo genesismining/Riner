@@ -3,7 +3,7 @@
 
 #include "PoolRecords.h"
 
-namespace miner {
+namespace riner {
 
     PoolRecords::Data PoolRecords::read() const {
         return _node.getValue();

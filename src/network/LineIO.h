@@ -7,7 +7,7 @@
 #include "IOTypeLayer.h"
 #include "BaseIO.h"
 
-namespace miner {
+namespace riner {
 
     /**
      * `IOTypeLayer` for std::string lines, see `IOTypeLayer` for more information.

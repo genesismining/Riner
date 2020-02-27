@@ -10,7 +10,7 @@
 #include <deque>
 #include <map>
 
-namespace miner {
+namespace riner {
     class Application;
 
     class ApiServer {

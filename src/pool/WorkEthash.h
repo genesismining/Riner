@@ -9,7 +9,7 @@
 #include <src/algorithm/ethash/DagCache.h>
 #include <src/util/DifficultyTarget.h>
 
-namespace miner {
+namespace riner {
 
     struct HasPowTypeEthash {
         static inline constexpr auto &getPowType() {

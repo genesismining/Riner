@@ -10,7 +10,7 @@
 #include <map>
 #include "src/config/Config.h"
 
-namespace miner {
+namespace riner {
     class ApiServer;
 
     class Application {

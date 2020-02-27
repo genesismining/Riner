@@ -9,7 +9,7 @@
 #include <src/application/ApiServer.h>
 #include <thread>
 
-namespace miner {
+namespace riner {
 
     Application::Application(Config movedConfig)
     : config(std::move(movedConfig))
@@ -72,7 +72,7 @@ namespace miner {
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
 
-                MI_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
+                RNR_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
                 PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
                 const std::string poolImplName = factory.poolImplForProtocolAndPowType(powType.c_str(), p.protocol().c_str());
@@ -93,7 +93,7 @@ namespace miner {
                 continue;
             }
 
-            MI_ENSURES(lockedPoolSwitchers->count(powType));
+            RNR_ENSURES(lockedPoolSwitchers->count(powType));
 
             decltype(AlgoConstructionArgs::assignedDevices) assignedDeviceRefs;
 

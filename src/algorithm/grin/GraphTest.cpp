@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-namespace miner {
+namespace riner {
 namespace {
 
 TEST(Graph, AddUEdges) {

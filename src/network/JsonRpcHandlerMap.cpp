@@ -3,7 +3,7 @@
 
 #include "JsonRpcHandlerMap.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
     void responseHandlerNoop(CxnHandle, const Message &) {}
 

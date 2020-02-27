@@ -5,7 +5,7 @@
 #include <src/common/Optional.h>
 #include <strings.h>
 
-namespace miner {
+namespace riner {
 
     //try to get element in map with key, not case sensitive, return nullptr if key doesn't match anything
     template <class Map>

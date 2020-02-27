@@ -10,7 +10,7 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <src/config/ConfigDefaultValues.h>
 
-namespace miner {
+namespace riner {
 
     optional<Config> parseConfig(const std::string &txtProto) {
         bool success = true;

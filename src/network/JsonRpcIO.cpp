@@ -3,7 +3,7 @@
 
 #include "JsonRpcIO.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
         Message JsonRpcIO::convertIncoming(nl::json j) {
             try {

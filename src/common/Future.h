@@ -5,7 +5,7 @@
 
 #include <future>
 
-namespace miner {
+namespace riner {
 
     using std::launch;
 

@@ -13,7 +13,7 @@
 #include <list>
 #include "Socket.h"
 
-namespace miner {
+namespace riner {
 
     class IOConnection {
         friend class BaseIO;

@@ -7,7 +7,7 @@
 #include <src/common/Json.h>
 #include <src/common/Endian.h>
 
-namespace miner {
+namespace riner {
 
     HexString::HexString(cByteSpan<> src)
             : bytes(src.begin(), src.end())

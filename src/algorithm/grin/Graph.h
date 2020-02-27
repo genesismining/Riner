@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace miner {
+namespace riner {
 
 class Graph {
 public:
@@ -79,7 +79,7 @@ private:
                 , mask_((size_t(1) << bits) - 1)
                 , shift_(n - bits)
                 , buckets_(size_t(1) << bits, {{0}}) {
-            MI_EXPECTS(sizeof(Bucket) == 64);
+            RNR_EXPECTS(sizeof(Bucket) == 64);
         }
 
         uint32_t getEdgeCount();
@@ -163,7 +163,7 @@ private:
                         continue;
                     }
                     if (b.value[i] == value && !removed) {
-                        MI_ENSURES(!removed);
+                        RNR_ENSURES(!removed);
                         removed = true;
                         b.full ^= (1 << i);
                     } else {
@@ -175,7 +175,7 @@ private:
                 }
                 bucket = (bucket + 1) & mask_;
             }
-            //MI_ENSURES(removed);
+            //RNR_ENSURES(removed);
             return active;
         }
 

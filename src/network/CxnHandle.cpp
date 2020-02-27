@@ -1,7 +1,7 @@
 
 #include "BaseIO.h"
 
-namespace miner {
+namespace riner {
 
     shared_ptr<IOConnection> CxnHandle::lock(BaseIO &baseIO) {
 

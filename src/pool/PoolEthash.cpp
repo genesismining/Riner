@@ -12,7 +12,7 @@
 #include <asio.hpp>
 #include <src/common/Chrono.h>
 
-namespace miner {
+namespace riner {
 
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
         LOG(DEBUG) << "onConnected";

@@ -6,7 +6,7 @@
 #include <atomic>
 #include <string>
 
-namespace miner {
+namespace riner {
 
     class Work;
     class Pool;

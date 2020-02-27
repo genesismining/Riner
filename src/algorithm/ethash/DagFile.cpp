@@ -265,7 +265,7 @@ static const uint32_t dagSize[2048] = {
 };
 
 
-namespace miner {
+namespace riner {
 
     uint32_t DagFile::getEpoch() const {
         return epoch;
@@ -373,13 +373,13 @@ namespace miner {
         clDagCache = {}; //clReleaseMemObject
 
         this->epoch = epoch;
-        MI_EXPECTS(this->size != 0);
+        RNR_EXPECTS(this->size != 0);
         valid = true;
         return true;
     }
 
     cl::Buffer &DagFile::getCLBuffer() {
-        MI_EXPECTS(valid);
+        RNR_EXPECTS(valid);
         return clDagBuffer;
     }
 

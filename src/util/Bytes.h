@@ -5,7 +5,7 @@
 #include <src/common/Endian.h>
 #include <cstring>
 
-namespace miner {
+namespace riner {
 
     template<size_t N>
     using Bytes = std::array<uint8_t, N>;

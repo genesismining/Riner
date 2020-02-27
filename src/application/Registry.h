@@ -11,7 +11,7 @@
 #include <vector>
 #include <string>
 
-namespace miner {
+namespace riner {
 
     struct AlgoConstructionArgs;
     struct PoolConstructionArgs;
@@ -87,7 +87,7 @@ namespace miner {
         template<class AlgoT>
         void addAlgoImpl(const char *algoImplName, const char *powType) {
             static_assert(std::is_base_of<Algorithm, AlgoT>::value, "AlgoT must derive from Algorithm");
-            MI_EXPECTS(_algoWithName.count(algoImplName) == 0); //don't add two algos with the same name!
+            RNR_EXPECTS(_algoWithName.count(algoImplName) == 0); //don't add two algos with the same name!
 
             _algoWithName[algoImplName] = {
                     powType,
@@ -100,7 +100,7 @@ namespace miner {
         template<class PoolT>
         void addPoolImpl(const char *poolImplName, const char *powType, const char *protocolType, const char *protocolTypeAlias = "") {
             static_assert(std::is_base_of<Pool, PoolT>::value, "PoolT must derive from Pool");
-            MI_EXPECTS(_poolWithName.count(poolImplName) == 0); //don't add two pools with the same name!
+            RNR_EXPECTS(_poolWithName.count(poolImplName) == 0); //don't add two pools with the same name!
 
             _poolWithName[poolImplName] = {
                     powType,
@@ -117,7 +117,7 @@ namespace miner {
         template<class GpuApiT>
         void addGpuApi(const char *gpuApiName) {
             static_assert(std::is_base_of<GpuApi, GpuApiT>::value, "GpuApiT must derive from GpuApi");
-            MI_EXPECTS(_gpuApiWithName.count(gpuApiName) == 0); //don't add two gpuApis with the same name!
+            RNR_EXPECTS(_gpuApiWithName.count(gpuApiName) == 0); //don't add two gpuApis with the same name!
 
             _gpuApiWithName[gpuApiName] = {
                     [] (const GpuApiConstructionArgs &args) -> unique_ptr<GpuApi> {

@@ -3,7 +3,7 @@
 
 #include "Barrier.h"
 
-namespace miner {
+namespace riner {
 
     std::shared_future<void> Barrier::copyFuture() const {
         //we are not allowed to call wait()/wait_for() from multiple threads on a shared_future simultaneously, therefore we must copy it first

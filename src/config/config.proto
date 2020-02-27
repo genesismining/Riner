@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package miner.proto;
+package riner.proto;
 
 //option optimize_for = LITE_RUNTIME; //generate code that only depends on the protobuf-lite library with a subset of features.
 

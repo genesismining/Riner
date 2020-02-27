@@ -7,7 +7,7 @@
 #include <future>
 #include <condition_variable>
 
-namespace miner {
+namespace riner {
 
     struct ShutdownState {
 

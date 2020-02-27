@@ -5,7 +5,7 @@
 #include <future>
 #include <mutex>
 
-namespace miner {
+namespace riner {
 
     //a barrier object that multiple threads can wait() on until another thread calls unblock()
     //probably crazy inefficient. Used for writing tests

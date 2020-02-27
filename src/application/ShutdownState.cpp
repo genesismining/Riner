@@ -3,7 +3,7 @@
 
 #include "ShutdownState.h"
 
-namespace miner {
+namespace riner {
 
     void ShutdownState::shutdownWithTimeoutFunc(int signum) {
         std::unique_lock <std::mutex> lock(mut);

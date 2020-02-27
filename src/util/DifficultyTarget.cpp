@@ -3,7 +3,7 @@
 
 #include "DifficultyTarget.h"
 
-namespace miner {
+namespace riner {
 
     double targetToDifficultyApprox(Bytes<32> targetBytes) {
         using limits = std::numeric_limits<double>;

@@ -3,7 +3,7 @@
 
 #include <variant.hpp>
 
-namespace miner {
+namespace riner {
 
     namespace var = mpark;
 

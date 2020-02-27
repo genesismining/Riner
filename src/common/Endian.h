@@ -6,7 +6,7 @@
 
 #include <src/common/Span.h>
 
-namespace miner {
+namespace riner {
 
     namespace endian {
         using endian_t = uint32_t;

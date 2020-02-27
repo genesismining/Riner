@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace miner {
+namespace riner {
 
     class CLProgramLoader {
 

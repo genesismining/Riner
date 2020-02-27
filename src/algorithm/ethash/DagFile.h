@@ -8,7 +8,7 @@
 #include <src/common/Span.h>
 #include <src/algorithm/ethash/DagCache.h>
 
-namespace miner {
+namespace riner {
 
     class DagFile {
 

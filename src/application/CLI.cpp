@@ -11,7 +11,7 @@
 
 #include <src/common/Json.h>
 
-namespace miner {
+namespace riner {
 
     namespace {
         constexpr auto endl = '\n';

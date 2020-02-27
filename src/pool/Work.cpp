@@ -2,7 +2,7 @@
 #include "Work.h"
 #include "WorkQueue.h"
 
-namespace miner {
+namespace riner {
 
     PoolJob::PoolJob(std::weak_ptr<Pool> pool)
         : pool(std::move(pool)) {

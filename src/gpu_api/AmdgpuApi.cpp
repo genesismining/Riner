@@ -7,7 +7,7 @@
 #endif
 
 
-namespace miner {
+namespace riner {
 
     static optional<int> getCurrentDpmFreq(std::fstream &file) {
         optional<int> freq = nullopt;

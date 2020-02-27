@@ -1,6 +1,6 @@
 #include <src/algorithm/grin/Graph.h>
 
-namespace miner {
+namespace riner {
 
 const uint32_t Graph::Bucket::kCapacity;
 

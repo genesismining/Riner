@@ -7,7 +7,7 @@
 #include <vector>
 #include <deque>
 
-namespace miner {
+namespace riner {
 
     namespace configUtils {
 

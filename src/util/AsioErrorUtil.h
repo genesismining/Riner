@@ -6,7 +6,7 @@
 #include <string>
 #include <asio.hpp>
 
-namespace miner {
+namespace riner {
 
     std::string asio_error_name(const asio::error_code &);
 

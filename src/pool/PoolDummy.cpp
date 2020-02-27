@@ -5,7 +5,7 @@
 #include "PoolDummy.h"
 #include "PoolEthash.h"
 
-namespace miner {
+namespace riner {
 
     PoolDummy::PoolDummy(const PoolConstructionArgs &args)
             : Pool(args) //set args in base class, can be accessed via this->constructionArgs

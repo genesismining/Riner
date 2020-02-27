@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 int main(int argc, char **argv) {
-    using namespace miner;
+    using namespace riner;
 
     ::testing::InitGoogleTest(&argc, argv);
     initLogging(argc, (const char **)argv);

@@ -7,16 +7,16 @@
 #include <src/application/CLI.h>
 #include <src/application/ShutdownState.h>
 
-namespace miner {
+namespace riner {
     unique_ptr<ShutdownState> shutdownState; //global, so that the SIGINT handler can access it
 }
 
 void sigintHandler(int signum) {
-    miner::shutdownState->launchShutdownTask(signum);
+    riner::shutdownState->launchShutdownTask(signum);
 }
 
 int main(int raw_argc, const char *raw_argv[]) {
-    using namespace miner;
+    using namespace riner;
 
     //expand args like -abc to -a -b -c
     auto expandedArgs = copyArgsAndExpandSingleDashCombinedArgs(raw_argc, raw_argv);

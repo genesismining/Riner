@@ -4,7 +4,7 @@
 #include <utility>
 #include "Average.h"
 
-namespace miner {
+namespace riner {
     using namespace std::chrono;
 
     double ExpAverage::getExpAvg(double avg, clock::duration delta_t, seconds lambda, double new_value) const {

@@ -3,7 +3,7 @@
 #include "AmdgpuApi.h"
 
 
-namespace miner {
+namespace riner {
 
     optional<int> GpuApi::getEngineClock() {
         return nullopt;

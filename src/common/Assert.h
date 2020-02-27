@@ -5,10 +5,10 @@
 #include <src/util/Logging.h>
 
 #ifndef NDEBUG
-    //#define MI_EXPECTS(x) Expects(x)
-    //#define MI_ENSURES(x) Ensures(x)
+    //#define RNR_EXPECTS(x) Expects(x)
+    //#define RNR_ENSURES(x) Ensures(x)
 
-#define MI_EXPECTS(x) \
+#define RNR_EXPECTS(x) \
   do { \
     if (!(x)) { \
         LOG(ERROR) << "assertion failed: " << #x; \
@@ -16,7 +16,7 @@
     } \
   } while (0)
 
-#define MI_ENSURES(x) \
+#define RNR_ENSURES(x) \
   do { \
     if (!(x)) { \
         LOG(ERROR) << "assertion failed: " << #x; \
@@ -24,6 +24,6 @@
     } \
   } while (0)
 #else
-    #define MI_EXPECTS(x)
-    #define MI_ENSURES(x)
+    #define RNR_EXPECTS(x)
+    #define RNR_ENSURES(x)
 #endif

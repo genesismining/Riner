@@ -5,7 +5,7 @@
 #include <src/util/Bytes.h>
 #include <src/util/DynamicBuffer.h>
 
-namespace miner {
+namespace riner {
 
     class DagCacheContainer {
 

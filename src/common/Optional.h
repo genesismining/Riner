@@ -2,7 +2,7 @@
 
 #include <optional.hpp>
 
-namespace miner {
+namespace riner {
 
     template<class T>
     using optional_ref = std::experimental::optional<T&>;

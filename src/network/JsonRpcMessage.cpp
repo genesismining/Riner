@@ -5,7 +5,7 @@
 #include <src/util/Logging.h>
 #include <src/common/Assert.h>
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
         ErrorCode toErrorCode(const nl::json &j) {
             if (j.is_number_integer())

@@ -11,7 +11,7 @@ namespace cl {
     class Device;
 }
 
-namespace miner {
+namespace riner {
 
     struct PcieIndex {
         uint16_t segment = 0;

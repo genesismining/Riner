@@ -13,7 +13,7 @@
 #include <src/network/SslDesc.h>
 #include <src/network/CxnHandle.h>
 
-namespace miner {
+namespace riner {
 
     enum class IOMode {
         Tcp,
@@ -141,7 +141,7 @@ namespace miner {
             if (ioThreadRunning()) {
                 LOG(ERROR) << "IOTypeLayer subclass must call 'stopIOThread()' at the start of its destructor to prevent the IO Thread from accessing destroyed resources.";
             }
-            MI_ENSURES(!ioThreadRunning());
+            RNR_ENSURES(!ioThreadRunning());
         };
 
         /**
@@ -342,7 +342,7 @@ namespace miner {
          * shorthand for ensuring that it is ok to mutate the layer's state
          */
         void checkNotLaunchedOrOnIOThread() {
-            MI_EXPECTS(!hasLaunched() || isIoThread()); //mutating functions may only be called before calling launch, or from the IO Thread
+            RNR_EXPECTS(!hasLaunched() || isIoThread()); //mutating functions may only be called before calling launch, or from the IO Thread
         }
 
         ModifierFunc _incomingModifier;

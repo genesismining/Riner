@@ -4,11 +4,11 @@
 #include <src/common/Assert.h>
 #include "JsonRpcBuilder.h"
 
-namespace miner { namespace jrpc {
+namespace riner { namespace jrpc {
 
         RequestBuilder::RequestBuilder() {
             _msg.var = Request{}; //make _msg be a request
-            MI_ENSURES(var::holds_alternative<Request>(_msg.var));
+            RNR_ENSURES(var::holds_alternative<Request>(_msg.var));
         }
 
         RequestBuilder &RequestBuilder::id(nl::json id) {
@@ -26,14 +26,14 @@ namespace miner { namespace jrpc {
         }
 
         RequestBuilder &RequestBuilder::param(nl::json val) {
-            MI_EXPECTS(paramsIsArray() || hasNoParams());
+            RNR_EXPECTS(paramsIsArray() || hasNoParams());
 
             msgRequest().params.emplace_back(std::move(val));
             return *this;
         }
 
         RequestBuilder &RequestBuilder::param(const char *key, nl::json val) {
-            MI_EXPECTS(!paramsIsArray() || hasNoParams());
+            RNR_EXPECTS(!paramsIsArray() || hasNoParams());
 
             msgRequest().params[key] = std::move(val);
             return *this;

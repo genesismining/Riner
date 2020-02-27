@@ -3,7 +3,7 @@
 
 #include "DeviceRecords.h"
 
-namespace miner {
+namespace riner {
 
     void DeviceRecords::reportScannedNoncesAmount(uint64_t inAmt) {
         _node.lockedForEach([inAmt] (Data &data) {
