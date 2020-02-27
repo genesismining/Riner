@@ -56,7 +56,7 @@ namespace riner {
 
         //try to create
         for (const char *gpuApiName : registry.listGpuApis()) {
-            LOG(INFO) << "try to create GpuApi instance: '" << gpuApiName << "'";
+            VLOG(1) << "trying to create GpuApi instance: '" << gpuApiName << "'";
 
             if (auto instance = registry.tryMakeGpuApi(gpuApiName, args)) {
 
@@ -74,10 +74,10 @@ namespace riner {
                 return instance;
             }
             else {
-                VLOG(0) << "failed to create GpuApi instance: '" << gpuApiName << "'";
+                VLOG(1) << "failed to create GpuApi instance: '" << gpuApiName << "'";
             }
         }
-        LOG(INFO) << "could not create any GpuApi";
+        LOG(INFO) << "could not initialize any GpuApi";
         return nullptr;
     }
 

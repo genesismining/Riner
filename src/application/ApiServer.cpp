@@ -25,7 +25,7 @@ namespace riner {
             VLOG(0) << "ApiServer connection closed";
         });
 
-        LOG(INFO) << "started api server on port " << port;
+        LOG(INFO) << "tcp JsonRPC 2.0 monitoring api now available on port " << port;
     }
 
     ApiServer::~ApiServer() {

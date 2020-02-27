@@ -386,7 +386,7 @@ namespace riner {
             return api;
         }
 #endif
-        LOG(INFO) << "device has no sysfs API";
+        VLOG(2) << "device has no sysfs API";
         return nullptr;
     }
 
