@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(Miner)
+project(riner)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RELEASE)
@@ -29,9 +29,9 @@ file(GLOB_RECURSE ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 protobuf_generate_cpp(ProtoSources ProtoHeaders ${ProtoFiles})
 #message(STATUS "ProtoSources: ${ProtoSources}")
 #message(STATUS "ProtoHeaders: ${ProtoHeaders}")
-#add_library(LibMiner STATIC ${ProtoSources} ${ProtoHeaders})
+#add_library(lib_riner STATIC ${ProtoSources} ${ProtoHeaders})
 
-add_library(LibMiner
+add_library(lib_riner
         ${ProtoSources} ${ProtoHeaders}
         src/application/Application.cpp src/application/Application.h
         src/application/Registry.cpp src/application/Registry.h src/application/RegistryImpl.cpp
@@ -118,12 +118,12 @@ add_library(LibMiner
         src/util/TestSslData.h
         )
 
-target_include_directories (LibMiner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories (lib_riner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(Miner src/application/Main.cpp)
-target_link_libraries(Miner LibMiner)
+add_executable(riner src/application/Main.cpp)
+target_link_libraries(riner lib_riner)
 
-target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories (riner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(JSON_BuildTests OFF CACHE BOOL "build json tests") #disable building json tests by default
 
@@ -132,15 +132,15 @@ add_subdirectory("lib/gsl")
 add_subdirectory("lib/json")
 add_subdirectory("lib/easyloggingpp")
 
-target_compile_definitions(LibMiner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
-target_compile_definitions(LibMiner PUBLIC CL_HPP_TARGET_OPENCL_VERSION=120)
-target_compile_definitions(LibMiner PUBLIC ASIO_STANDALONE) #tell asio to not include boost headers
-#target_compile_definitions(LibMiner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
+target_compile_definitions(lib_riner PUBLIC CL_HPP_MINIMUM_OPENCL_VERSION=120)
+target_compile_definitions(lib_riner PUBLIC CL_HPP_TARGET_OPENCL_VERSION=120)
+target_compile_definitions(lib_riner PUBLIC ASIO_STANDALONE) #tell asio to not include boost headers
+#target_compile_definitions(lib_riner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
 
-target_compile_definitions(LibMiner PUBLIC ELPP_THREAD_SAFE ELPP_FEATURE_CRASH_LOG) #tell easylogging++ to be threadsafe
-#target_compile_definitions(LibMiner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
+target_compile_definitions(lib_riner PUBLIC ELPP_THREAD_SAFE ELPP_FEATURE_CRASH_LOG) #tell easylogging++ to be threadsafe
+#target_compile_definitions(lib_riner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
 
-#target_compile_definitions(LibMiner PUBLIC GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
+#target_compile_definitions(lib_riner PUBLIC GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
 
 include_directories(
         lib/asio/asio/include
@@ -157,28 +157,28 @@ if(APPLE)
     link_directories(/usr/local/lib)
 
     #asio string_view fix on MacOS
-    target_compile_definitions(LibMiner PUBLIC ASIO_DISABLE_STD_EXPERIMENTAL_STRING_VIEW)
+    target_compile_definitions(lib_riner PUBLIC ASIO_DISABLE_STD_EXPERIMENTAL_STRING_VIEW)
 endif()
 
 #Protocol Buffers
-target_link_libraries(LibMiner ${PROTOBUF_LIBRARY})
+target_link_libraries(lib_riner ${PROTOBUF_LIBRARY})
 
 #OpenCL
-target_link_libraries (Miner ${OpenCL_LIBRARY})
+target_link_libraries (riner ${OpenCL_LIBRARY})
 if(UNIX AND NOT APPLE)
-    target_link_libraries (Miner -static-libgcc -static-libstdc++)
+    target_link_libraries (riner -static-libgcc -static-libstdc++)
 endif()
 
 #OpenSSL
 find_package(OpenSSL)
 if (OPENSSL_FOUND)
-    target_link_libraries (LibMiner OpenSSL::SSL)
-    target_compile_definitions(LibMiner PUBLIC HAS_OPENSSL)
+    target_link_libraries (lib_riner OpenSSL::SSL)
+    target_compile_definitions(lib_riner PUBLIC HAS_OPENSSL)
 endif()
 
 #Threads
 find_package(Threads REQUIRED)
-target_link_libraries (Miner Threads::Threads)
+target_link_libraries (riner Threads::Threads)
 
 #Google Tests
 include(GoogleTest)
@@ -193,8 +193,8 @@ add_executable(tests
         src/application/LoggingMain.cpp
         src/application/TestMain.cpp)
 target_link_libraries(tests gtest gmock  Threads::Threads ${OpenCL_LIBRARY})
-target_link_libraries(tests LibMiner)
-target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(tests lib_riner)
+target_include_directories (riner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 gtest_add_tests(TARGET tests)
 add_test(NAME monolithic COMMAND tests)
