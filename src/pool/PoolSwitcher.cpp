@@ -11,12 +11,14 @@ namespace riner {
 
     PoolSwitcher::PoolSwitcher(std::string powType, clock::duration checkInterval, clock::duration durUntilDeclaredDead)
             : Pool(PoolConstructionArgs{})
-            , powType(std::move(powType))
+            , powType(powType)
             , checkInterval(checkInterval)
             , durUntilDeclaredDead(durUntilDeclaredDead) {
 
+        RNR_EXPECTS(!powType.empty());
+
         periodicAliveCheckTask = std::async(std::launch::async, [this, powType] () {
-            setThreadName("poolswitcher " + powType);
+            SetThreadNameStream{} << "poolswitcher " << powType;
             periodicAliveCheck();
         });
     }
@@ -30,12 +32,14 @@ namespace riner {
     }
 
     void PoolSwitcher::periodicAliveCheck() {
+        using namespace std::chrono;
         std::unique_lock<std::mutex> lock(mut);
 
         while(!shutdown) {
 
             if (!pools.empty()) {
-                LOG(INFO) << "checking pool connection status";
+                auto int_secs = duration_cast<seconds>(checkInterval).count();
+                VLOG(2) << "periodic pool connection status check (every " << int_secs << "s)";
                 aliveCheckAndMaybeSwitch();
             }
 
@@ -47,6 +51,8 @@ namespace riner {
     }
 
     void PoolSwitcher::aliveCheckAndMaybeSwitch() {
+        //called while holding lock this->mut
+        using namespace std::chrono;
         auto now = clock::now();
 
         for (size_t i = 0; i < pools.size(); ++i) {
@@ -57,41 +63,54 @@ namespace riner {
 
             //make some descriptive bools
             bool isDead = now - lastKnownAliveTime > durUntilDeclaredDead;
-            bool wasAlreadyDead = latestDeclaredDeadTime > lastKnownAliveTime; //pool was dead last time we checked
-            bool justDied = isDead && !wasAlreadyDead;
+            bool wasAlreadyDeadAndIsStillDead = (latestDeclaredDeadTime > lastKnownAliveTime) | isDead; //pool was dead last time we checked
+            bool justDied = isDead && !wasAlreadyDeadAndIsStillDead;
             bool isAlive = !isDead;
+
+            auto activePoolBefore = activePoolIndex;
 
             if (justDied) {//the pool died between now and the last time we checked
                 pool->declareDead();
 
+                auto int_secs = duration_cast<seconds>(durUntilDeclaredDead).count();
                 if (i == activePoolIndex) {
                     ++activePoolIndex; //next pool is now the active pool
-                    LOG(INFO) << "actively used pool #" << i << " turned inactive, switching to next backup pool";
+                    LOG(WARNING) << "active pool #" << i << "(" << pool->getName() << ") was inactive for " << int_secs << " sec, switching to next backup pool";
                 }
                 else {
-                    LOG(INFO) << "currently unused backup pool #" << i << " turned inactive";
+                    LOG(INFO) << "currently unused backup pool #" << i << " (" << pool->getName() << ") was inactive for " << int_secs << "s";
                 }
             }
-            else if (wasAlreadyDead) {//the pool was already dead last time we checked and is still dead
+            else if (wasAlreadyDeadAndIsStillDead) {//the pool was already dead last time we checked and is still dead
                 if (now - latestDeclaredDeadTime > durUntilDeclaredDead) {
                     //if the declared dead time interval has passed again since the last time we declared it dead
                     //redeclare the pool dead, so it can try again to reconnect
-                    pool->declareDead();
+                    pool->declareDead(); //redeclare dead to trigger re-start efforts on pool implementation site
+                }
+
+                if (i == activePoolIndex) {//pool was already dead but just became the chosen active pool because the pool on top died
+                    //pass the activeIndex further down the chain
+                    ++activePoolIndex;
                 }
             }
             else if (isAlive) {//the pool is alive (and may have just turned alive)
-
                 //if i is alive and a lower priority pool is active => assign i to be the new active pool
-                if (activePoolIndex > i) {
+                bool activePoolWasChanged = activePoolBefore != activePoolIndex;
+                if (activePoolIndex > i || (activePoolIndex == i && activePoolWasChanged)) {
                     activePoolIndex = i;
-                    const auto &name = pool->getName();
-                    LOG(INFO) << "Pool #" << i << " (" << name << ") chosen as new active pool";
+                    LOG(INFO) << "Pool #" << i << " (" << pool->getName() << ") chosen as new active pool";
                 }
+            }
+            else {
+
+                int test = 0;
+                LOG(INFO) << test;
+                RNR_EXPECTS(false); //unreachable
             }
         }
 
         if (activePoolIndex == pools.size()) {
-            LOG(INFO) << "no more backup pools available. Waiting for pools to become available again.";
+            LOG(WARNING) << "no more backup pools available. Waiting for pools to become available again.";
         }
     }
 

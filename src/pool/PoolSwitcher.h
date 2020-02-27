@@ -21,14 +21,14 @@ namespace riner {
 
         explicit PoolSwitcher(std::string powType,
                 clock::duration checkInterval = std::chrono::seconds(20),
-                clock::duration durUntilDeclaredDead = std::chrono::seconds(60));
+                clock::duration durUntilDeclaredDead = std::chrono::seconds(20));
 
         ~PoolSwitcher() override;
 
         //the provided pool records will get connected to the total records of this PoolSwitcher
         std::shared_ptr<Pool> tryAddPool(const PoolConstructionArgs &args, const char *poolImplName, const Registry &registry = Registry{}) {
             std::shared_ptr<Pool> pool = registry.makePool(poolImplName, args);
-            MI_EXPECTS(pool != nullptr);
+            RNR_EXPECTS(pool != nullptr);
 
             pool->addRecordsListener(records);
             std::lock_guard<std::mutex> lock(mut);
@@ -80,6 +80,7 @@ namespace riner {
 
         std::shared_ptr<Pool> activePool();
 
+        //check which pools are still alive and if the active pool is no longer alive, switch active pool
         void aliveCheckAndMaybeSwitch();
     };
 

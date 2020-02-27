@@ -328,6 +328,7 @@ namespace riner {
 
     void BaseIO::clientIterateEndpoints(const asio::error_code &error, tcp::resolver::iterator it) {
         RNR_EXPECTS(_resolver);
+        auto it_end = tcp::resolver::iterator(); //default constructed iterator is "end"
         if (!error) {
             LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
@@ -340,19 +341,23 @@ namespace riner {
                 }
             }, it->host_name());
         }
-        else if (it != tcp::resolver::iterator()) {//default constructed iterator is "end"
+        else if (it != it_end) {
             //The connection failed, but there's another endpoint to try.
             _socket->get().close(); //socket operation
 
             tcp::endpoint endpoint = *it;
-            VLOG(0) << "asio error while trying this endpoint: " << error.value() << " , " << error.message();
-            VLOG(0) << "connecting: trying different endpoint with ip: " << endpoint.address().to_string();
-            _socket->get().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
+
+            VLOG(1) << "when trying endpoint "<< it->host_name() << ":" << it->service_name() <<" - " << asio_error_name_num(error) << ": " << error.message();
+            auto next = ++it;
+            if (next != it_end) {
+                VLOG(3) << "now trying different endpoint "<< next->host_name() << ":" << next->service_name();
+            }
+            _socket->get().async_connect(endpoint, [this, next] (const auto &error) { //socket operation
                 clientIterateEndpoints(error, next);
             });
         }
         else {
-            VLOG(0) << "asio async connect: Error " << asio_error_name_num(error) << ": " << error.message();
+            VLOG(3) << "async connect: " << asio_error_name_num(error) << ": " << error.message();
             _onDisconnected();
         }
     }
