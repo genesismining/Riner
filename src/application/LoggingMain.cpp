@@ -1,6 +1,7 @@
 #include <src/util/Logging.h>
 
 #include <src/application/CLI.h>
+#include <src/util/StringUtils.h>
 
 #include <easylogging++.cc>
 INITIALIZE_EASYLOGGINGPP
@@ -16,10 +17,6 @@ namespace riner {
 
     void setThreadName(const std::string &name) {
         el::Helpers::setThreadName(name);
-    }
-
-    void setThreadName(const std::stringstream &sstream) {
-        setThreadName(sstream.str());
     }
 
     std::string getThreadName() {
@@ -38,8 +35,13 @@ namespace riner {
         Configurations c;
         c.setToDefault();
 
-        std::string fmt = "%datetime %level [%thread] %msg"; //if you change this, make sure to also adjust the fancified log (see void fancifyLog(std::string &msg))
-        std::string fmtv = "%datetime %level%vlevel [%thread] %msg"; //for verbose
+        std::string time_fmt = "%datetime";
+        if (hasArg({"--sec"}, argc, argv)) {
+            time_fmt = "%datetime{%s,%g}";
+        }
+
+        std::string fmt = time_fmt + " %level [%thread] %msg"; //if you change this, make sure to also adjust the fancified log (see void fancifyLog(std::string &msg))
+        std::string fmtv = time_fmt + " %level%vlevel [%thread] %msg"; //for verbose
 
         c.setGlobally(CT::Format, fmt);
         c.set(Level::Verbose, CT::Format, fmtv);
@@ -51,21 +53,10 @@ namespace riner {
 
         if (hasArg({"-v", "--verbose"}, argc, argv) || logLevelStr.has_value())  {
             c.set(Level::Verbose, CT::Enabled, "true");
-            if (logLevelStr) {
-                try {
-                    auto level = stol(*logLevelStr);
-                    if (0 <= level && level < 10) {
-                        Loggers::setVerboseLevel(level);
-                    }
-                    else {
-                        throw std::exception(); //goto catch
-                    }
-                }
-                catch (const std::exception &) {
-                    //both exceptions mean invalid argument for verbose, so just catch all
-                    LOG(WARNING) << "invalid log level argument '" << *logLevelStr << "'. using max log level instead. (if you want max log level you can also omit the argument)";
-                }
-            }
+            if (logLevelStr)
+                if (auto level = strToInt64(logLevelStr->c_str()))
+                    if (0 <= *level && *level < 10)
+                        Loggers::setVerboseLevel(*level);
         }
         else { // !hasArg
             c.set(Level::Verbose, CT::Enabled, "false");
