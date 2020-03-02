@@ -75,7 +75,7 @@ namespace miner {
                 MI_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
                 PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
-                const std::string poolImplName = factory.poolImplForProtocolAndPowType(powType.c_str(), p.protocol().c_str());
+                const std::string poolImplName = factory.poolImplForProtocolAndPowType(p.protocol().c_str(), powType.c_str());
                 if (poolImplName.empty()) {
                     LOG(ERROR) << "no pool implementation available for powType '"
                                << powType << "' in combination with protocolType '"
