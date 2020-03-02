@@ -151,7 +151,7 @@ const std::future<void> &CuckatooSolver::solve(const SiphashKeys &keys, ResultFn
                 Cycle c;
                 c.edges = std::move(cycle.edges);
                 if (!isValidCycle(opts_.n, opts_.cycleLength, keys, c)) {
-                    LOG(FATAL) << "GPU " << getDeviceName() << " produced invalid cycle [" << toString(cycle.edges)
+                    LOG(ERROR) << "GPU " << getDeviceName() << " produced invalid cycle [" << toString(cycle.edges)
                                << "]!";
                 }
                 result.push_back(std::move(c));
