@@ -85,7 +85,7 @@ namespace miner {
     const char *Registry::poolImplForProtocolAndPowType(const char *protocolType, const char *powType) const {
         if (0 != strcmp(protocolType, "")) { //don't accidentally match "" with an unspecified protocolTypeAlias
             for (auto &pair : _poolWithName) {
-                bool samePow = 0 == strcmp(pair.second.powType, powType);
+                bool samePow = 0 == strcasecmp(pair.second.powType, powType);
 
                 bool sameProto = 0 == strcasecmp(pair.second.protocolType     , protocolType);
                      sameProto|= 0 == strcasecmp(pair.second.protocolTypeAlias, protocolType);

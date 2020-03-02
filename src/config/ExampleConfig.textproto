@@ -76,7 +76,7 @@ profile {
     run_on_all_remaining_devices: true
     #run this task on every gpu except gpu 1, which will run the task below
 
-    run_algoimpl_with_name: "AlgoEthashCL" 
+    run_algoimpl_with_name: "EthashCL"
     #run the OpenCL ethash AlgoImpl. run riner --list_algoimpls for a list of all available AlgoImpls
 
     use_device_profile_with_name: "my_default_gpu_profile" 
@@ -88,7 +88,7 @@ profile {
     device_index: 1
     #gpu 1 will not run the task above, but this one.
 
-    run_algoimpl_with_name: "AlgoCuckatoo31Cl"
+    run_algoimpl_with_name: "Cuckatoo31Cl"
 
     use_device_profile_with_name: "my_AMD_gpu_profile" 
     #my_gpu_profile has specified other settings for AlgoCuckatoo31Cl
@@ -100,7 +100,7 @@ device_profile {
   #device profile, example name suggests they should be used for AMD gpus
 
   settings_for_algoimpl {
-    algo_impl: "AlgoEthashCL"
+    algo_impl: "EthashCL"
     #these settings are applied if AlgoEthashCL is started with this gpu profile
     num_threads: 4
     work_size: 1024
@@ -112,7 +112,7 @@ device_profile {
   #generic device profile for no particular gpu
 
   settings_for_algoimpl { #key value pairs
-    key: "AlgoCuckatoo31"
+    key: "Cuckatoo31"
 
     value: { #settings:
         work_size: 2048
@@ -120,7 +120,7 @@ device_profile {
   }
 
   settings_for_algoimpl {
-    key: "AlgoEthashCL"
+    key: "EthashCL"
     
     value: {
       num_threads: 4
@@ -136,6 +136,7 @@ device_profile {
 
 pool {
   pow_type: "ethash" #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
+  protocol: "stratum2"
   host: "127.0.0.1"
   port: 2345
   username: "a"
@@ -143,7 +144,8 @@ pool {
 }
 
 pool {
-  pow_type: "grin"
+  pow_type: "cuckatoo31"
+  protobuf: "stratum"
   host: "127.0.0.1"
   port: 2346
   username: "b"

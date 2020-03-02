@@ -19,13 +19,13 @@ profile {
     task {
         run_on_all_remaining_devices: true
         use_device_profile_with_name: "my_gpu_profile"
-        run_algoimpl_with_name: "AlgoEthashCL"
+        run_algoimpl_with_name: "EthashCL"
     }
 
     task {
         device_index: 1
         use_device_profile_with_name: "my_gpu_profile"
-        run_algoimpl_with_name: "AlgoCuckatoo31Cl"
+        run_algoimpl_with_name: "Cuckatoo31Cl"
     }
 }
 
@@ -33,15 +33,15 @@ device_profile {
     name: "my_gpu_profile"
 
     settings_for_algoimpl {
-        key: "AlgoEthashCL"
+        key: "EthashCL"
 
         value: {
-            work_size: 1024
+            work_size: 128
         }
     }
 
     settings_for_algoimpl {
-        key: "AlgoCuckatoo31Cl"
+        key: "Cuckatoo31Cl"
 
         value: {
             work_size: 512
@@ -59,7 +59,7 @@ pool {
 }
 
 pool {
-    pow_type: "grin"
+    pow_type: "cuckatoo31"
     protocol: "stratum"
     host: "127.0.0.1"
     port: 2346
