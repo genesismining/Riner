@@ -53,7 +53,7 @@ namespace miner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
-            asio::async_write(_socket->get(), asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
+            _socket->async_write(asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
                 if (error) {
                     LOG(WARNING) << "async write error " << asio_error_name_num(error) <<
                               " in Connection while trying to send '" << outgoing << "'";
@@ -66,7 +66,7 @@ namespace miner {
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
             VLOG(1) << "ReadUntil queued";
-            asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
+            _socket->async_read_until(_incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
                 VLOG(1) << "ReadUntil scheduled";
@@ -81,9 +81,8 @@ namespace miner {
                     return;
                 }
 
-                std::string line = "asio read_until error occured: #" + std::to_string(error.value()) + " " + error.message() + "\n";
-
-                if (!error && numBytes != 0) {
+                std::string line;
+                {
                     std::istream stream(&_incoming);
                     std::getline(stream, line);
                 }
@@ -252,10 +251,11 @@ namespace miner {
     void BaseIO::serverListen() {
         MI_EXPECTS(_acceptor);
         MI_EXPECTS(_socket);
-        _acceptor->async_accept(_socket->get(), [this] (const asio::error_code &error) { //socket operation
+        _acceptor->async_accept(_socket->tcpStream(), [this] (const asio::error_code &error) { //socket operation
             if (!error) {
                 bool isClient = false;
 
+                _socket->tcpStream().set_option(tcp::no_delay(true));
                 auto suSock = make_shared<unique_ptr<Socket>>(move(_socket)); //move out current socket
                 prepareSocket(isClient); //make new socket
 
@@ -315,7 +315,7 @@ namespace miner {
         _resolver->async_resolve(query, [this] (auto &error, auto it) {
             if (!error) {
                 auto endpoint = *it;
-                _socket->get().async_connect(endpoint, [this, it] (auto &error) { //socket operation
+                _socket->tcpStream().async_connect(endpoint, [this, it] (auto &error) { //socket operation
                     clientIterateEndpoints(error, it);
                 });
             }
@@ -332,6 +332,7 @@ namespace miner {
             LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
             //std::function that the upcoming lambda will be converted to demands copyability. so no unique_ptrs may be captured.
+            _socket->tcpStream().set_option(tcp::no_delay(true));
             auto suSock = make_shared<unique_ptr<Socket>>(move(_socket));
 
             (*suSock)->asyncHandshakeOrNoop([this, suSock] (const asio::error_code &error) mutable {
@@ -342,12 +343,12 @@ namespace miner {
         }
         else if (it != tcp::resolver::iterator()) {//default constructed iterator is "end"
             //The connection failed, but there's another endpoint to try.
-            _socket->get().close(); //socket operation
+            _socket->tcpStream().close(); //socket operation
 
             tcp::endpoint endpoint = *it;
             VLOG(0) << "asio error while trying this endpoint: " << error.value() << " , " << error.message();
             VLOG(0) << "connecting: trying different endpoint with ip: " << endpoint.address().to_string();
-            _socket->get().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
+            _socket->tcpStream().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
                 clientIterateEndpoints(error, next);
             });
         }

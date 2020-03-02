@@ -105,8 +105,6 @@ namespace miner {
         }
 
         auto &sock = _var.emplace<SslTcpSocket>(ioService, ctx);
-        (void)sock;
-        //sock.lowest_layer().set_option(tcp::no_delay(true)); //leads to error apparently
 #endif
     }
 
@@ -150,20 +148,18 @@ namespace miner {
 #endif
     }
 
-    asio::basic_stream_socket<tcp> &Socket::get() {
+    asio::basic_stream_socket<tcp> &Socket::tcpStream() {
         asio::basic_stream_socket<tcp> *result = nullptr;
 
-        bool success = visit<TcpSocket>(_var, [&] (TcpSocket &s) {
+        if (!visit<TcpSocket>(_var, [&] (TcpSocket &s) {
             result = &s;
-        });
-        (void)success;
-
+        })) {
 #ifdef HAS_OPENSSL
-        if (!success)
             visit<SslTcpSocket>(_var, [&] (SslTcpSocket &s) {
                 result = &s.next_layer();
             });
 #endif
+        }
 
         MI_EXPECTS(result);
         return *result;

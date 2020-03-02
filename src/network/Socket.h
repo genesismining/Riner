@@ -15,6 +15,26 @@
 #include <lib/asio/asio/include/asio/ssl/stream.hpp>
 #endif
 
+
+#ifdef HAS_OPENSSL
+#define SOCKET_SSL_FNCT(fnct) \
+    return asio::fnct(mpark::get<SslTcpSocket>(_var), std::forward<Args>(args)...)
+#else
+#define SOCKET_SSL_FNCT(fnct) \
+    throw mpark::bad_variant_access();
+#endif
+
+#define SOCKET_FNCT(fnct) \
+    template<class... Args> \
+    auto fnct(Args&&... args) { \
+        if (auto s = mpark::get_if<TcpSocket>(&_var)) { \
+            return asio::fnct(*s, std::forward<Args>(args)...); \
+        } \
+        else { \
+           SOCKET_SSL_FNCT(fnct); \
+        } \
+    }
+
 namespace miner {
 
     using asio::ip::tcp;
@@ -43,10 +63,16 @@ namespace miner {
         bool isClient() const;
 
         /**
-         * get a reference to the underlying socket type.
-         * @return common base class of tcp and tcp ssl socket types
+         * get a reference to the underlying TCP socket.
+         * NOTE: Boost provides no common base class for TCP and SSL sockets.
+         * Therefore the async_* member functions provide this abstraction
+         * @return TCP stream used by TCP or SSL connection
          */
-        asio::basic_stream_socket<tcp> &get();
+        asio::basic_stream_socket<tcp> &tcpStream();
+
+        SOCKET_FNCT(async_read_until);
+        SOCKET_FNCT(async_read);
+        SOCKET_FNCT(async_write);
 
         /**
          * if initialized as a ssl socket, performs ssl handshake, otherwise nothing. use handler to continue
@@ -57,3 +83,6 @@ namespace miner {
     };
 
 }
+
+#undef SOCKET_FNCT
+#undef SOCKET_SSL_FNCT
