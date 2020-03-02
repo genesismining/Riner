@@ -41,7 +41,6 @@ add_library(LibMiner
         src/application/CLI.cpp src/application/CLI.h
         src/application/LoggingMain.cpp
         src/config/Config.cpp src/config/Config.h
-        src/config/ConfigTest.cpp
         src/config/ConfigDefaultValues.h
         src/algorithm/Algorithm.cpp src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp src/algorithm/ethash/AlgoEthashCL.h
@@ -164,37 +163,36 @@ endif()
 target_link_libraries(LibMiner ${PROTOBUF_LIBRARY})
 
 #OpenCL
-target_link_libraries (Miner ${OpenCL_LIBRARY})
-if(UNIX AND NOT APPLE)
-    target_link_libraries (Miner -static-libgcc -static-libstdc++)
-endif()
+target_link_libraries (LibMiner ${OpenCL_LIBRARY})
 
 #OpenSSL
 find_package(OpenSSL)
-if (OPENSSL_FOUND)
+if (OpenSSL_FOUND)
     target_link_libraries (LibMiner OpenSSL::SSL)
     target_compile_definitions(LibMiner PUBLIC HAS_OPENSSL)
+else()
+    message(WARNING "OpenSSL not found - build without TLS support")
 endif()
 
 #Threads
 find_package(Threads REQUIRED)
-target_link_libraries (Miner Threads::Threads)
+target_link_libraries (LibMiner Threads::Threads)
 
 #Google Tests
-include(GoogleTest)
-find_package(GTest REQUIRED)
+find_package(GTest)
 
-add_executable(tests
-    src/algorithm/grin/CuckatooTest.cpp
-    src/algorithm/grin/GraphTest.cpp
-    src/config/ConfigTest.cpp
-    src/pool/WorkCuckatoo31Test.cpp
-    src/network/JrpcTest.cpp
-        src/application/LoggingMain.cpp
+if (GTest_FOUND)
+    include(GoogleTest)
+    add_executable(tests
+        src/algorithm/grin/CuckatooTest.cpp
+        src/algorithm/grin/GraphTest.cpp
+        src/config/ConfigTest.cpp
+        src/pool/WorkCuckatoo31Test.cpp
+        src/network/JrpcTest.cpp
         src/application/TestMain.cpp)
-target_link_libraries(tests gtest gmock  Threads::Threads ${OpenCL_LIBRARY})
-target_link_libraries(tests LibMiner)
-target_include_directories (Miner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(tests gmock GTest::GTest)
+    target_link_libraries(tests LibMiner)
 
-gtest_add_tests(TARGET tests)
-add_test(NAME monolithic COMMAND tests)
+    gtest_add_tests(TARGET tests)
+    add_test(NAME monolithic COMMAND tests)
+endif()
