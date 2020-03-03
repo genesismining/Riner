@@ -154,12 +154,12 @@ namespace miner {
             LOG(WARNING) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
             return;
         }
+        _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
             SetThreadNameStream{} << "io#" << _uid; //thread name shows BaseIO's uid
             setIoThreadId(); //set this thread id to be the IO Thread
-            _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 
             try {
 
@@ -208,11 +208,9 @@ namespace miner {
 
             _ioService->stop();
 
-            if (_thread) {
-                MI_EXPECTS(_thread->joinable());
-                _thread->join();
-                _thread = nullptr; //so that assert(!_thread) works as expected
-            }
+            MI_EXPECTS(_thread->joinable());
+            _thread->join();
+            _thread = nullptr; //so that assert(!_thread) works as expected
             _hasLaunched = false;
             //_shutdown = false; //shutdown should NOT be set to false here, since the onDisconnect handler checks _shutdown to decide whether to autoReconnect. Instead it gets set to false upon iothread restart
         }
