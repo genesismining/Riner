@@ -357,7 +357,7 @@ namespace riner {
             if (next != it_end) {
                 VLOG(3) << "now trying different endpoint "<< next->host_name() << ":" << next->service_name();
             }
-            _socket->tcpStream().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
+            _socket->tcpStream().async_connect(endpoint, [this, next] (const auto &error) { //socket operation
                 clientIterateEndpoints(error, next);
             });
         }
