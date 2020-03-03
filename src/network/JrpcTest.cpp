@@ -61,8 +61,8 @@ namespace riner {
         std::future_status status;
 
         {
-            JsonRpcUtil server{IOMode::Tcp};
-            JsonRpcUtil client{IOMode::Tcp};
+            JsonRpcUtil server{};
+            JsonRpcUtil client{};
 
             server.launchServer(4029, [&](CxnHandle cxn) {
                 //on connect
@@ -117,8 +117,8 @@ namespace riner {
         std::atomic_int counter {0};
 
         {
-            JsonRpcUtil server{IOMode::Tcp};
-            JsonRpcUtil client{IOMode::Tcp};
+            JsonRpcUtil server{};
+            JsonRpcUtil client{};
 
             //auto logServer = [] (auto &) {LOG(INFO) << "                                   server:";};
             //auto logClient = [] (auto &) {LOG(INFO) << "                                   client:";};
@@ -246,8 +246,8 @@ namespace riner {
         using RB = jrpc::RequestBuilder;
 
         JsonRpcServerClientFixture()
-        : server(make_unique<JsonRpcUtil>(IOMode::Tcp))
-        , client(make_unique<JsonRpcUtil>(IOMode::Tcp)) {
+        : server(make_unique<JsonRpcUtil>())
+        , client(make_unique<JsonRpcUtil>()) {
         }
 
         bool initSsl() {
