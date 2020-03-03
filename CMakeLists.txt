@@ -10,11 +10,6 @@ set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS}         -Wall -Werror=return-typ
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   ${CMAKE_CXX_FLAGS} -Og -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS} -O2 -mtune=native -msse4.1")
 
-#OpenCL
-find_package(OpenCL REQUIRED)
-include_directories(${OpenCL_INCLUDE_DIRS})
-link_directories(${OpenCL_LIBRARY})
-
 #download external ethash OpenCL kernel
 file(DOWNLOAD https://raw.githubusercontent.com/genesismining/sgminer-gm/bc138413d9098d6ed285df1bdebc70b47f69bcac/kernel/ethash-new.cl ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/ethash.cl TLS_VERIFY ON STATUS FILE_RET)
 if(NOT ("0" IN_LIST FILE_RET))
@@ -163,7 +158,8 @@ endif()
 target_link_libraries(LibMiner ${PROTOBUF_LIBRARY})
 
 #OpenCL
-target_link_libraries (LibMiner ${OpenCL_LIBRARY})
+find_package(OpenCL REQUIRED)
+target_link_libraries (LibMiner OpenCL::OpenCL)
 
 #OpenSSL
 find_package(OpenSSL)
@@ -171,7 +167,7 @@ if (OpenSSL_FOUND)
     target_link_libraries (LibMiner OpenSSL::SSL)
     target_compile_definitions(LibMiner PUBLIC HAS_OPENSSL)
 else()
-    message(WARNING "OpenSSL not found - build without TLS support")
+    message(WARNING "OpenSSL not found - building without TLS support")
 endif()
 
 #Threads
@@ -182,6 +178,7 @@ target_link_libraries (LibMiner Threads::Threads)
 find_package(GTest)
 
 if (GTest_FOUND)
+    enable_testing()
     include(GoogleTest)
     add_executable(tests
         src/algorithm/grin/CuckatooTest.cpp
@@ -194,5 +191,5 @@ if (GTest_FOUND)
     target_link_libraries(tests LibMiner)
 
     gtest_add_tests(TARGET tests)
-    add_test(NAME monolithic COMMAND tests)
+    #add_test(NAME monolithic COMMAND tests)
 endif()

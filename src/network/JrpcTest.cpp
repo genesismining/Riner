@@ -346,7 +346,6 @@ namespace miner {
 
 #ifndef HAS_OPENSSL
         LOG(INFO) << "skip this test since the binary was compiled without openssl support";
-        std::this_thread::sleep_for(10ms);
         return;
 #endif
 
