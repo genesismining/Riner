@@ -13,7 +13,7 @@ namespace riner {
 
     ApiServer::ApiServer(uint16_t port, const Application &app)
             : _app(app)
-            , io(std::make_unique<JsonRpcUtil>(IOMode::Tcp)){
+            , io(std::make_unique<JsonRpcUtil>("ApiServer")){
         registerFunctions();
 
         io->launchServer(port, [this] (CxnHandle cxn) {

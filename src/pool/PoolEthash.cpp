@@ -151,10 +151,9 @@ namespace riner {
     }
 
     void PoolEthashStratum::tryConnect() {
-        VLOG(1) << "PoolEthashStratum#" << poolUid << " trying to connect";
         auto &args = constructionArgs;
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
-            LOG(INFO) << "PoolEthashStratum#"  << poolUid << " connected"; //this message
+            LOG(INFO) << "connected";
             onConnected(cxn);
         });
     }

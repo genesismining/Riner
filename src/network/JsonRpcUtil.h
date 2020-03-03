@@ -53,7 +53,7 @@ namespace riner { namespace jrpc {
             using IdType = int64_t;
             std::atomic<IdType> nextId = {0}; //expose id counter publicly because its really helpful
 
-            explicit JsonRpcUtil(IOMode mode);
+            explicit JsonRpcUtil(const char *customIoThreadName = "", IOMode mode = IOMode::Tcp);
 
             template<class Func, class ... ArgNames>
             void addMethod(const char *name, Func &&func, ArgNames &&... argNames) {

@@ -45,9 +45,10 @@ namespace riner {
         /**
          * `BaseIO`'s constructor starts the IO thread but does not yet enqueue any handlers on it.
          * Connections initiated only in the `launchClient()` and `launchServer()` functions.
-         * @param mode
+         * @param mode unused
+         * @param threadName pass the thread name that any IO thread created by this
          */
-        explicit BaseIO(IOMode mode);
+        explicit BaseIO(const char *customIOThreadName = "", IOMode mode = IOMode::Tcp);
         ~BaseIO();
 
         DELETE_COPY_AND_MOVE(BaseIO); //because Connection<T> is referencing BaseIO::_onRecv
@@ -97,6 +98,8 @@ namespace riner {
 
         uint64_t _uid = generateUid(); //uniquely identifies this BaseIO instance, so that the error can be caught where
         // CxnHandles from another BaseIO instance are used with this BaseIO instance by mistake.
+        const char *const _customIOThreadName = "";
+        std::string getIoThreadName() const;
 
         using tcp = asio::ip::tcp;
 
