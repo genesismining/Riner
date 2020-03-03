@@ -15,7 +15,6 @@
 namespace riner {
 
     struct EthashStratumJob : public PoolJob {
-
         const std::string jobId;
         WorkEthash workTemplate;
 
@@ -36,7 +35,6 @@ namespace riner {
         static const uint32_t uniqueNonce;
     };
 
-
     class PoolEthashStratum : public Pool {
     public:
         explicit PoolEthashStratum(const PoolConstructionArgs &);
@@ -50,11 +48,11 @@ namespace riner {
 
         // Pool interface
         bool isExpiredJob(const PoolJob &job) override;
-        unique_ptr <Work> tryGetWorkImpl() override;
+        unique_ptr<Work> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution> resultBase) override;
 
         void onConnected(CxnHandle);
-        jrpc::JsonRpcUtil io {"PoolEthashStratum"};
+        jrpc::JsonRpcUtil io {};
 
         CxnHandle _cxn; //modified only on IO thread
         bool acceptMiningNotify = false; //modified only on IO thread

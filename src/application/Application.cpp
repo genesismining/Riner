@@ -57,7 +57,7 @@ namespace riner {
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            const std::string powType = factory.powTypeOfAlgoImpl(implName.c_str());
+            const std::string powType = factory.powTypeOfAlgoImpl(implName);
             if (powType.empty()) {
                 LOG(INFO) << "no PowType found for AlgoImpl '" << implName << "'. skipping.";
                 continue;
@@ -74,7 +74,7 @@ namespace riner {
                 RNR_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
                 PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
-                const std::string poolImplName = factory.poolImplForProtocolAndPowType(p.protocol().c_str(), powType.c_str());
+                const std::string poolImplName = factory.poolImplForProtocolAndPowType(p.protocol(), powType);
                 if (poolImplName.empty()) {
                     LOG(ERROR) << "no pool implementation available for powType '"
                                << powType << "' in combination with protocolType '"

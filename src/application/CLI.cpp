@@ -119,7 +119,7 @@ namespace riner {
             for (auto &e : all) {
                 ss << "\t'" << e.name << "'\t\t(for PowType '" << e.powType << "'\t protocol names: ";
                 ss << "'" << e.protocolType << "'";
-                if (0 != strcmp("", e.protocolTypeAlias)) { //if it has an alias
+                if (e.protocolTypeAlias != "") { //if it has an alias
                     ss << ", '" << e.protocolTypeAlias << "'";
                 }
                 ss << ")" << endl;

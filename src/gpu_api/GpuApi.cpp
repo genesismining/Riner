@@ -55,7 +55,7 @@ namespace riner {
         Registry registry;
 
         //try to create
-        for (const char *gpuApiName : registry.listGpuApis()) {
+        for (std::string &gpuApiName : registry.listGpuApis()) {
             VLOG(1) << "trying to create GpuApi instance: '" << gpuApiName << "'";
 
             if (auto instance = registry.tryMakeGpuApi(gpuApiName, args)) {

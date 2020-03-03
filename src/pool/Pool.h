@@ -101,8 +101,8 @@ namespace riner {
 
         explicit Pool(PoolConstructionArgs args);
         std::weak_ptr<Pool> _this; //assigned in Registry's initFunc lambda, which creates the shared_ptr, which is ok because even if the Pool ctor starts iothreads which use _this before it is assigned, the mechanisms that use it are nullptr safe.
-        const char *_poolImplName = ""; //assigned in Registry...
-        const char *_powType = ""; //assigned in Registry...
+        std::string _poolImplName = ""; //assigned in Registry...
+        std::string _powType = ""; //assigned in Registry...
         std::atomic_bool connected {false};
         PoolRecords records;
 
@@ -111,7 +111,7 @@ namespace riner {
 
         const PoolConstructionArgs constructionArgs;
 
-        static void postInit(std::shared_ptr<Pool> w, const char *poolImplName, const char *powType) { //inits private/protected base class members without requiring the user to pass them through
+        static void postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType) { //inits private/protected base class members without requiring the user to pass them through
             w->_this = w;
             w->_poolImplName = poolImplName;
             w->_powType = powType;

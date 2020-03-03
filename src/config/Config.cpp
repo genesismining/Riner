@@ -18,17 +18,14 @@ namespace riner {
         using TextFormat = google::protobuf::TextFormat;
 
         Config config;
-        success = TextFormat::ParseFromString(defaultConfigCStr, &config);
-        if (!success) {
-            LOG(ERROR) << "error while parsing default config values (not the user provided config)";
-            return nullopt;
-        }
-
-        success = TextFormat::MergeFromString(txtProto, &config);
+        success = TextFormat::ParseFromString(txtProto, &config);
         if (!success) {
             LOG(INFO) << "error while parsing config";
             return nullopt;
         }
+
+        //TODO: add merging with default values
+        //success = TextFormat::ParseFromString(defaultConfigCStr, &config);
 
         if (validateConfig(config)) {
             return config;
