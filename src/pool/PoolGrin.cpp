@@ -175,8 +175,7 @@ namespace riner {
     }
 
     PoolGrinStratum::PoolGrinStratum(const PoolConstructionArgs &args)
-            : Pool(args)
-            , io(IOMode::Tcp) {
+            : Pool(args) {
         tryConnect();
     }
 

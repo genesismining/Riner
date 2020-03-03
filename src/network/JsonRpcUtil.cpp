@@ -5,7 +5,7 @@
 
 namespace riner { namespace jrpc {
 
-        JsonRpcUtil::JsonRpcUtil(IOMode mode) : Base(mode) {
+        JsonRpcUtil::JsonRpcUtil(const char *customIoThreadName, IOMode mode) : Base(customIoThreadName, mode) {
 
             setOnReceive([this] (CxnHandle cxn, Message msg) {
 

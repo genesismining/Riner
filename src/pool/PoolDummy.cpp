@@ -8,8 +8,7 @@
 namespace riner {
 
     PoolDummy::PoolDummy(const PoolConstructionArgs &args)
-            : Pool(args) //set args in base class, can be accessed via this->constructionArgs
-            , io(IOMode::Tcp) {
+            : Pool(args) {//set args in base class, can be accessed via this->constructionArgs
 
         tryConnect();
         //make sure tryConnect() is the final thing you do in this ctor.

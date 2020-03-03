@@ -119,8 +119,8 @@ namespace riner {
          * Constructor of the `IOTypeLayer` does not establish any connection yet. Use `launchClient*()` or `launchServer()` functions
          * @param mode not implemented yet
          */
-        IOTypeLayer(IOMode mode)
-                : _layerBelow(mode) {
+        IOTypeLayer(const char *customIoThreadName = "", IOMode mode = IOMode::Tcp)
+                : _layerBelow(customIoThreadName, mode) {
         }
 
         /**

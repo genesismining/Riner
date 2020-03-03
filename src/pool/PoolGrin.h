@@ -54,7 +54,7 @@ namespace riner {
         LazyWorkQueue queue;
 
         Random random_;
-        jrpc::JsonRpcUtil io;
+        jrpc::JsonRpcUtil io{"PoolGrinStratum"};
         CxnHandle _cxn; //connection to submit shares to (set on mining notify)
 
         int64_t currentHeight = -1;

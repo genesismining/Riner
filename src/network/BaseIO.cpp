@@ -105,8 +105,9 @@ namespace riner {
         //handlers get destroyed in _ioService dtor
     }
 
-    BaseIO::BaseIO(IOMode mode)
+    BaseIO::BaseIO(const char *customIOThreadName, IOMode mode)
     : _mode(mode)
+    , _customIOThreadName(customIOThreadName)
     , _ioService(make_unique<asio::io_service>()) {
         startIOThread();
     }
@@ -158,7 +159,7 @@ namespace riner {
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
-            SetThreadNameStream{} << "io#" << _uid; //thread name shows BaseIO's uid
+            SetThreadNameStream{} << getIoThreadName();
             setIoThreadId(); //set this thread id to be the IO Thread
             _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 
@@ -230,10 +231,9 @@ namespace riner {
 
     //functions used by server
     void BaseIO::launchServer(uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
+        VLOG(3) << getIoThreadName() << " trying to launch server";
         if (sslEnabledButNotSupported())
             return;
-
-        VLOG(2) << "BaseIO::launchServer: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         RNR_EXPECTS(_ioService);
         RNR_EXPECTS(_thread);
@@ -287,8 +287,16 @@ namespace riner {
         }
     }
 
+    std::string BaseIO::getIoThreadName() const {
+        std::string name = "io#" + std::to_string(_uid);
+        if (_customIOThreadName)
+            name = std::string{_customIOThreadName} + " " + name;
+        return name;
+    }
+
     //functions used by client
     void BaseIO::launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
+        VLOG(3) << getIoThreadName() << " trying to launch client";
         if (sslEnabledButNotSupported())
             return;
 
@@ -296,7 +304,6 @@ namespace riner {
         RNR_EXPECTS(_thread);
         RNR_EXPECTS(!hasLaunched());
         _hasLaunched = true;
-        VLOG(3) << "BaseIO::launchClient: hasLaunched: " << hasLaunched() << " _thread: " << !!_thread;
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = [&, onDc = std::move(onDc)] () {
