@@ -124,7 +124,7 @@ namespace riner {
                 if (!accepted) {
                     if (auto error = res.getIfError()) {
                         auto code = error->code;
-                        LOG_IF(code == -32502, FATAL) << "Invalid share";
+                        LOG_IF(code == -32502, WARNING) << "Invalid share";
                     }
                 }
             };

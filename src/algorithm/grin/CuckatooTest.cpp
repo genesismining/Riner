@@ -39,10 +39,10 @@ public:
 
     CuckatooSolverTest() :
             programLoader(testKernelDir, "") {
-        header = std::make_unique<WorkCuckatoo31>();
     }
 
 protected:
+
     std::unique_ptr<CuckatooSolver> createSolver(uint32_t n) {
         cl_int err;
         device = cl::Device::getDefault(&err);
@@ -60,7 +60,8 @@ protected:
         AlgoSettings algoSettings;
         Device algoDevice = {*deviceId, algoSettings, 0};
 
-        CuckatooSolver::Options options {algoDevice, tasks};
+        tasks = std::make_unique<TaskExecutorPool>(1);
+        CuckatooSolver::Options options {algoDevice, *tasks};
         options.programLoader = &programLoader;
         options.n = n;
         options.context = context;
@@ -83,8 +84,8 @@ protected:
     cl::Device device;
     cl::Context context;
     VendorEnum vendor = VendorEnum::kUnknown;
-    std::unique_ptr<WorkCuckatoo31> header;
-    TaskExecutorPool tasks {1};
+    WorkCuckatoo31 header;
+    std::unique_ptr<TaskExecutorPool> tasks;
 };
 
 TEST_F(CuckatooSolverTest, Solve29) {
@@ -94,11 +95,11 @@ TEST_F(CuckatooSolverTest, Solve29) {
         return;
     }
 
-    header->prePow = {0x41,0x42,0x43};
-    header->prePow.resize(72, 0);
-    header->nonce = 0x15000000;
+    header.prePow = {0x41,0x42,0x43};
+    header.prePow.resize(72, 0);
+    header.nonce = 0x15000000;
 
-    solver->solve(AlgoCuckatoo31Cl::calculateKeys(*header),
+    solver->solve(AlgoCuckatoo31Cl::calculateKeys(header),
             [] (std::vector<CuckatooSolver::Cycle> cycles) {
                 ASSERT_EQ(1, cycles.size());
                 EXPECT_THAT(cycles[0].edges, testing::ElementsAreArray( {
@@ -120,11 +121,11 @@ TEST_F(CuckatooSolverTest, Solve31) {
     }
 
     std::string hex = "0001000000000000ce54000000005c6e92a4000002cf90d4ed85c43063baf5c681ac054309a3719464d8cf4d6d2e2b38f51144ef86059dda0c73a68bce94407ab7d28b381c52a108659684336749e16f0786cabf1d575b97a7b9ad7e5306f3feb328216d62d581f1fcaee49222b7cf60436748e5abe6ecbbed054c05532b4b9afdd9fe3e03041cfa7cbab5d40866f42df910132647982234aa306a3fd628088b17a3053be72991dd4c0d6a9e8183657e4c39ff530a7f06436b8d99df6c069a182dd53166870aa2c4ae44f5ce28d8f2754aef00000000000f26ad000000000005fde3000062c5c4f056ea00000545";
-    header->nonce=8742930641540181280ULL;
+    header.nonce=8742930641540181280ULL;
 	HexString h(hex);
-    header->prePow.resize(h.sizeBytes());
-    h.getBytes(header->prePow);
-    SiphashKeys keys = AlgoCuckatoo31Cl::calculateKeys(*header);    
+    header.prePow.resize(h.sizeBytes());
+    h.getBytes(header.prePow);
+    SiphashKeys keys = AlgoCuckatoo31Cl::calculateKeys(header);
     // Siphash Keys: 707696558862008831, 13844509301656340219, 10878251467021832460, 1593815210236709481
 
     solver->solve(
@@ -146,10 +147,10 @@ TEST_F(CuckatooSolverTest, Solve31) {
 }
 
 TEST_F(CuckatooSolverTest, IsValidCycle) {
-    header->prePow = {0x41,0x42,0x43};
-    header->prePow.resize(72, 0);
-    header->nonce = 0x15000000;
-    SiphashKeys keys = AlgoCuckatoo31Cl::calculateKeys(*header);
+    header.prePow = {0x41,0x42,0x43};
+    header.prePow.resize(72, 0);
+    header.nonce = 0x15000000;
+    SiphashKeys keys = AlgoCuckatoo31Cl::calculateKeys(header);
 
     CuckatooSolver::Cycle cycle;
     cycle.edges = { 31512508, 59367126, 60931190, 94763886, 104277898, 116747030, 127554684,

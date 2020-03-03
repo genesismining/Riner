@@ -87,7 +87,7 @@ namespace riner {
             for (auto &pair : _poolWithName) {
                 const char *poolImplName = pair.first;
                 const EntryPool &e = pair.second;
-                bool samePow = 0 == strcmp(e.powType, powType);
+                bool samePow = 0 == strcasecmp(e.powType, powType);
 
                 bool sameProto = false;
                 sameProto |= 0 == strcasecmp(e.protocolType     , protocolType);

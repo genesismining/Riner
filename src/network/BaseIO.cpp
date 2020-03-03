@@ -53,7 +53,7 @@ namespace riner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
-            asio::async_write(_socket->get(), asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
+            _socket->async_write(asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
                 if (error) {
                     LOG(WARNING) << "async write error " << asio_error_name_num(error) <<
                               " in Connection while trying to send '" << outgoing << "'";
@@ -66,7 +66,7 @@ namespace riner {
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
             VLOG(3) << "ReadUntil queued";
-            asio::async_read_until(_socket->get(), _incoming, '\n', [this, shared = this->shared_from_this()]
+            _socket->async_read_until(_incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
                 VLOG(3) << "ReadUntil scheduled";
@@ -81,9 +81,8 @@ namespace riner {
                     return;
                 }
 
-                std::string line = "asio read_until error occured: #" + std::to_string(error.value()) + " " + error.message() + "\n";
-
-                if (!error && numBytes != 0) {
+                std::string line;
+                {
                     std::istream stream(&_incoming);
                     std::getline(stream, line);
                 }
@@ -155,12 +154,12 @@ namespace riner {
             LOG(WARNING) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
             return;
         }
+        _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 
         //start io service thread which will handle the async calls
         _thread = std::make_unique<std::thread>([this] () {
             SetThreadNameStream{} << "io#" << _uid; //thread name shows BaseIO's uid
             setIoThreadId(); //set this thread id to be the IO Thread
-            _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
 
             try {
 
@@ -209,11 +208,9 @@ namespace riner {
 
             _ioService->stop();
 
-            if (_thread) {
-                RNR_EXPECTS(_thread->joinable());
-                _thread->join();
-                _thread = nullptr; //so that assert(!_thread) works as expected
-            }
+            RNR_EXPECTS(_thread->joinable());
+            _thread->join();
+            _thread = nullptr; //so that assert(!_thread) works as expected
             _hasLaunched = false;
             //_shutdown = false; //shutdown should NOT be set to false here, since the onDisconnect handler checks _shutdown to decide whether to autoReconnect. Instead it gets set to false upon iothread restart
         }
@@ -252,10 +249,11 @@ namespace riner {
     void BaseIO::serverListen() {
         RNR_EXPECTS(_acceptor);
         RNR_EXPECTS(_socket);
-        _acceptor->async_accept(_socket->get(), [this] (const asio::error_code &error) { //socket operation
+        _acceptor->async_accept(_socket->tcpStream(), [this] (const asio::error_code &error) { //socket operation
             if (!error) {
                 bool isClient = false;
 
+                _socket->tcpStream().set_option(tcp::no_delay(true));
                 auto suSock = make_shared<unique_ptr<Socket>>(move(_socket)); //move out current socket
                 prepareSocket(isClient); //make new socket
 
@@ -315,7 +313,7 @@ namespace riner {
         _resolver->async_resolve(query, [this] (auto &error, auto it) {
             if (!error) {
                 auto endpoint = *it;
-                _socket->get().async_connect(endpoint, [this, it] (auto &error) { //socket operation
+                _socket->tcpStream().async_connect(endpoint, [this, it] (auto &error) { //socket operation
                     clientIterateEndpoints(error, it);
                 });
             }
@@ -333,6 +331,7 @@ namespace riner {
             LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
             //std::function that the upcoming lambda will be converted to demands copyability. so no unique_ptrs may be captured.
+            _socket->tcpStream().set_option(tcp::no_delay(true));
             auto suSock = make_shared<unique_ptr<Socket>>(move(_socket));
 
             (*suSock)->asyncHandshakeOrNoop([this, suSock] (const asio::error_code &error) mutable {
@@ -343,16 +342,15 @@ namespace riner {
         }
         else if (it != it_end) {
             //The connection failed, but there's another endpoint to try.
-            _socket->get().close(); //socket operation
+            _socket->tcpStream().close(); //socket operation
 
             tcp::endpoint endpoint = *it;
-
             VLOG(1) << "when trying endpoint "<< it->host_name() << ":" << it->service_name() <<" - " << asio_error_name_num(error) << ": " << error.message();
             auto next = ++it;
             if (next != it_end) {
                 VLOG(3) << "now trying different endpoint "<< next->host_name() << ":" << next->service_name();
             }
-            _socket->get().async_connect(endpoint, [this, next] (const auto &error) { //socket operation
+            _socket->tcpStream().async_connect(endpoint, [this, next = ++it] (const auto &error) { //socket operation
                 clientIterateEndpoints(error, next);
             });
         }

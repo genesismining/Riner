@@ -384,13 +384,15 @@ namespace riner {
         //it does not test whether the wrong password is the reason for the connection
         //not being established, so this test only makes sense together with other tests
 
-        bool hasOpenSsl = false;
-#ifdef HAS_OPENSSL
-        hasOpenSsl = true;
+#ifndef HAS_OPENSSL
+        LOG(INFO) << "skip this test since the binary was compiled without openssl support";
+        std::this_thread::sleep_for(10ms);
+        return;
 #endif
 
-        auto testDuration = hasOpenSsl ? 4s : 300ms; //shorter time if timeout is expected due to no openssl support, lets not make this test waste time on expected behavior.
+        auto testDuration = 4s;
 
+        std::atomic_bool failure{false};
         EXPECT_TRUE(initSsl()); //initialize ssl for server and client members
 
         sslDescServer.server->onGetPassword = [] () -> std::string {
@@ -399,15 +401,14 @@ namespace riner {
 
         server->io().enableSsl(sslDescServer);
 
-        server->addMethod("method", [&] () {
-            barrier.unblock();
-        });
-
         launchServerWithReadLoop();
 
         launchClient([&] (CxnHandle cxn) {
-            client->callAsync(cxn, RB{}.id(0).method("method").done(), [&] (CxnHandle cxn, Message res) {});
-            client->readAsync(cxn);
+            // a connection should never be established
+            failure = true;
+            barrier.unblock();
+        }, [&] () {
+            barrier.unblock();
         });
 
         bool timeout = waitAndInvoke(barrier, [&] () {
@@ -416,14 +417,8 @@ namespace riner {
         }, testDuration);
         LOG(INFO) << "waiting over timeout = " << timeout;
 
-        server.reset();
-        client.reset();
-        LOG(INFO) << "deinit";
-
-        if (hasOpenSsl) //expect openssl == !!timeout
-            EXPECT_FALSE(timeout);
-        else
-            EXPECT_TRUE(timeout);
+        EXPECT_FALSE(failure);
+        EXPECT_FALSE(timeout);
     }
 
     TEST_F(JsonRpcServerClientFixture, JsonRpcKillConnection) {
@@ -530,8 +525,9 @@ namespace riner {
         auto testDuration = 4s;
 
         server->addMethod("method", [&] () {
-            client->io().disconnectAll();
+            client->io().disconnectAll(); // WARNING: not thread safe
             barrier.unblock();
+            return true;
         });
 
         launchClientAutoReconnect([&] (CxnHandle cxn) {

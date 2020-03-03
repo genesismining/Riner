@@ -81,14 +81,14 @@ profile {
                 auto &task = *profile.add_task();
                 task.set_run_on_all_remaining_devices(true);
                 task.set_use_device_profile_with_name("my_gpu_profile");
-                task.set_run_algoimpl_with_name("AlgoEthashCL");
+                task.set_run_algoimpl_with_name("EthashCL");
             }
 
             { //Task 1
                 auto &task = *profile.add_task();
                 task.set_device_index(1);
                 task.set_use_device_profile_with_name("my_gpu_profile");
-                task.set_run_algoimpl_with_name("AlgoCuckatoo31");
+                task.set_run_algoimpl_with_name("Cuckatoo31");
             }
         }
 
@@ -99,13 +99,13 @@ profile {
             auto &settings_for_algoimpl = *d.mutable_settings_for_algoimpl();
 
             {//AlgoSettings 0
-                auto &a = settings_for_algoimpl["AlgoEthashCL"];
+                auto &a = settings_for_algoimpl["EthashCL"];
                 a.set_work_size(1024);
                 a.set_num_threads(4);
             }
 
             {//AlgoSettings 1
-                auto &a = settings_for_algoimpl["AlgoCuckatoo31"];
+                auto &a = settings_for_algoimpl["Cuckatoo31"];
                 a.set_work_size(2048);
             }
         }
@@ -113,6 +113,7 @@ profile {
         {//Pool
             auto &pool = *c.add_pool();
             pool.set_pow_type("ethash");
+            pool.set_protocol("stratum2");
             pool.set_host("127.0.0.1");
             pool.set_port(2345);
             pool.set_username("a");
@@ -121,7 +122,8 @@ profile {
 
         {//Pool
             auto &pool = *c.add_pool();
-            pool.set_pow_type("grin");
+            pool.set_pow_type("cuckatoo31");
+            pool.set_protocol("stratum");
             pool.set_host("127.0.0.1");
             pool.set_port(2346);
             pool.set_username("b");

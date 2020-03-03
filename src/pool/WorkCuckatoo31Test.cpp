@@ -4,11 +4,9 @@
 #define private public
 #include <src/pool/PoolGrin.h>
 #undef private
-#include <src/statistics/PoolRecords.h>
 
 #include <src/util/Logging.h>
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <algorithm>
 #include <src/application/Registry.h>
@@ -30,9 +28,8 @@ protected:
     std::unique_ptr<WorkSolutionCuckatoo31> oldSolution;
     std::unique_ptr<WorkSolutionCuckatoo31> latestSolution;
 
-    GrinJobs() {
-        Registry registry;
-        auto typeErasedPool = registry.makePool("Cuckatoo31Stratum", args);
+    void initTest() {
+        auto typeErasedPool = Registry{}.makePool("Cuckatoo31Stratum", args);
         pool = std::static_pointer_cast<PoolGrinStratum>(typeErasedPool);
 
         nl::json job = {{"height", 10}, {"job_id", 2}, {"difficulty", 1}, {"pre_pow", "00"}};
@@ -54,6 +51,7 @@ protected:
 };
 
 TEST_F(GrinJobs, ExpiryWorks) {
+    initTest();
 
     using limits = std::numeric_limits<double>;
     EXPECT_EQ(2. + limits::epsilon(), 2.);
@@ -80,7 +78,8 @@ TEST_F(GrinJobs, ExpiryWorks) {
 }
 
 TEST_F(GrinJobs, PoolDeletionWorks) {
-    pool = nullptr;
+    initTest();
+    pool.reset();
 
     EXPECT_TRUE(latestWork->expired());
     EXPECT_TRUE(latestSolution->expired());
