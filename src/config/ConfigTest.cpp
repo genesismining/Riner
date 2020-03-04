@@ -65,7 +65,7 @@ profile {
 
     task {
       run_on_all_remaining_devices: true
-      run_algoimpl_with_name: "EthashCL"
+      run_algoimpl_with_name: "AlgoDummy"
       use_device_profile_with_name: "dprof_0"
     }
 }
@@ -87,7 +87,9 @@ pool {
     password: "x"
 }
 )");
-        ASSERT_TRUE(config);
+        ASSERT_TRUE(config); //do not proceed unless config exists
+        EXPECT_EQ(config->global_settings().api_port(), 4028);
+
         {
             Application app{*config};
 
@@ -95,11 +97,9 @@ pool {
                 auto lock = app.devicesInUse.lock();
                 for (auto &dev : *lock) {
                     if (dev)
-                        LOG(INFO) << dev->settings.algoImplName;
+                        LOG(INFO) << "algoimpl of device " << dev->id.getName() << ": " << dev->settings.algoImplName;
                 }
             }
-
-            EXPECT_EQ(config->global_settings().api_port(), 4028);
             EXPECT_EQ(app.algorithms.size(), 1);
         }//Application dtor
     }
