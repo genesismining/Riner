@@ -93,5 +93,6 @@ int main(int raw_argc, const char *raw_argv[]) {
 
     shutdownState->confirmAppHasClosed();
     shutdownState.reset(); //joins 'shutdownWithTimeoutTask' thread
+    VLOG(4) << "returning from main function";
     return 0;
 }

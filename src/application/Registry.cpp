@@ -29,7 +29,7 @@ namespace riner {
         addPoolImpl<PoolEthashStratum>("EthashStratum2", "ethash", "stratum2");
         addPoolImpl<PoolGrinStratum>("Cuckatoo31Stratum", "cuckatoo31", "stratum"); // TODO: make it possible to assign multiple pow_types to one PoolImpl
         // addPoolImpl<PoolGrinStratum>("Cuckaroo29Stratum", "cuckaroo29", "stratum");
-        addPoolImpl<PoolGrinStratum>("AlgoDummy", "ethash", "dummy");
+        addPoolImpl<PoolDummy>("PoolDummy", "ethash", "dummy");
     }
 
     void Registry::registerAllGpuApis() {

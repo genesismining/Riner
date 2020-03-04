@@ -133,11 +133,11 @@ namespace riner {
     unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
         if (auto pool = activePool()) {
-            LOG(INFO) << "getting work from " << pool->getName();
+            VLOG(2) << "getting work from " << pool->getName();
             return pool->tryGetWorkImpl();
         }
 
-        LOG(INFO) << "PoolSwitcher cannot provide work since there is no active pool";
+        VLOG(2) << "PoolSwitcher cannot provide work since there is no active pool";
         //wait for a short period of time to prevent busy waiting in the algorithms' loops
         //TODO: better solution would be to wait for a short time, and if a pool becomes available in that time period it can be used immediately and the function returns
         std::this_thread::sleep_for(std::chrono::seconds(1));

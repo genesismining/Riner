@@ -34,19 +34,19 @@ protected:
 
         nl::json job = {{"height", 10}, {"job_id", 2}, {"difficulty", 1}, {"pre_pow", "00"}};
         pool->onMiningNotify(job);
-        invalidWork = std::move(pool->tryGetWork<WorkCuckatoo31>());
-        invalidSolution = std::move(invalidWork->makeWorkSolution<WorkSolutionCuckatoo31>());
+        invalidWork = pool->tryGetWork<WorkCuckatoo31>();
+        invalidSolution = invalidWork->makeWorkSolution<WorkSolutionCuckatoo31>();
 
         job["height"] = 11;
         job["job_id"] = 0;
         pool->onMiningNotify(job);
-        oldWork = std::move(pool->tryGetWork<WorkCuckatoo31>());
-        oldSolution = std::move(oldWork->makeWorkSolution<WorkSolutionCuckatoo31>());
+        oldWork = pool->tryGetWork<WorkCuckatoo31>();
+        oldSolution = oldWork->makeWorkSolution<WorkSolutionCuckatoo31>();
 
         job["job_id"] = 1;
         pool->onMiningNotify(job);
-        latestWork = std::move(pool->tryGetWork<WorkCuckatoo31>());
-        latestSolution = std::move(latestWork->makeWorkSolution<WorkSolutionCuckatoo31>());
+        latestWork = pool->tryGetWork<WorkCuckatoo31>();
+        latestSolution = latestWork->makeWorkSolution<WorkSolutionCuckatoo31>();
     }
 };
 
