@@ -67,10 +67,10 @@ protected:
         options.context = context;
         options.device = device;
 
-        std::vector<std::string> files = {"/kernel/siphash.h", "/kernel/cuckatoo.cl"};
+        std::vector<std::string> files = {"kernel/siphash.h", "kernel/cuckatoo.cl"};
         std::string fileDir = testKernelDir;
         for (auto &fileName : files) {
-            auto path = fileDir + fileName;
+            auto path = concatPath(fileDir, fileName);
             if (!file::readFileIntoString(path)) {
                 LOG(WARNING)<< "Failed to load one of the required kernel files";
                 return nullptr;

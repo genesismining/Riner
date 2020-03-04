@@ -24,6 +24,14 @@ namespace riner {
 
     bool startsWith(const std::string& string, const std::string& prefix);
 
+    //concats and maybe adds/removes a slash, tries to behave like std::filesystem would
+    // a   | b   |  return
+    // foo , bar => foo/bar
+    // foo/, bar => foo/bar
+    // foo ,/bar => throw std::invalid_argument
+    // foo/,/bar => throw std::invalid_argument
+    std::string concatPath(const std::string &a, const std::string &b);
+
     template<typename C>
     std::string toString(C container) {
         std::ostringstream s;

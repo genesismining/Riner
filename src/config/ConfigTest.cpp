@@ -7,6 +7,7 @@
 #include <src/application/Application.h>
 #include <src/common/Pointers.h>
 #include <src/util/Logging.h>
+#include <src/util/StringUtils.h>
 
 #include <config.pb.h>
 
@@ -33,6 +34,22 @@ namespace riner {
         EXPECT_TRUE(TextFormat::ParseFromString(str2, &config2));
 
         EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(config, config2));
+    }
+
+    TEST(Config, ConcatPath) {
+        EXPECT_EQ(concatPath("path/to", "file"), "path/to/file");
+        EXPECT_EQ(concatPath("path/to/", "file"), "path/to/file");
+        EXPECT_EQ(concatPath("path/to", ""), "path/to/");
+        EXPECT_EQ(concatPath("", ""), "");
+        EXPECT_EQ(concatPath("/", ""), "/");
+
+        using E = std::invalid_argument;
+        EXPECT_THROW(concatPath("path/to"  ,"/file"), E);
+        EXPECT_THROW(concatPath("path/to/" ,"/file"), E);
+        EXPECT_THROW(concatPath("path/to/" ,"/"), E);
+        EXPECT_THROW(concatPath("path/to"  ,"/"), E);
+        EXPECT_THROW(concatPath(""  , "/"), E);
+        EXPECT_THROW(concatPath("/" , "/"), E);
     }
 
     TEST(Config, LaunchApp) {

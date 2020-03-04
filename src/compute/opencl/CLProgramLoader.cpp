@@ -4,6 +4,7 @@
 #include <src/common/Optional.h>
 #include "CLProgramLoader.h"
 #include <src/util/FileUtils.h>
+#include <src/util/StringUtils.h> //concatPath
 #include <src/util/Logging.h>
 #include <condition_variable>
 
@@ -19,7 +20,7 @@ namespace riner {
                                                        const std::string &options) {
         std::vector<std::string> sources;
         for(auto& file: clFilesInDir) {
-            std::string clFilePath = clSourceDir + file;
+            std::string clFilePath = concatPath(clSourceDir, file);
 
             optional<std::string> source = file::readFileIntoString(clFilePath);
             if (!source) {

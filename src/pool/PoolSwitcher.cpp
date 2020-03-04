@@ -109,10 +109,14 @@ namespace riner {
         }
 
         if (activePoolIndex == pools.size()) {
-            if (activePoolBefore != activePoolIndex) //if it just changed
-                LOG(WARNING) << "no more backup pools available for PowType '"<<powType<<"'. Waiting for pools to become available again.";
-                if (pools.size() == 1)
-                    VLOG(0) << "note: you can put multiple pools per PowType into the config file. additional pools will be used as backup.";
+            if (activePoolBefore != activePoolIndex) {//if it just changed
+                LOG(WARNING) << "no more backup pools available for PowType '" << powType
+                             << "'. Waiting for pools to become available again.";
+                if (pools.size() == 1) {
+                    VLOG(0)
+                        << "note: you can put multiple pools per PowType into the config file. additional pools will be used as backup.";
+                }
+            }
             else
                 VLOG(0) << "still no backup pools available. Waiting for pools to become available again.";
         }
