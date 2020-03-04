@@ -21,7 +21,7 @@ namespace riner {
 
         explicit PoolSwitcher(std::string powType,
                 clock::duration checkInterval = std::chrono::seconds(20),
-                clock::duration durUntilDeclaredDead = std::chrono::seconds(20));
+                clock::duration durUntilDeclaredDead = std::chrono::seconds(60));
 
         ~PoolSwitcher() override;
 
