@@ -54,6 +54,7 @@ namespace riner {
         //called while holding lock this->mut
         using namespace std::chrono;
         auto now = clock::now();
+        auto activePoolBefore = activePoolIndex;
 
         for (size_t i = 0; i < pools.size(); ++i) {
             auto pool = pools[i];
@@ -66,8 +67,6 @@ namespace riner {
             bool wasAlreadyDeadAndIsStillDead = (latestDeclaredDeadTime > lastKnownAliveTime) | isDead; //pool was dead last time we checked
             bool justDied = isDead && !wasAlreadyDeadAndIsStillDead;
             bool isAlive = !isDead;
-
-            auto activePoolBefore = activePoolIndex;
 
             if (justDied) {//the pool died between now and the last time we checked
                 pool->declareDead();
@@ -110,7 +109,12 @@ namespace riner {
         }
 
         if (activePoolIndex == pools.size()) {
-            LOG(WARNING) << "no more backup pools available. Waiting for pools to become available again.";
+            if (activePoolBefore != activePoolIndex) //if it just changed
+                LOG(WARNING) << "no more backup pools available for PowType '"<<powType<<"'. Waiting for pools to become available again.";
+                if (pools.size() == 1)
+                    VLOG(0) << "note: you can put multiple pools per PowType into the config file. additional pools will be used as backup.";
+            else
+                VLOG(0) << "still no backup pools available. Waiting for pools to become available again.";
         }
     }
 
