@@ -52,7 +52,7 @@ namespace riner {
         void submitSolutionImpl(unique_ptr<WorkSolution> resultBase) override;
 
         void onConnected(CxnHandle);
-        jrpc::JsonRpcUtil io {};
+        jrpc::JsonRpcUtil io {"PoolEthash"};
 
         CxnHandle _cxn; //modified only on IO thread
         bool acceptMiningNotify = false; //modified only on IO thread

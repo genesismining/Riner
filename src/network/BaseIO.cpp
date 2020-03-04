@@ -287,7 +287,7 @@ namespace riner {
 
     std::string BaseIO::getIoThreadName() const {
         std::string name = "io#" + std::to_string(_uid);
-        if (0 == strcmp(_customIOThreadName, ""))
+        if (0 != strcmp(_customIOThreadName, ""))
             name = std::string{_customIOThreadName} + " " + name;
         return name;
     }
