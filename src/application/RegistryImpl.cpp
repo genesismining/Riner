@@ -18,8 +18,8 @@ namespace riner {
     }
 
     unique_ptr<Algorithm> Registry::makeAlgo(const std::string &name, AlgoConstructionArgs args) const {
-        if (_algoWithName.count(name))
-            return _algoWithName.at(name).makeFunc(std::move(args)); //initFunc declared in Registry::addAlgoImpl<T>
+        if (auto e = map_at_case_insensitive(_algoWithName, name))
+            return e->makeFunc(std::move(args)); //initFunc declared in Registry::addAlgoImpl<T>
         return nullptr;
     }
 
@@ -91,8 +91,8 @@ namespace riner {
                 bool samePow = toLower(e.powType) == toLower(powType);
 
                 bool sameProto = false;
-                sameProto |= toLower(e.protocolType)      == toLower(protocolType);
-                sameProto |= toLower(e.protocolTypeAlias) == toLower(protocolType);
+                sameProto |= toLower(protocolType) == toLower(e.protocolType);
+                sameProto |= toLower(protocolType) == toLower(e.protocolTypeAlias);
 
                 if (sameProto && samePow) {
                     return poolImplName;

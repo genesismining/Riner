@@ -38,7 +38,7 @@ namespace riner {
         //TODO: this function is basically the constructor of a not yet existent "Profile" class
         using namespace configUtils;
 
-        Registry factory; //registry is used as a factory for algo and pools
+        Registry registry; //registry is used as a factory for algo and pools
 
         //clear old state
         algorithms.clear(); //algos call into pools => clear algos before pools!
@@ -57,7 +57,7 @@ namespace riner {
         //for all algorithms that are required to be launched
         for (auto &implName : allRequiredImplNames) {
 
-            const std::string powType = factory.powTypeOfAlgoImpl(implName);
+            const std::string powType = registry.powTypeOfAlgoImpl(implName);
             if (powType.empty()) {
                 LOG(INFO) << "no PowType found for AlgoImpl '" << implName << "'. skipping.";
                 continue;
@@ -74,7 +74,7 @@ namespace riner {
                 RNR_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
                 PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
 
-                const std::string poolImplName = factory.poolImplForProtocolAndPowType(p.protocol(), powType);
+                const std::string poolImplName = registry.poolImplForProtocolAndPowType(p.protocol(), powType);
                 if (poolImplName.empty()) {
                     LOG(ERROR) << "no pool implementation available for powType '"
                                << powType << "' in combination with protocolType '"
@@ -84,7 +84,7 @@ namespace riner {
 
                 LOG(INFO) << "launching pool '" << poolImplName << "' to connect to " << p.host() << " on port " << p.port();
 
-                poolSwitcher->tryAddPool(args, poolImplName.c_str(), factory);
+                poolSwitcher->tryAddPool(args, poolImplName.c_str(), registry);
             }
 
             if (poolSwitcher->poolCount() == 0) {
@@ -110,7 +110,7 @@ namespace riner {
                     *lockedPoolSwitchers->at(powType) //TODO: do the pool switchers actually need to stay locked while calling into the user's algo and pool ctors?
             };
 
-            unique_ptr<Algorithm> algo = factory.makeAlgo(implName.c_str(), args);
+            unique_ptr<Algorithm> algo = registry.makeAlgo(implName, args);
 
             algorithms.emplace_back(std::move(algo));
         }
