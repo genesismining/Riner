@@ -118,10 +118,11 @@ target_link_libraries(riner lib_riner)
 target_include_directories (riner PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #set cmake cache values of used libs
-set(JSON_MultipleHeaders TRUE CACHE INTERNAL "") #enable json_fwd header
+set(JSON_MultipleHeaders ON CACHE INTERNAL "") #enable json_fwd header
 set(JSON_BuildTests OFF CACHE INTERNAL "") #disable building json tests by default
 set(BUILD_TESTING OFF CACHE INTERNAL "") #this seems to be required to remove the testing targets of Nlohmann json
 
+set(build_static_lib OFF CACHE INTERNAL "") #don't build easyloggingpp as static lib, easylogging++.cc is included in LoggingMain.cpp
 set(lib_utc_datetime ON CACHE BOOL "") #easyloggingpp log utc
 
 #add subdirectories
