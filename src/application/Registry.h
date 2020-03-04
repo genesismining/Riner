@@ -70,9 +70,9 @@ namespace riner {
         };
 
         struct EntryPool {
-            std::string powType = "";
-            std::string protocolType = "";
-            std::string protocolTypeAlias = "";
+            std::string powType;
+            std::string protocolType;
+            std::string protocolTypeAlias;
             std::function<shared_ptr<Pool>(PoolConstructionArgs &&)> makeFunc;
         };
 

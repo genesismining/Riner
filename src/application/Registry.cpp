@@ -9,6 +9,7 @@
 
 #include <src/pool/PoolEthash.h>
 #include <src/pool/PoolGrin.h>
+#include <src/pool/PoolDummy.h>
 
 #include <src/gpu_api/AmdgpuApi.h>
 
@@ -26,9 +27,9 @@ namespace riner {
     void Registry::registerAllPoolImpls() {
         //         <PoolImpl class>(ConfigName, PowType)
         addPoolImpl<PoolEthashStratum>("EthashStratum2", "ethash", "stratum2");
-        // TODO: make it possible to assign multiple pow_types to one PoolImpl
-        addPoolImpl<PoolGrinStratum>("Cuckatoo31Stratum", "cuckatoo31", "stratum");
+        addPoolImpl<PoolGrinStratum>("Cuckatoo31Stratum", "cuckatoo31", "stratum"); // TODO: make it possible to assign multiple pow_types to one PoolImpl
         // addPoolImpl<PoolGrinStratum>("Cuckaroo29Stratum", "cuckaroo29", "stratum");
+        addPoolImpl<PoolGrinStratum>("AlgoDummy", "ethash", "dummy");
     }
 
     void Registry::registerAllGpuApis() {

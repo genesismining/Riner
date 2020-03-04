@@ -40,25 +40,51 @@ namespace riner {
 global_settings {
     api_port: 4028
     opencl_kernel_dir: ""
-    start_profile_name: "example_profile"
+    start_profile_name: "prof_0"
 }
 
 profile {
     name: "prof_0"
+
+    task {
+      run_on_all_remaining_devices: true
+      run_algoimpl_with_name: "EthashCL"
+      use_device_profile_with_name: "dprof_0"
+    }
+}
+
+device_profile {
+    name: "dprof_0"
+    settings_for_algoimpl {
+        key: "AlgoDummy"
+        value {}
+    }
+}
+
+pool {
+    pow_type: "ethash"
+    protocol: "dummy"
+    host: "127.0.0.1"
+    port: 2345
+    username: "a"
+    password: "x"
 }
 )");
         ASSERT_TRUE(config);
-        Application app{*config};
+        {
+            Application app{*config};
 
-        {auto lock = app.devicesInUse.lock();
-            for (auto &dev : *lock) {
-                if (dev)
-                    LOG(INFO) << dev->settings.algoImplName;
+            {
+                auto lock = app.devicesInUse.lock();
+                for (auto &dev : *lock) {
+                    if (dev)
+                        LOG(INFO) << dev->settings.algoImplName;
+                }
             }
-        }
 
-        EXPECT_EQ(config->global_settings().api_port(), 4028);
-        EXPECT_EQ(app.algorithms.size(), 1);
+            EXPECT_EQ(config->global_settings().api_port(), 4028);
+            EXPECT_EQ(app.algorithms.size(), 1);
+        }//Application dtor
     }
 
     TEST(Config, GenerateProtoMessage) {
