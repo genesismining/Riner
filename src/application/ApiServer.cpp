@@ -16,7 +16,7 @@ namespace riner {
             , io(std::make_unique<JsonRpcUtil>("ApiServer")){
         registerFunctions();
 
-        io->launchServer(port, [this] (CxnHandle cxn) {
+        bool success = io->launchServer(port, [this] (CxnHandle cxn) {
             //on connected
             VLOG(0) << "ApiServer connection #" << cxn.id() << " accepted";
             io->setReadAsyncLoopEnabled(true);
@@ -25,7 +25,13 @@ namespace riner {
             VLOG(0) << "ApiServer connection closed";
         });
 
-        LOG(INFO) << "tcp JsonRPC 2.0 monitoring api now available on port " << port;
+        if (success) {
+            LOG(INFO) << "tcp JsonRPC 2.0 monitoring api now available on port " << port;
+        }
+        else {
+            //likely because the port is already used
+            LOG(WARNING) << "tcp JsonRPC 2.0 monitoring api not running";
+        }
     }
 
     ApiServer::~ApiServer() {

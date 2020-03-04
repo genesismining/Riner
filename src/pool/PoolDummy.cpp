@@ -19,7 +19,6 @@ namespace riner {
     void PoolDummy::tryConnect() {
         auto &args = this->constructionArgs; //get args from base class
         io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
-            setThreadName("pooldummy#" + std::to_string(poolUid) + " io");
             onConnected(cxn);
         });
         //launch the json rpc 2.0 client

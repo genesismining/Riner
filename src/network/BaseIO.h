@@ -56,7 +56,7 @@ namespace riner {
         void enableSsl(const SslDesc &);
 
         //launch as server or client, once launched cannot be changed for an instance
-        void launchServer(uint16_t listenOnPort, IOOnConnectedFunc &&, IOOnDisconnectedFunc && = ioOnDisconnectedNoop);
+        bool launchServer(uint16_t listenOnPort, IOOnConnectedFunc &&, IOOnDisconnectedFunc && = ioOnDisconnectedNoop);
         void launchClient(std::string host, uint16_t port, IOOnConnectedFunc &&, IOOnDisconnectedFunc && = ioOnDisconnectedNoop);
 
         //only reconnects if the connection was NOT closed due to

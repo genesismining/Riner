@@ -270,8 +270,8 @@ namespace riner {
          * @param onCxn the function that is called on the IO thread on every successfully established connection
          * @param onDc function that gets called (not necessarily on the io thread!) whenever a connection was closed from the other side, lost, or closed on this side.
          */
-        void launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
-            _layerBelow.launchServer(port, std::move(onCxn), std::move(onDc));
+        bool launchServer(uint16_t port, IOOnConnectedFunc onCxn = ioOnConnectedNoop, IOOnDisconnectedFunc onDc = ioOnDisconnectedNoop) {
+            return _layerBelow.launchServer(port, std::move(onCxn), std::move(onDc));
         }
 
         bool hasLaunched() {

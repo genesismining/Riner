@@ -53,7 +53,9 @@ namespace riner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
+            VLOG(4) << "async_write queued";
             _socket->async_write(asio::buffer(outgoing), [outgoing, shared = this->shared_from_this()] (const asio::error_code &error, size_t numBytes) {
+                VLOG(4) << "async_write scheduled";
                 if (error) {
                     LOG(WARNING) << "async write error " << asio_error_name_num(error) <<
                               " in Connection while trying to send '" << outgoing << "'";
@@ -65,11 +67,11 @@ namespace riner {
             //capturing shared = shared_from_this() is critical here, it means that as long as the handler is not invoked
             //the refcount of this connection is kept above zero, and thus the connection is kept alive.
             //as soon as no async read or write action is queued on a given connection is, the connection will close itself
-            VLOG(3) << "ReadUntil queued";
+            VLOG(4) << "read_until queued";
             _socket->async_read_until(_incoming, '\n', [this, shared = this->shared_from_this()]
                     (const asio::error_code &error, size_t numBytes) {
 
-                VLOG(3) << "ReadUntil scheduled";
+                VLOG(4) << "read_until scheduled";
                 if (error) {
                     if (error.value() == asio::error::eof) {
                         LOG(INFO) << "connection #" << _connectionUid << " closed from other side (eof)";
@@ -152,7 +154,7 @@ namespace riner {
     void BaseIO::startIOThread() {
         RNR_EXPECTS(_thread == nullptr);
         if (_thread) {
-            LOG(WARNING) << "BaseIO::launchIoThread called after ioService thread was already started by another call. Ignoring this call.";
+            LOG(WARNING) << getIoThreadName() << ": 'launchIoThread' called after ioService thread was already started by another call. Ignoring this call.";
             return;
         }
         _shutdown = false; //reset shutdown to false if it remained true e.g. due to disconnectAll();
@@ -197,7 +199,7 @@ namespace riner {
             _ioThreadId = {}; //reset io thread id
         });
         RNR_ENSURES(_thread);
-        VLOG(3) << "BaseIO::startIOThread";
+        VLOG(3) << getIoThreadName() << " io thread started";
     }
 
     void BaseIO::stopIOThread() { //TODO: atm subclasses are required to call stopIOThread from their dtor but implementors can forget to do so. (which causes crashes that are hard to pin down)
@@ -227,29 +229,44 @@ namespace riner {
     } //cxn refcount decremented and maybe destroyed if cxn was not used in _onConnected(cxn)
 
     //functions used by server
-    void BaseIO::launchServer(uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
+    bool BaseIO::launchServer(uint16_t port, IOOnConnectedFunc &&onCxn, IOOnDisconnectedFunc &&onDc) {
         VLOG(3) << getIoThreadName() << " trying to launch server";
         if (sslEnabledButNotSupported())
-            return;
+            return false;
 
         RNR_EXPECTS(_ioService);
         RNR_EXPECTS(_thread);
         RNR_EXPECTS(!hasLaunched());
-        _hasLaunched = true;
+
+        try {
+            VLOG(6) << "creating tcp::acceptor...";
+            _acceptor = make_unique<tcp::acceptor>(*_ioService, tcp::endpoint{tcp::v4(), port});
+            VLOG(6) << "creating tcp::acceptor...done";
+        }
+        catch(const std::system_error &e) {
+            LOG(ERROR) << "unable to listen for incoming tcp on port " << port << ": " << e.what();
+            VLOG(1) << "launchServer returning without having launched server";
+            return false;
+        }
+
+        RNR_EXPECTS(_acceptor);
 
         _onConnected    = std::move(onCxn);
         _onDisconnected = std::move(onDc);
-        _acceptor = make_unique<tcp::acceptor>(*_ioService, tcp::endpoint{tcp::v4(), port});
 
+        _hasLaunched = true;
         bool isClient = false;
         prepareSocket(isClient);
         serverListen();
+        return true;
     }
 
     void BaseIO::serverListen() {
         RNR_EXPECTS(_acceptor);
         RNR_EXPECTS(_socket);
+        VLOG(6) << "async_accept queued";
         _acceptor->async_accept(_socket->tcpStream(), [this] (const asio::error_code &error) { //socket operation
+            VLOG(6) << "async_accept scheduled";
             if (!error) {
                 bool isClient = false;
 
@@ -257,7 +274,9 @@ namespace riner {
                 auto suSock = make_shared<unique_ptr<Socket>>(move(_socket)); //move out current socket
                 prepareSocket(isClient); //make new socket
 
+                VLOG(6) << "asyncHandshakeOrNoop queued (B)";
                 (*suSock)->asyncHandshakeOrNoop([this, suSock] (const asio::error_code &error) {
+                    VLOG(6) << "asyncHandshakeOrNoop scheduled (B)";
                     if (*suSock) {
                         handshakeHandler(error, move(*suSock));
                     }
@@ -277,12 +296,14 @@ namespace riner {
 
     void BaseIO::prepareSocket(bool isClient) {
         RNR_EXPECTS(_ioService);
+        VLOG(6) << "prepareSocket...";
         if (_sslDesc) { //create ssl socket
             _socket = make_unique<Socket>(*_ioService, isClient, _sslDesc.value());
         }
         else { //create tcp socket
             _socket = make_unique<Socket>(*_ioService, isClient);
         }
+        VLOG(6) << "prepareSocket...done";
     }
 
     std::string BaseIO::getIoThreadName() const {
@@ -317,10 +338,14 @@ namespace riner {
 
         tcp::resolver::query query{host, std::to_string(port)};
 
+        VLOG(6) << "async_resolve queued";
         _resolver->async_resolve(query, [this] (auto &error, auto it) {
+            VLOG(6) << "async_resolve scheduled";
             if (!error) {
                 auto endpoint = *it;
+                VLOG(6) << "async_connect queued (A)";
                 _socket->tcpStream().async_connect(endpoint, [this, it] (auto &error) { //socket operation
+                    VLOG(6) << "async_connect scheduled (A)";
                     clientIterateEndpoints(error, it);
                 });
             }
@@ -341,7 +366,9 @@ namespace riner {
             _socket->tcpStream().set_option(tcp::no_delay(true));
             auto suSock = make_shared<unique_ptr<Socket>>(move(_socket));
 
+            VLOG(6) << "asyncHandshakeOrNoop queued (A)";
             (*suSock)->asyncHandshakeOrNoop([this, suSock] (const asio::error_code &error) mutable {
+                VLOG(6) << "asyncHandshakeOrNoop scheduled (A)";
                 if (*suSock) {
                     handshakeHandler(error, std::move(*suSock));
                 }
@@ -357,7 +384,9 @@ namespace riner {
             if (next != it_end) {
                 VLOG(3) << "now trying different endpoint "<< next->host_name() << ":" << next->service_name();
             }
+            VLOG(6) << "async_connect queued (B)";
             _socket->tcpStream().async_connect(endpoint, [this, next] (const auto &error) { //socket operation
+                VLOG(6) << "async_connect scheduled (B)";
                 clientIterateEndpoints(error, next);
             });
         }
@@ -460,6 +489,7 @@ namespace riner {
 
         //define function that re-submits asio::steady_timer with this function
         shared->waitHandler = [this, weak, interval] (const asio::error_code &error) {
+            VLOG(6) << "async_wait waitHandler called";
 
             if (error == asio::error::operation_aborted) { //TODO: remove
                 LOG(INFO) << "retry handler successfully aborted";
@@ -489,6 +519,7 @@ namespace riner {
                 }
                 else {
                     shared->timer = asio::steady_timer{*_ioService, interval};
+                    VLOG(6) << "async_wait waitHandler queued";
                     shared->timer.async_wait(shared->waitHandler);
                 }
 
@@ -497,6 +528,7 @@ namespace riner {
         };
 
         //initiate the periodic waitHandler calls with empty error_code
+        VLOG(6) << "async_wait waitHandler posted";
         postAsync([shared] {
             shared->waitHandler(asio::error_code());
         });
