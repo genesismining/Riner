@@ -7,6 +7,7 @@
 #include <src/common/Endian.h>
 #include <src/compute/opencl/CLProgramLoader.h>
 #include <src/common/Future.h>
+#include <src/util/StringUtils.h>
 #include <memory>
 
 namespace riner {
@@ -39,7 +40,6 @@ namespace riner {
         const unsigned numGpuSubTasks = settings.num_threads;
 
         //Statistics statistics;
-
         auto notifyFunc = [] (const char *errinfo, const void *private_info, size_t cb, void *user_data) {
             LOG_N_TIMES(10, ERROR) << errinfo;
         };
@@ -47,9 +47,9 @@ namespace riner {
         PerPlatform plat;
         plat.clContext = cl::Context(clDevice, nullptr, notifyFunc); //TODO: opencl context should be per-platform
 
-        auto compilerOptions = std::stringstream{} << "-D WORKSIZE=" << settings.work_size;
+        std::string compilerOptions = MakeStr{} << "-D WORKSIZE=" << settings.work_size;
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", compilerOptions.str());
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", compilerOptions);
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
@@ -166,7 +166,7 @@ namespace riner {
 
                 for (uint64_t resultNonce : resultNonces) {
                     tasks.addTask([=, &device] () {
-                        setThreadName("EthashCL submit share");
+                        SetThreadNameStream{} << "EthashCL submit share";
                         submitShare(work, resultNonce, device);
                     });
                 }

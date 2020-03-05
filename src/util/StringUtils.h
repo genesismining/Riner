@@ -24,6 +24,27 @@ namespace riner {
 
     bool startsWith(const std::string& string, const std::string& prefix);
 
+    //quick and easy string creation stream shorthand
+    //usage (MakeStr{} << "foo" << 4.f << "\n").str()
+    struct MakeStr {
+        std::stringstream ss {};
+        MakeStr() = default;
+        MakeStr(MakeStr &&) = default;
+
+        template<class T> MakeStr &&operator<<(T &&t) && {
+            ss << (std::forward<T>(t));
+            return std::move(*this);
+        }
+
+        std::string str() {
+            return ss.str();
+        }
+
+        operator std::string () const {
+            return ss.str();
+        }
+    };
+
     //concats and maybe adds/removes a slash, tries to behave like std::filesystem would
     // a   | b   |  return
     // foo , bar => foo/bar

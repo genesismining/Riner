@@ -24,7 +24,7 @@ namespace riner {
 
             optional<std::string> source = file::readFileIntoString(clFilePath);
             if (!source) {
-                LOG(ERROR) << "failed to read " << clFilePath;
+                LOG(ERROR) << "when loading cl program: failed to read file '" << clFilePath << "'";
                 return nullopt;
             }
             sources.push_back(std::move(*source));
