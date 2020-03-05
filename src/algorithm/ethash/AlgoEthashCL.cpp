@@ -15,7 +15,7 @@ namespace riner {
             : pool(args.workProvider)
             , clProgramLoader(args.compute.getProgramLoaderOpenCL()) {
 
-        LOG(INFO) << "launching " << args.assignedDevices.size() << " gpu-tasks";
+        VLOG(0) << "EthashCL: launching " << args.assignedDevices.size() << " gpu-tasks";
 
         for (auto &device : args.assignedDevices) {
             if (auto clDevice = args.compute.getDeviceOpenCL(device.get().id)) {
@@ -41,35 +41,36 @@ namespace riner {
         //Statistics statistics;
 
         auto notifyFunc = [] (const char *errinfo, const void *private_info, size_t cb, void *user_data) {
-            LOG(ERROR) << errinfo;
+            LOG_N_TIMES(10, ERROR) << errinfo;
         };
 
         PerPlatform plat;
         plat.clContext = cl::Context(clDevice, nullptr, notifyFunc); //TODO: opencl context should be per-platform
 
-        std::string compilerOptions = "-D WORKSIZE=" + std::to_string(settings.work_size);
+        auto compilerOptions = std::stringstream{} << "-D WORKSIZE=" << settings.work_size;
 
-        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "kernel/ethash.cl", compilerOptions);
+        auto maybeProgram = clProgramLoader.loadProgram(plat.clContext, "ethash.cl", compilerOptions.str());
         if (!maybeProgram) {
             LOG(ERROR) << "unable to load ethash kernel, aborting algorithm";
             return;
         }
+        VLOG(0) << "successfully compiled ethash kernel";
         plat.clProgram = *maybeProgram;
 
         DagFile dag;
 
+        VLOG(4) << "trying to get work for dag creation";
         while (!shutdown) {
             //get work only for obtaining dag creation info
-            LOG(INFO) << "trying to get work for dag creation";
             auto work = pool.tryGetWork<WorkEthash>();
             if (!work)
                 continue; //check shutdown and try again
 
-            LOG(INFO) << "using work to generate dag";
+            VLOG(4) << "using work to generate dag";
 
             //~ every 5 days
             {
-                LOG(INFO) << "waiting for dag cache to be generated";
+                VLOG(2) << "waiting for dag cache to be generated";
                 typedef decltype(dagCache.readLock()) read_locked_cache_t;
                 unique_ptr<read_locked_cache_t> readCachePtr;
                 auto lockedCache = dagCache.immediateLock();
@@ -82,15 +83,15 @@ namespace riner {
                     readCachePtr = std::make_unique<read_locked_cache_t>(lockedCache.downgrade());
                 }
                 auto &readCache = *readCachePtr;
-                LOG(INFO) << "dag cache was generated for epoch " << readCache->getEpoch();
+                VLOG(0) << "dag cache was generated for epoch " << readCache->getEpoch();
 
                 if (!dag.generate(*readCache, plat.clContext, clDevice, plat.clProgram)) {
-                    LOG(ERROR) << "generating dag file failed.";
+                    LOG_N_TIMES(10, ERROR) << "generating dag file failed.";
                     continue;
                 }
             }
 
-            LOG(INFO) << "launching " << numGpuSubTasks << " gpu-subtasks for the current gpu-task";
+            VLOG(0) << "launching " << numGpuSubTasks << " gpu-subtasks for the current gpu-task";
 
             std::vector<std::future<void>> tasks;
 
@@ -116,30 +117,30 @@ namespace riner {
 
         state.cmdQueue = cl::CommandQueue(plat.clContext, clDevice, 0, &err);
         if (err || !state.cmdQueue()) {
-            LOG(ERROR) << "unable to create command queue in gpuSubTask";
+            LOG_N_TIMES(10, ERROR) << "unable to create command queue in gpuSubTask";
         }
 
         state.clSearchKernel = cl::Kernel(plat.clProgram, "search", &err);
         if (err) {
-            LOG(ERROR) << "unable to create 'search' kernel object from cl program";
+            LOG_N_TIMES(10, ERROR) << "unable to create 'search' kernel object from cl program";
         }
 
         size_t headerSize = 32;
         state.header = cl::Buffer(plat.clContext, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
                 headerSize, nullptr, &err);
         if (err) {
-            LOG(ERROR) << "unable to allocate opencl header buffer";
+            LOG_N_TIMES(10, ERROR) << "unable to allocate opencl header buffer";
             return;
         }
 
         state.clOutputBuffer = cl::Buffer(plat.clContext, CL_MEM_READ_WRITE, state.bufferSize, nullptr, &err);
         if (err) {
-            LOG(ERROR) << "unable to allocate opencl output buffer";
+            LOG_N_TIMES(10, ERROR) << "unable to allocate opencl output buffer";
             return;
         }
         err = state.cmdQueue.enqueueFillBuffer(state.clOutputBuffer, (uint8_t)0, 0, state.bufferSize);
         if (err) {
-            LOG(ERROR) << "unable to clear opencl output buffer";
+            LOG_N_TIMES(10, ERROR) << "unable to clear opencl output buffer";
             return;
         }
 
@@ -172,7 +173,7 @@ namespace riner {
                 device.records.reportScannedNoncesAmount(raw_intensity);
 
                 if (work->expired()) {
-                    LOG(INFO) << "aborting kernel loop because work has expired on " << std::this_thread::get_id();
+                    VLOG(0) << "aborting kernel loop because work has expired on " << std::this_thread::get_id();
                     break; //get new work
                 }
             }
@@ -235,13 +236,13 @@ namespace riner {
 
         err = state.cmdQueue.enqueueNDRangeKernel(state.clSearchKernel, offset, globalWorkSize, localWorkSize);
         if (err) {
-            LOG(ERROR) << "#" << err << " error when enqueueing search kernel on " << std::this_thread::get_id();
+            LOG_N_TIMES(10, ERROR) << "#" << err << " error when enqueueing search kernel on " << std::this_thread::get_id();
         }
 
         cl_bool blocking = CL_FALSE;
         err = state.cmdQueue.enqueueReadBuffer(state.clOutputBuffer, blocking, 0, state.bufferSize, state.outputBuffer.data());
         if (err) {
-            LOG(ERROR) << "#" << err << " error when trying to read back clOutputBuffer after search kernel";
+            LOG_N_TIMES(10, ERROR) << "#" << err << " error when trying to read back clOutputBuffer after search kernel";
             return results;
         }
         state.cmdQueue.finish();
@@ -250,7 +251,7 @@ namespace riner {
 
         auto numFoundNonces = state.outputBuffer.back();
         if (numFoundNonces >= state.bufferCount) {
-            LOG(ERROR) << "amount of nonces (" << numFoundNonces << ") in outputBuffer exceeds outputBuffer's size";
+            LOG_N_TIMES(10, ERROR) << "amount of nonces (" << numFoundNonces << ") in outputBuffer exceeds outputBuffer's size";
         }
         else if (numFoundNonces > 0) {
             //clear the clOutputBuffer by overwriting it with blank
