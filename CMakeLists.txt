@@ -136,6 +136,7 @@ target_compile_definitions(lib_riner PUBLIC ASIO_STANDALONE) #tell asio to not i
 #target_compile_definitions(lib_riner PUBLIC BOOST_ASIO_ENABLE_HANDLER_TRACKING) #async debugging handler tracking
 
 target_compile_definitions(lib_riner PUBLIC ELPP_THREAD_SAFE ELPP_FEATURE_CRASH_LOG) #tell easylogging++ to be threadsafe
+target_compile_definitions(lib_riner PUBLIC ELPP_NO_DEFAULT_LOG_FILE)
 #target_compile_definitions(lib_riner PUBLIC ELPP_DISABLE_LOGS) #disable all easylogging++ logging
 
 #target_compile_definitions(lib_riner PUBLIC GSL_UNENFORCED_ON_CONTRACT_VIOLATION) #tell GSL to not perform performance heavy checks
