@@ -4,6 +4,8 @@
 #include <src/util/StringUtils.h>
 
 #include <easylogging++.cc>
+#include <src/common/Assert.h>
+
 INITIALIZE_EASYLOGGINGPP
 
 namespace riner {
@@ -35,6 +37,25 @@ namespace riner {
         Configurations c;
         c.setToDefault();
 
+        size_t defaultLogSize = 1 * 1024 * 1024;
+        std::string logFileSizeBytes = getValueAfterArgWithEqualsSign({"--logsize"}, argc, argv).value_or(std::to_string(defaultLogSize));
+
+        RNR_EXPECTS(argc > 0);
+        std::string logFileDir = stripDirFromPath(argv[0]) + "/logs";
+        std::string logFile0 = logFileDir + "/riner_log.log";
+        std::string logFile1 = logFileDir + "/riner_log.1.log";
+
+        //this callback is called when the log file surpassed the logsize limit
+        el::Helpers::installPreRollOutCallback([=] (const char *log_file_name, size_t file_size) {
+            std::remove(logFile1.c_str());
+            std::rename(logFile0.c_str(), logFile1.c_str());
+        });
+
+        c.setGlobally(CT::ToFile, "true"); //log to a file
+        c.setGlobally(CT::Filename, logFile0);
+        c.setGlobally(CT::MaxLogFileSize, logFileSizeBytes);
+        //c.setGlobally(CT::LogFlushThreshold, 4);
+
         std::string time_fmt = "%datetime";
         if (hasArg({"--sec"}, argc, argv)) {
             time_fmt = "%datetime{%s,%g}";
@@ -63,6 +84,7 @@ namespace riner {
         }
 
         Loggers::reconfigureLogger("default", c);
+        VLOG(4) << "log file size set to: " << logFileSizeBytes;
     }
 
     std::string &fancifyLog(std::string &msg) {
