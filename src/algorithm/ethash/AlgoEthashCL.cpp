@@ -9,6 +9,7 @@
 #include <src/common/Future.h>
 #include <src/util/StringUtils.h>
 #include <memory>
+#include <src/compute/opencl/CLError.h>
 
 namespace riner {
 
@@ -115,34 +116,24 @@ namespace riner {
         PerGpuSubTask state;
         state.settings = device.settings;
 
-        state.cmdQueue = cl::CommandQueue(plat.clContext, clDevice, 0, &err);
-        if (err || !state.cmdQueue()) {
-            LOG_N_TIMES(10, ERROR) << "unable to create command queue in gpuSubTask";
+        if (!(state.cmdQueue = cl::CommandQueue(plat.clContext, clDevice, 0, &err))()) {
+            LOG_N_TIMES(10, ERROR) << "creating command queue failed in gpuSubTask";
         }
+        RNR_RETURN_ON_CL_ERR(err, "create command queue in gpuSubTask",);
 
         state.clSearchKernel = cl::Kernel(plat.clProgram, "search", &err);
-        if (err) {
-            LOG_N_TIMES(10, ERROR) << "unable to create 'search' kernel object from cl program";
-        }
+        RNR_RETURN_ON_CL_ERR(err, "unable to create 'search' kernel object from cl program",);
 
         size_t headerSize = 32;
         state.header = cl::Buffer(plat.clContext, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY,
                 headerSize, nullptr, &err);
-        if (err) {
-            LOG_N_TIMES(10, ERROR) << "unable to allocate opencl header buffer";
-            return;
-        }
+        RNR_RETURN_ON_CL_ERR(err, "unable to allocate opencl header buffer",);
 
         state.clOutputBuffer = cl::Buffer(plat.clContext, CL_MEM_READ_WRITE, state.bufferSize, nullptr, &err);
-        if (err) {
-            LOG_N_TIMES(10, ERROR) << "unable to allocate opencl output buffer";
-            return;
-        }
+        RNR_RETURN_ON_CL_ERR(err, "unable to allocate opencl output buffer",);
+
         err = state.cmdQueue.enqueueFillBuffer(state.clOutputBuffer, (uint8_t)0, 0, state.bufferSize);
-        if (err) {
-            LOG_N_TIMES(10, ERROR) << "unable to clear opencl output buffer";
-            return;
-        }
+        RNR_RETURN_ON_CL_ERR(err, "unable to clear opencl output buffer",);
 
         while (!shutdown) {
             std::shared_ptr<const WorkEthash> work = pool.tryGetWork<WorkEthash>();
@@ -213,10 +204,7 @@ namespace riner {
         memcpy(&target64, work.deviceTarget.data() + 24, work.deviceTarget.size() - 24);
 
         err = state.cmdQueue.enqueueWriteBuffer(state.header, CL_FALSE, 0, work.header.size(), work.header.data());
-        if (err) {
-            LOG(ERROR) << "#" << err << " error when writing work header to cl buffer";
-            return results;
-        }
+        RNR_RETURN_ON_CL_ERR(err, "error when writing work header to cl buffer", results);
 
         cl_uint argI = 0;
         auto &k = state.clSearchKernel;
@@ -235,16 +223,12 @@ namespace riner {
         cl::NDRange globalWorkSize{state.settings.raw_intensity};
 
         err = state.cmdQueue.enqueueNDRangeKernel(state.clSearchKernel, offset, globalWorkSize, localWorkSize);
-        if (err) {
-            LOG_N_TIMES(10, ERROR) << "#" << err << " error when enqueueing search kernel on " << std::this_thread::get_id();
-        }
+        RNR_CL_ERR(err, "error when enqueueing search kernel");
 
         cl_bool blocking = CL_FALSE;
         err = state.cmdQueue.enqueueReadBuffer(state.clOutputBuffer, blocking, 0, state.bufferSize, state.outputBuffer.data());
-        if (err) {
-            LOG_N_TIMES(10, ERROR) << "#" << err << " error when trying to read back clOutputBuffer after search kernel";
-            return results;
-        }
+        RNR_RETURN_ON_CL_ERR(err, "error when trying to read back clOutputBuffer after search kernel", results);
+
         state.cmdQueue.finish();
 
         //TODO: alternatively for nvidia, use clFlush instead of finish and wait for the cl event of readBuffer command to finish
