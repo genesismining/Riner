@@ -76,6 +76,7 @@ add_library(lib_riner
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.cpp src/compute/ComputeApiEnums.h
+        src/compute/opencl/CLError.cpp src/compute/opencl/CLError.h
         src/compute/opencl/CLProgramLoader.cpp src/compute/opencl/CLProgramLoader.h
         src/common/Chrono.h
         src/common/Endian.h
