@@ -53,6 +53,9 @@ namespace riner {
     // foo/,/bar => throw std::invalid_argument
     std::string concatPath(const std::string &a, const std::string &b);
 
+    //returns the string up until the last "/" or "\".
+    std::string stripDirFromPath(const std::string &);
+
     template<typename C>
     std::string toString(C container) {
         std::ostringstream s;

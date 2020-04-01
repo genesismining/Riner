@@ -22,6 +22,10 @@ namespace riner {
         return res;
     }
 
+    std::string stripDirFromPath(const std::string &path) {
+        return path.substr(0, path.find_last_of("\\/"));
+    }
+
     std::string concatPath(const std::string& a, const std::string& b) {
         //s1 starts with /
         if (!b.empty() && b.front() == '/') {
