@@ -34,7 +34,6 @@ add_library(lib_riner
         src/application/CLI.cpp src/application/CLI.h
         src/application/LoggingMain.cpp
         src/config/Config.cpp src/config/Config.h
-        src/config/ConfigDefaultValues.h
         src/algorithm/Algorithm.cpp src/algorithm/Algorithm.h
         src/algorithm/ethash/AlgoEthashCL.cpp src/algorithm/ethash/AlgoEthashCL.h
         src/algorithm/ethash/DagFile.cpp src/algorithm/ethash/DagFile.h

@@ -13,28 +13,9 @@
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>
-#include <src/config/ConfigDefaultValues.h>
 
 namespace riner {
     using namespace proto;
-
-    TEST(Config, ParseDefaults) {
-        using TextFormat = google::protobuf::TextFormat;
-        std::string str = defaultConfigCStr;
-
-        Config config;
-        EXPECT_TRUE(TextFormat::ParseFromString(str, &config));
-
-        std::string str2;
-        EXPECT_TRUE(TextFormat::PrintToString(config, &str2));
-
-        LOG(INFO) << "stripped default config: " << str2;
-
-        Config config2;
-        EXPECT_TRUE(TextFormat::ParseFromString(str2, &config2));
-
-        EXPECT_TRUE(google::protobuf::util::MessageDifferencer::Equals(config, config2));
-    }
 
     TEST(Config, ConcatPath) {
         EXPECT_EQ(concatPath("path/to", "file"), "path/to/file");

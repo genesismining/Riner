@@ -11,7 +11,9 @@ namespace riner {
 
     using Config = proto::Config;
     optional<Config> parseConfig(const std::string &txtProto);
+    void fillInDefaultValuesIfNeeded(Config &config);
     bool validateConfig(const Config &);
+
     optional_cref<proto::Config_Profile> getStartProfile(const Config &);
     optional_cref<proto::Config_DeviceProfile> getDeviceProfile(const Config &c, const std::string &devProfileName);
 

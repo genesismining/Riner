@@ -14,12 +14,12 @@ message Config {
     repeated Pool pool = 6;
 
     message GlobalSettings {
-        optional int32 temp_cutoff_celsius   = 1 [default = 85];
-        optional int32 temp_overheat_celsius = 2 [default = 80];
-        optional int32 temp_target_celsius   = 3 [default = 76];
-        optional int32 temp_hysteresis       = 4 [default =  2];
+        optional int32 temp_cutoff_celsius   = 1;
+        optional int32 temp_overheat_celsius = 2;
+        optional int32 temp_target_celsius   = 3;
+        optional int32 temp_hysteresis       = 4;
 
-        optional uint32 api_port             = 5 [default = 4028];
+        optional uint32 api_port             = 5;
         optional string opencl_kernel_dir    = 6;
 
         optional string start_profile_name   = 7; //must correspond to "name" field of an existing Profile that should be used as the first one when starting the application
