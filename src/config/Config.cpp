@@ -43,12 +43,7 @@ if (!obj. has_##member () ) { \
         Config::GlobalSettings &gs = *config.mutable_global_settings(); //this call instantiates if needed.
 
         //global_settings default values
-        default_value(gs, temp_cutoff_celsius, 85);
-        default_value(gs, temp_overheat_celsius, 80);
-        default_value(gs, temp_target_celsius, 76);
-        default_value(gs, temp_hysteresis, 2);
         default_value(gs, api_port, 4028);
-        default_value(gs, opencl_kernel_dir, "./kernels");
 
         //device_profiles
         for (auto &dp : *config.mutable_device_profile()) {
@@ -56,13 +51,14 @@ if (!obj. has_##member () ) { \
                 Config::DeviceProfile::AlgoSettings &as = pair.second;
 
                 //algo_settings default values
-                default_value(as, core_clock_mhz_min, 700);
-                default_value(as, core_clock_mhz_max, 1129);
-                default_value(as, core_clock_mhz, 700); //TODO: value
-                default_value(as, memory_clock_mhz, 2040);
-                default_value(as, core_voltage_mv, 0);//TODO: value
-                default_value(as, core_voltage_offset_mv, 0);//TODO: value
-                default_value(as, power_limit_w, 120);
+
+                if (as.has_power_limit_w()) {
+                    //no defaults
+                }
+                else if (as.has_power_limit_percent()) {
+                    default_value(as, power_limit_percent, 100);
+                }
+
                 default_value(as, num_threads, 1);
                 default_value(as, work_size, 128);
                 default_value(as, raw_intensity, 1048576);
@@ -71,7 +67,8 @@ if (!obj. has_##member () ) { \
 
         //pool default values
         for (auto &p : *config.mutable_pool()) {
-            default_value(p, host, "127.0.0.1");
+            (void)p;
+            //no defaults
         }
     }
 
@@ -84,18 +81,14 @@ if (!(_min <= x && x <= _max)) { \
 }
 
     bool validateConfig(const Config &config) {
+        constexpr uint32_t u32_max = std::numeric_limits<uint32_t>::max();
 
         //e.g. check whether keys in settings_for_algoimpl are actual AlgoImpl names of registered classes
         const Config::GlobalSettings &gs = config.global_settings();
 
         try {
             //global_settings default values
-            check_between(gs.temp_cutoff_celsius(), 0, 100); //TODO: values
-            check_between(gs.temp_overheat_celsius(), 0, 100); //TODO: values
-            check_between(gs.temp_target_celsius(), 0, 100); //TODO: values
-            check_between(gs.temp_hysteresis(), 0, 100); //TODO: values
-
-            check_between(gs.api_port(), 0, 65535);
+            check_between(gs.api_port(), 1, 65535);
 
             //device_profiles
             for (auto &dp : config.device_profile()) {
@@ -103,24 +96,20 @@ if (!(_min <= x && x <= _max)) { \
                     const Config::DeviceProfile::AlgoSettings &as = pair.second;
 
                     //algo_settings default values
-
-                    check_between(as.core_clock_mhz_min(), 0, 0); //TODO: values
-                    check_between(as.core_clock_mhz_max(), as.core_clock_mhz_min(), 0); //TODO: values
-                    check_between(as.core_clock_mhz(), as.core_clock_mhz_min(), as.core_clock_mhz_max()); //TODO: values
-                    check_between(as.memory_clock_mhz(), 0, 0); //TODO: values
-                    check_between(as.core_voltage_mv(), 0, 0); //TODO: values
-                    check_between(as.core_voltage_offset_mv(), 0, 0); //TODO: values
-
                     if (as.has_power_limit_w()) {
-                        check_between(as.power_limit_w(), 0, 0);
+                        //no limits
                     }
                     if (as.has_power_limit_percent()) {
-                        check_between(as.power_limit_percent(), 0, 100); //TODO: values
+                        check_between(as.power_limit_percent(), 0, 200);
                     }
 
-                    check_between(as.num_threads(), 1, std::numeric_limits<uint32_t>::max());
-                    check_between(as.work_size(), 8, 1024);//TODO: values
-                    check_between(as.raw_intensity(), 8, std::numeric_limits<uint32_t>::max())//TODO: values
+                    check_between(as.num_threads(), 1, u32_max);
+                    check_between(as.work_size(), 128, u32_max);
+                    if (as.work_size() > 1024) {
+                        LOG(WARNING) << "unusually high work_size of " << as.work_size() << "found. proceeding.";
+                    }
+
+                    check_between(as.raw_intensity(), 1, u32_max)//TODO: values
 
                 }
             }
@@ -178,8 +167,6 @@ if (!(_min <= x && x <= _max)) { \
 
         algoImplName = algoImplNameArg;
         set_if_has(gpuSettings.memory_clock_MHz, memory_clock_mhz);
-        set_if_has(gpuSettings.core_clock_MHz_min, core_clock_mhz_min);
-        set_if_has(gpuSettings.core_clock_MHz_max, core_clock_mhz_max);
         set_if_has(gpuSettings.core_clock_MHz, core_clock_mhz);
         set_if_has(gpuSettings.memory_clock_MHz, memory_clock_mhz);
         set_if_has(gpuSettings.power_limit_W, power_limit_w);

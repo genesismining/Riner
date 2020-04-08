@@ -14,11 +14,6 @@ message Config {
     repeated Pool pool = 6;
 
     message GlobalSettings {
-        optional int32 temp_cutoff_celsius   = 1;
-        optional int32 temp_overheat_celsius = 2;
-        optional int32 temp_target_celsius   = 3;
-        optional int32 temp_hysteresis       = 4;
-
         optional uint32 api_port             = 5;
         optional string opencl_kernel_dir    = 6;
 
@@ -61,30 +56,26 @@ message Config {
         map<string, AlgoSettings> settings_for_algoimpl = 2; //string key is the name of the AlgoImpl e.g. "AlgoEthashCL" for which the provided AlgoSettings should be used.
 
         message AlgoSettings {
-            optional uint32 core_clock_MHz_min = 1;// [default = 700];
-            optional uint32 core_clock_MHz_max = 2;// [default = 1129];
             optional uint32 core_clock_MHz = 3;
-
-            optional uint32 memory_clock_MHz = 4;// [default = 2040];
-
+            optional uint32 memory_clock_MHz = 4;
             optional uint32 core_voltage_mV = 5;
             optional uint32 core_voltage_offset_mV = 6;
 
             oneof power_limit {
-                uint32 power_limit_W = 7; //[default = 120];
+                uint32 power_limit_W = 7;
                 uint32 power_limit_percent = 8;
             }
 
-            optional uint32 num_threads = 9 [default = 1];
-            optional uint32 work_size = 10 [default = 128];
-            optional uint32 raw_intensity = 11 [default = 1048576];
+            optional uint32 num_threads = 9;
+            optional uint32 work_size = 10;
+            optional uint32 raw_intensity = 11;
         }
 
     }
 
     message Pool {
-        optional string pow_type = 1 [default = "ethash"];
-        optional string protocol = 2 [default = "stratum+tcp"];
+        optional string pow_type = 1;
+        optional string protocol = 2;
         optional string host = 3;
         optional uint32 port = 4;
         optional string username = 5;
