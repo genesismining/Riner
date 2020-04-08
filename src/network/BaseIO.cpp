@@ -422,14 +422,21 @@ namespace riner {
         };
 
         auto connect = [this, host, port, failedTriesToConnect] () {
-            if (this->_shutdown)
-                return;
-
             //if connecting has failed last time, wait a little bit before trying again
             if (*failedTriesToConnect > 0) {
-                int waitMs = std::max(*failedTriesToConnect, 20) * 500;
-                std::this_thread::sleep_for(std::chrono::milliseconds(waitMs));
+                int singleWaitMs = 500; //this is the interval in which _shutdown is checked
+                int totalWaitMs = std::max(*failedTriesToConnect, 20) * singleWaitMs;
+
+                for (; totalWaitMs >= 0; totalWaitMs -= singleWaitMs) {
+                    if (this->_shutdown)
+                        break;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(singleWaitMs));
+                }
             }
+
+            if (this->_shutdown) //check after wait, because shutdown status may have changed since
+                return;
+
             ++*failedTriesToConnect;
 
             auto onCxn = std::move(_onConnected); //create temporaries to move from
