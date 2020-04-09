@@ -26,6 +26,10 @@ namespace riner {
         return path.substr(0, path.find_last_of("\\/"));
     }
 
+    std::string partBefore(const std::string &delim, const std::string &str) {
+        return str.substr(0, str.find(delim));
+    }
+
     std::string concatPath(const std::string& a, const std::string& b) {
         //s1 starts with /
         if (!b.empty() && b.front() == '/') {

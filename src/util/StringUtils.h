@@ -22,7 +22,10 @@ namespace riner {
 
     optional<int64_t> strToInt64(const char *str);
 
-    bool startsWith(const std::string& string, const std::string& prefix);
+    bool startsWith(const std::string &string, const std::string &prefix);
+
+    //returns the part in the string str before the delimiter. if no delimiter is found, return the entire str
+    std::string partBefore(const std::string &delimiter, const std::string &str);
 
     //quick and easy string creation stream shorthand
     //usage (MakeStr{} << "foo" << 4.f << "\n").str()

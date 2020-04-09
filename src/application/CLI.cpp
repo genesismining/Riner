@@ -18,6 +18,55 @@ namespace riner {
         constexpr auto json_indent = 4;
     }
 
+    std::string commandHelp(const CommandInfos &infos, bool useJson) {
+        if (useJson) {
+            nl::json j;
+            for (auto &pair : infos) {
+                j.emplace_back();
+                auto &jinfo = j.back();
+
+                auto &jnames = jinfo["commands"];
+                for (auto &name : pair.first) {
+                    jnames.push_back(name);
+                }
+                jinfo["help_text"] = pair.second;
+            }
+            return j.dump(json_indent);
+        }
+        else {
+            std::vector<std::string> concat_names; //{"--help, -h", "--config", ...}
+            size_t longest_concat = 0;
+
+            for (auto &pair : infos) {
+                concat_names.emplace_back();
+                auto &concat_name = concat_names.back();
+
+                for (auto &name : pair.first)
+                    concat_name += ", " + name;
+
+                if (concat_name.length() > 2)
+                    concat_name = concat_name.c_str() + 2; //skip first comma
+
+                if (longest_concat < concat_name.length())
+                    longest_concat = concat_name.length();
+            }
+
+            std::stringstream ss;
+
+            for (size_t i = 0; i < infos.size(); ++i) {
+                auto &info = infos.at(i);
+                auto &help_text = info.second;
+                std::string concat_name = concat_names.at(i);
+                //add space for alignment
+                while (concat_name.length() < longest_concat) {
+                    concat_name = " " + concat_name;
+                }
+                ss << concat_name << "  " << help_text << endl;
+            }
+            return ss.str();
+        }
+    }
+
     std::string commandList(bool useJson) {
         if (useJson) {
             return nl::json {
@@ -131,7 +180,8 @@ namespace riner {
 
     optional<size_t> argIndex(const std::string &argName, int argc, const char **argv) {
         for (int i = 1; i < argc; ++i) {
-            if (toLower(std::string{argv[i]}) == toLower(argName))
+            std::string arg = partBefore("=", argv[i]);
+            if (toLower(arg) == toLower(argName))
                 return i;
         }
         return nullopt;
@@ -174,16 +224,15 @@ namespace riner {
                     if (c != '=' && c != '-')
                         res.strings.push_back(std::string("-") + c);
                 }
-            }
-            else { //its something like --something or -a=something
+            } else { //its something like --something or -a=something
                 res.strings.push_back(arg);
             }
         }
         //fill other members of result struct
-        res.argc = (int)res.strings.size();
+        res.argc = (int) res.strings.size();
         for (auto &str : res.strings) {
             bool isFirstPathArg = &str == &res.strings.front();
-            bool isLastArg      = &str == &res.strings.back();
+            bool isLastArg = &str == &res.strings.back();
 
             if (!isFirstPathArg) {
                 res.allArgsAsOneString += str;
@@ -195,6 +244,48 @@ namespace riner {
             res.argv = res.ptrs.data();
         }
         return res;
+    }
+
+    size_t reportUnsupportedCommands(const CommandInfos &infos, int argc, const char **argv) {
+        std::vector<std::string> supported; //names of supported args
+        for (auto &pair : infos)
+            for (auto &cmd : pair.first)
+                supported.push_back(cmd);
+
+        std::vector<std::string> unsupported; //e.g. {arg0, arg4, arg8}
+        std::string concat_unsupported; //e.g. "arg0, arg4, arg8"
+
+        //skip first arg
+        for (size_t i = 1; i < argc; ++i) {
+            std::string arg = argv[i];
+            arg = partBefore("=", arg); //take only the part of the arg before a possible '='
+
+            bool is_supported = false;
+            for (auto &supp : supported) {
+                is_supported |= arg == supp;
+            }
+
+            if (!is_supported) {
+                unsupported.push_back(arg);
+                concat_unsupported += ", " + arg;
+            }
+        }
+
+        //remove leading comma
+        if (concat_unsupported.size() > 2)
+            concat_unsupported = concat_unsupported.c_str() + 2;
+
+        if (!unsupported.empty()) {
+            for (auto &arg : unsupported)
+                std::cout << "argument " << arg << " not supported." << endl;
+#ifndef NDEBUG
+            std::string start = unsupported.size() == 1 ? "if the argument (" : "if one of the arguments (";
+            std::cout << start << concat_unsupported <<
+            ") is actually supported, please add it to the listing in the main() function." << endl;
+#endif
+        }
+
+        return unsupported.size();
     }
 
     optional<std::string> getValueAfterArgWithEqualsSign(const std::vector<std::string> &argNames, int argc, const char **argv) {

@@ -106,7 +106,7 @@ if (!(_min <= x && x <= _max)) { \
                     check_between(as.num_threads(), 1, u32_max);
                     check_between(as.work_size(), 128, u32_max);
                     if (as.work_size() > 1024) {
-                        LOG(WARNING) << "unusually high work_size of " << as.work_size() << "found. proceeding.";
+                        LOG(WARNING) << "unusually high work_size of " << as.work_size() << " found. proceeding.";
                     }
 
                     check_between(as.raw_intensity(), 1, u32_max)//TODO: values

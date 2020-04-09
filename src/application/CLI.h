@@ -9,7 +9,9 @@
 
 namespace riner {
     class ComputeModule;
+    using CommandInfos = std::vector<std::pair<std::vector<std::string>, std::string>>;
 
+    std::string commandHelp(const CommandInfos &, bool asJson);
     std::string commandList(bool asJson);
     std::string commandListDevices(bool asJson);
     std::string commandListAlgoImpls(bool asJson);
@@ -26,6 +28,9 @@ namespace riner {
 
     //takes {"-a" "-bcd" "-e" "-fg" "--hij"} and returns {"-a", "-b", "-c", "-d", "-e" "-f" "-g" "--hij"}
     CommandLineArgs copyArgsAndExpandSingleDashCombinedArgs(int argc, const char **argv);
+
+    //reports unsupported commands on command line and returns amount of them
+    size_t reportUnsupportedCommands(const CommandInfos &supportedCommands, int argc, const char **argv);
 
     /**
      * searches for argName in argv.
