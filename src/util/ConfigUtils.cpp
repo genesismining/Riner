@@ -87,19 +87,19 @@ namespace riner {namespace configUtils {
         return result;
     }
 
-
     optional_cref<proto::Config_Profile_Task> getTaskForDevice(const proto::Config_Profile &prof, size_t deviceIndex) {
-        optional_cref<proto::Config_Profile_Task> result;
 
+        optional<size_t> chosen_task_i;
         for (size_t i = 0; i < prof.task_size(); ++i) {
             auto &task = prof.task(i);
 
             if (task.has_run_on_all_remaining_devices() && task.run_on_all_remaining_devices()) {
-                result = {task}; //write it to result now, it may be returned later unless this device gets another assignment somewhere else
+                chosen_task_i = i; //write it to result now, it may be returned later unless this device gets another assignment somewhere else
             }
 
-            if (task.has_device_index() && task.device_index() == i) {
-                return task;
+            if (task.has_device_index() && task.device_index() == deviceIndex) {
+                chosen_task_i = i;
+                break;
             }
 
             if (task.has_device_alias_name()) {
@@ -107,7 +107,15 @@ namespace riner {namespace configUtils {
             }
         }
 
-        return result;
+        if (chosen_task_i) {
+            auto i = *chosen_task_i;
+            VLOG(2) << "assigning device #" << deviceIndex << " to profile '" << prof.name() << "'´s task #" << i << " (counting from #0)";
+            return prof.task(i);
+        }
+        else {
+            VLOG(2) << "assigning no task to device #" << deviceIndex << " under profile '" << prof.name() << "'";
+            return nullopt;
+        }
     }
 
 }}
