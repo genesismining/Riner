@@ -17,6 +17,18 @@ namespace riner {
         return nullopt;
     }
 
+    bool Registry::algoImplExists(std::string name) const {
+        return _algoWithName.count(name);
+    }
+
+    bool Registry::poolImplExists(std::string name) const {
+        return _poolWithName.count(name);
+    }
+
+    bool Registry::gpuApiExists(std::string name) const {
+        return _gpuApiWithName.count(name);
+    }
+
     unique_ptr<Algorithm> Registry::makeAlgo(const std::string &name, AlgoConstructionArgs args) const {
         if (auto e = map_at_case_insensitive(_algoWithName, name))
             return e->makeFunc(std::move(args)); //initFunc declared in Registry::addAlgoImpl<T>

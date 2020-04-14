@@ -5,6 +5,7 @@
 #include <src/util/Logging.h>
 #include <src/util/OptionalAccess.h>
 #include <src/util/StringUtils.h>
+#include <src/application/Registry.h>
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>
@@ -18,9 +19,15 @@ namespace riner {
         using TextFormat = google::protobuf::TextFormat;
 
         Config config;
+        try {
         success = TextFormat::ParseFromString(txtProto, &config);
+        }
+        catch(std::exception &e) {
+            LOG(ERROR) << "std except in parse from string: "<< e.what();
+        }
+
         if (!success) {
-            LOG(INFO) << "error while parsing config";
+            LOG(ERROR) << "error while parsing config";
             return nullopt;
         }
 
@@ -83,6 +90,8 @@ if (!(_min <= x && x <= _max)) { \
     bool validateConfig(const Config &config) {
         constexpr uint32_t u32_max = std::numeric_limits<uint32_t>::max();
 
+        Registry registry;
+
         //e.g. check whether keys in settings_for_algoimpl are actual AlgoImpl names of registered classes
         const Config::GlobalSettings &gs = config.global_settings();
 
@@ -93,6 +102,11 @@ if (!(_min <= x && x <= _max)) { \
             //device_profiles
             for (auto &dp : config.device_profile()) {
                 for (auto &pair : dp.settings_for_algoimpl()) {
+                    std::string algoImplName = pair.first;
+                    if (!registry.algoImplExists(algoImplName)) {
+                        LOG(WARNING) << "device profile '" << dp.name() << "' has settings for unknown AlgoImpl: '" << algoImplName << "'";
+                    }
+
                     const Config::DeviceProfile::AlgoSettings &as = pair.second;
 
                     //algo_settings default values

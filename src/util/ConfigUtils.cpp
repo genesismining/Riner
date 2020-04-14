@@ -79,7 +79,7 @@ namespace riner {namespace configUtils {
                     result.emplace_back(*deviceToInit);
                 }
                 else {
-                    LOG(WARNING) << "no algorithm settings for '" << implName << "' in deviceProfile '" << devProf.name() << "'";
+                    LOG(WARNING) << "no algorithm settings for '" << implName << "' in device #" << i << " '" << deviceId.getName() << "'´s device profile '" << devProf.name() << "'. Device #" << i << " will not be used.";
                     continue;
                 }
             }

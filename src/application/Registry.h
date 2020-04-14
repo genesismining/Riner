@@ -54,6 +54,10 @@ namespace riner {
         std::vector<Listing> listPoolImpls() const;
         std::vector<std::string> listGpuApis() const;
 
+        bool algoImplExists(std::string name) const;
+        bool poolImplExists(std::string name) const;
+        bool gpuApiExists(std::string name) const;
+
         std::string powTypeOfAlgoImpl(const std::string &algoImplName) const; //returns empty string "" if not found
         std::string powTypeOfPoolImpl(const std::string &algoImplName) const; //returns empty string "" if not found
         std::string poolImplForProtocolAndPowType(const std::string &protocolType, const std::string &powType) const; // "" if not found

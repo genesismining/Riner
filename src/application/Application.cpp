@@ -102,6 +102,11 @@ namespace riner {
                                                                            allIds);
             }
 
+            if (assignedDeviceRefs.empty()) {
+                LOG(ERROR) << "found no devices with device profile settings for algoImpl '" << implName << "'. Cannot launch algorithm. skipping";
+                continue;
+            }
+
             logLaunchInfo(implName, assignedDeviceRefs);
 
             AlgoConstructionArgs args{

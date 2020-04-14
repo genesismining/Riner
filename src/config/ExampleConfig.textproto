@@ -15,6 +15,7 @@
 # the default values from Config::fillInDefaultValuesIfNeeded in
 # src/config/Config.cpp are chosen.
 #
+version: "0.1"
 
 global_settings {
   api_port: 4028
@@ -54,7 +55,7 @@ device_profile {
   name: "my_AMD_gpu_profile"
   #device profile, example name suggests they should be used for AMD gpus
 
-  settings_for_algoimpl {
+  settings_for_algoimpl { #key value pairs
     key: "EthashCL"
     #these settings are applied if AlgoEthashCL is started with this gpu profile
 
@@ -63,19 +64,19 @@ device_profile {
       work_size: 1024
     }
   }
+
+  settings_for_algoimpl {
+    key: "Cuckatoo31Cl"
+
+    value: { #settings:
+      work_size: 512
+    }
+  }
 }
 
 device_profile {
   name: "my_default_gpu_profile"
   #generic device profile for no particular gpu
-
-  settings_for_algoimpl { #key value pairs
-    key: "Cuckatoo31"
-
-    value: { #settings:
-        work_size: 2048
-    }
-  }
 
   settings_for_algoimpl {
     key: "EthashCL"
@@ -92,8 +93,6 @@ device_profile {
 # if that pool is unresponsive, work will get taken from the next ethash pool instead.
 # To prevent idle time in such a case, riner has connections to all pools, even unused ones.
 # if an unresponsive pool reawakens, its work will get used again.
-
-version: "0.1"
 
 pool { #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
   pow_type: "ethash"

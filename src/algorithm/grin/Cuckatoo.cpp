@@ -234,8 +234,8 @@ void CuckatooSolver::prepare() {
     VLOG(0) << buckets_ << " buckets with max size " << maxBucketSize_;
 
     std::vector<std::string> files;
-    files.emplace_back("/kernel/siphash.h");
-    files.emplace_back("/kernel/cuckatoo.cl");
+    files.emplace_back("kernel/siphash.h");
+    files.emplace_back("kernel/cuckatoo.cl");
 
     // TODO proper error handling
 
