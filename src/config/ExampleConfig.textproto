@@ -93,6 +93,8 @@ device_profile {
 # To prevent idle time in such a case, riner has connections to all pools, even unused ones.
 # if an unresponsive pool reawakens, its work will get used again.
 
+version: "0.1"
+
 pool { #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
   pow_type: "ethash"
   protocol: "stratum2"
