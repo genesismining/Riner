@@ -1,70 +1,25 @@
+# proto-file: src/config/config.proto
+# proto-message: Config
+# info above is used by https://github.com/jvolkman/intellij-protobuf-editor#path-settings
 #
 # Riner config file in the google protobuf text format.
-# this file can be used to tell Riner what algorithms to run on which devices (GPUs/CPUs)
-# and which pools to connect to, as well as some other settings.
+# this file can be used to tell Riner what algorithms to run on which devices
+# (GPUs/CPUs) and which pools to connect to, as well as some other settings.
 #
 # the layout of riner config files is specified in 'config.proto'.
+# when writing your own config, we recommend using textproto helpers like
+# the intellij protobuf editor mentioned above. There is probably one for your
+# favourite editor
 #
-# if fields from the 'config.proto' specification are not assigned here, the
-# default values from ConfigDefaultValues.h are chosen.
+# if fields from the 'config.proto' specification are not assigned here,
+# the default values from Config::fillInDefaultValuesIfNeeded in
+# src/config/Config.cpp are chosen.
 #
 
 global_settings {
   api_port: 4028
   opencl_kernel_dir: "kernel/dir/" #dir which contains the opencl kernel files (e.g. ethash.cl)
   start_profile_name: "my_profile" #when running Riner with this config file, the tasks of "my_profile" get launched
-}
-
-# ------------------------------
-# explanation of device aliases:
-# ------------------------------
-# 
-# the following device aliases resolve the following example gpu indexing problem:
-# this is just an example to motivate the existance of device aliases. In most cases device aliases
-# are not needed.
-# 
-# PHYSIAL GPUS       | OPENCL_INDEX | VULKAN INDEX
-# (unknown to riner) |              |
-#                  A |            0 | 3
-#              --> B |            1 | 2 <--
-#                  C |            2 | 1
-#                  D |            3 | 0
-#
-# RINER DEVICE_INDEX | OPENCL INDEX | VULKAN INDEX
-#                  0 |            0 | 3
-#                  1 |            1 | 1
-#                  2 |            2 | 2
-#                  3 |            3 | 0
-#
-# compute api implementations may chose their own order of gpus. In an attempt to get a consistent index
-# for every physical gpu, riner creates its own indexing which can be found out via --list_devices
-# in theory a case like the one above could happen, where riner's indexing fails. 
-# if we try to run the following tasks:
-#
-# task0: Some opencl algo on device_index 1
-# task1: Some vulkan algo on device_index 2
-# 
-# both algos will end up running on the same physical GPU, since
-# device_index 1 => OpenCL index 1 => Physical GPU B
-# device_index 2 => Vulkan index 2 => Physical GPU B
-#
-# the following device_alias definitions resolve this issue.
-# device_aliases can be used manually specify a physical GPU in case we know about such an indexing issue. 
-# in this example tasks must specify the device_alias names "MyGpu1", "MyGpu2" instead of device_indices.
-# since this is just an example, the profile doesn't actually use these aliases.
-
-device_alias {
-  name: "MyGpu1"
-  #lets say we somehow found out that vulkan and opencl use these different indices for the same gpu
-  index_opencl: 1
-  index_vulkan: 2
-}
-
-device_alias {
-  name: "MyGpu2"
-  #lets say we somehow found out that vulkan and opencl use these different indices for the same gpu
-  index_opencl: 2
-  index_vulkan: 1
 }
 
 profile {
@@ -100,10 +55,13 @@ device_profile {
   #device profile, example name suggests they should be used for AMD gpus
 
   settings_for_algoimpl {
-    algo_impl: "EthashCL"
+    key: "EthashCL"
     #these settings are applied if AlgoEthashCL is started with this gpu profile
-    num_threads: 4
-    work_size: 1024
+
+    value {
+      num_threads: 4
+      work_size: 1024
+    }
   }
 }
 
@@ -131,23 +89,33 @@ device_profile {
 
 # pools are listed by priority. 
 # e.g. if there are two ethash pools, the top most one will get used first, 
-# if the connection dies, work will get taken from the next ethash pool instead.
-# if the dead pool reawakens, 
+# if that pool is unresponsive, work will get taken from the next ethash pool instead.
+# To prevent idle time in such a case, riner has connections to all pools, even unused ones.
+# if an unresponsive pool reawakens, its work will get used again.
 
-pool {
-  pow_type: "ethash" #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
+pool { #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
+  pow_type: "ethash"
   protocol: "stratum2"
   host: "127.0.0.1"
   port: 2345
-  username: "a"
-  password: "x"
+  username: "user"
+  password: "password"
 }
 
 pool {
   pow_type: "cuckatoo31"
-  protobuf: "stratum"
+  protocol: "stratum"
   host: "127.0.0.1"
   port: 2346
-  username: "b"
-  password: "y"
+  username: "user"
+  password: "password"
+}
+
+pool { #2nd ethash pool as a backup if the first one is unresponsive
+  pow_type: "ethash"
+  protocol: "stratum2"
+  host: "127.0.0.1"
+  port: 2347
+  username: "user"
+  password: "password"
 }
