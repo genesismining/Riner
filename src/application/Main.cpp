@@ -84,6 +84,10 @@ int main(int raw_argc, const char *raw_argv[]) {
     }
 
     if (hasArg({"--config"}, argc, argv)) {
+
+        if (hasArg({"--json"}, argc, argv))
+            LOG(INFO) << "note: json formatting only applies to list commands.";
+
         if (optional<std::string> configPath = getValueAfterArgWithEqualsSign({"--config"}, argc, argv)) {
 
             if (optional<Config> config = configUtils::loadConfig(*configPath)) {
