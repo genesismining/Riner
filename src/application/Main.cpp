@@ -36,6 +36,7 @@ int main(int raw_argc, const char *raw_argv[]) {
         {{"--color", "--colors"}, "enables colored output on some terminals"},
         {{"--emoji", "--emojis"}, "enables unicode emoji symbols for log message severity"},
         {{"--verbose", "-v"}, "-v=X with X from 0-9. Set verbose logging level. -v enables max verbosity"},
+        {{"--sec"}, "make log timestamp only consist of second and subsecond part"},
         {{"--logsize"}, "--logsize=X set size of one log file in bytes. writing of logs rotates between two files as one reaches the size limit."},
     };
 

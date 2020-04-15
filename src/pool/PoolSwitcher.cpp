@@ -133,7 +133,6 @@ namespace riner {
     unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
         if (auto pool = activePool()) {
-            VLOG(2) << "getting work from " << pool->getName();
             return pool->tryGetWorkImpl();
         }
 
