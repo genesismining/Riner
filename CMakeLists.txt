@@ -20,9 +20,10 @@ endif()
 #Protocol Buffers
 find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-file(GLOB_RECURSE ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
+file(GLOB_RECURSE ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/src/*.proto")
+
 protobuf_generate_cpp(ProtoSources ProtoHeaders ${ProtoFiles})
-#add_library(lib_riner STATIC ${ProtoSources} ${ProtoHeaders})
+set_source_files_properties(${ProtoSources} ${ProtoHeaders} PROPERTIES GENERATED TRUE)
 
 add_library(lib_riner
         ${ProtoSources} ${ProtoHeaders}
