@@ -66,22 +66,25 @@ namespace riner {namespace configUtils {
                     continue;
                 }
 
-                optional<Device> &deviceToInit = devicesInUse[i];
-
-                auto &devProf = getDeviceProfile(config, task.use_device_profile_with_name()).value();
-
-                if (auto algoSettings = getAlgoSettings(devProf, implName)) {
-
-                    //initialize the device inside the devicesInUse list, and put it
-                    //into the assignedDevices list of this algoImpl
-
-                    deviceToInit.emplace(deviceId, *algoSettings, i);
-                    result.emplace_back(*deviceToInit);
-                }
-                else {
-                    LOG(WARNING) << "no algorithm settings for '" << implName << "' in device #" << i << " '" << deviceId.getName() << "'´s device profile '" << devProf.name() << "'. Device #" << i << " will not be used.";
+                auto devProfOr = getDeviceProfile(config, task.use_device_profile_with_name());
+                if (!devProfOr) {
+                    LOG(WARNING) << "no device profile with name '" << task.use_device_profile_with_name() << "'. Skipping device #" << i << " (" << deviceId.getName() << ")";
                     continue;
                 }
+
+                auto algoSettingsOr = getAlgoSettings(*devProfOr, implName);
+                if (!algoSettingsOr) {
+                    LOG(WARNING) << "no algorithm settings for '" << implName << "' in device #" << i << " '" << deviceId.getName() << "'´s device profile '" << devProfOr->name() << "'. Device #" << i << " will not be used.";
+                    continue;
+                }
+
+                //initialize the device inside the devicesInUse list, and put it
+                //into the assignedDevices list of this algoImpl
+
+                optional<Device> &deviceToInit = devicesInUse[i];
+                deviceToInit.emplace(deviceId, *algoSettingsOr, i);
+                result.emplace_back(*deviceToInit);
+
             }
         }
         return result;
