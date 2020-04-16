@@ -311,6 +311,9 @@ namespace riner {
                 LOG(ERROR) << "#" << err << " allocation of clDagBuffer failed (size = " << allocSize << " on device " << device() << ")";
                 return false;
             }
+            else {
+                LOG(INFO) << "allocating clDagBuffer successful";
+            }
 
         }
 
@@ -322,6 +325,7 @@ namespace riner {
         //upload dag cache which is required for dag creation
         auto cacheSpan = cache.getByteCache();
 
+        VLOG(2) << "creating clDagCache";
         cl::Buffer clDagCache{context,
             CL_MEM_READ_ONLY |
             CL_MEM_COPY_HOST_PTR |
@@ -334,6 +338,7 @@ namespace riner {
             LOG(ERROR) << "#" << err << " creation of clDagCache failed (size = " << cacheSpan.size() << " on device " << device() << ")";
             return false;
         }
+        else VLOG(2) << "creating clDagCache successful";
 
         auto genDagKernel = cl::Kernel(generateDagProgram, "GenerateDAG", &err);
         if (err) {

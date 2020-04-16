@@ -92,6 +92,7 @@ namespace riner {
                     shutdown = true;
                     continue;
                 }
+                VLOG(0) << "successfully generated DagFile";
             }
 
             VLOG(0) << "launching " << numGpuSubTasks << " gpu-subtasks for the current gpu-task";

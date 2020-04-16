@@ -19,7 +19,7 @@ namespace riner {
 
         periodicAliveCheckTask = std::async(std::launch::async, [this, powType] () {
             SetThreadNameStream{} << "poolswitcher " << powType;
-            VLOG(3) << "alive-check thread started";
+            VLOG(6) << "alive-check thread started";
             periodicAliveCheck();
         });
     }
@@ -29,16 +29,15 @@ namespace riner {
             std::lock_guard<std::mutex> lock(mut);
             shutdown = true;
         }
-        VLOG(3) << "shutting down poolswitcher " << powType << " thread";
+        VLOG(6) << "shutting down poolswitcher " << powType << " thread";
         notifyOnShutdown.notify_all();
         periodicAliveCheckTask.wait();
-        VLOG(3) << "sucessfully shut down poolswitcher " << powType << " thread";
+        VLOG(6) << "sucessfully shut down poolswitcher " << powType << " thread";
     }
 
     void PoolSwitcher::periodicAliveCheck() {
         using namespace std::chrono;
         std::unique_lock<std::mutex> lock(mut);
-        VLOG(3) << "alive-check thread acquired initial lock";
 
         clock::duration usedCheckInterval = milliseconds(500);
 
@@ -153,7 +152,6 @@ namespace riner {
     unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
         std::lock_guard<std::mutex> lock(mut);
         if (auto pool = activePool()) {
-            VLOG(7) << "requesting work from " << pool->getName();
             return pool->tryGetWorkImpl();
         }
 

@@ -67,6 +67,7 @@ namespace riner {
 
             lockedPoolSwitchers->emplace(std::make_pair(powType, std::make_unique<PoolSwitcher>(powType)));
             auto &poolSwitcher = lockedPoolSwitchers->at(powType);
+            RNR_ENSURES(lockedPoolSwitchers->count(powType));
 
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
@@ -91,8 +92,6 @@ namespace riner {
                 LOG(ERROR) << "no pools available for PowType '" << powType << "' of '" << implName << "'. Cannot launch algorithm. skipping";
                 continue;
             }
-
-            RNR_ENSURES(lockedPoolSwitchers->count(powType));
 
             decltype(AlgoConstructionArgs::assignedDevices) assignedDeviceRefs;
 

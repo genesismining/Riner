@@ -127,6 +127,16 @@ if (!(_min <= x && x <= _max)) { \
 
                 }
             }
+
+            for (auto &prof : config.profile()) {
+                size_t i = 0;
+                for (auto &task : prof.task()) {
+                    if (task.has_device_alias_name()) {
+                        LOG(WARNING) << "profile '" << prof.name() << "'´s task #" << i << " uses the device_alias_name feature, which is not supported yet.";
+                    }
+                    ++i;
+                }
+            }
         }
         catch (const std::invalid_argument &e) {
             LOG(ERROR) << "invalid config: " << e.what();
