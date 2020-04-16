@@ -73,7 +73,7 @@ namespace riner {
         clock::duration durUntilDeclaredDead;
 
         std::vector<shared_ptr<Pool>> pools;
-        size_t activePoolIndex = SIZE_T_MAX; //if > pools.size(), no pool is active
+        size_t activePoolIndex = std::numeric_limits<size_t>::max(); //if > pools.size(), no pool is active
 
         std::shared_ptr<Pool> activePool();
 
