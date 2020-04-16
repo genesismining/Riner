@@ -81,12 +81,6 @@ namespace riner {
             poolInfos[i].index = i;
             poolInfos[i].was_dead = pools[i]->isDead();
             poolInfos[i].now_dead = now - pools[i]->getLastKnownAliveTime() > durUntilDeclaredDead;
-
-            auto now_sec = duration_cast<seconds>(now.time_since_epoch()).count();
-            auto last_sec =  duration_cast<seconds>(pools[i]->getLastKnownAliveTime().time_since_epoch()).count();
-            auto diff = duration_cast<seconds>(now - pools[i]->getLastKnownAliveTime()).count();
-
-            //LOG(DEBUG) << "pool " << i << " was last alive " << now_sec <<" - "<< last_sec <<" = "<< diff << " sec ago";
         }
 
         //decide new active pool
