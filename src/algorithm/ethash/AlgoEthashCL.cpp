@@ -87,9 +87,10 @@ namespace riner {
                 VLOG(0) << "dag cache was generated for epoch " << readCache->getEpoch();
 
                 if (!dag.generate(*readCache, plat.clContext, clDevice, plat.clProgram)) {
-                    LOG_N_TIMES(10, ERROR) << "generating dag file failed.";
+                    LOG_N_TIMES(10, ERROR) << "generating dag file failed";
                     continue;
                 }
+                VLOG(0) << "successfully generated DagFile";
             }
 
             VLOG(0) << "launching " << numGpuSubTasks << " gpu-subtasks for the current gpu-task";
