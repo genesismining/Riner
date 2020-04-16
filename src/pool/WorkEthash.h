@@ -42,6 +42,7 @@ namespace riner {
 
         void setDifficultiesAndTargets(const Bytes<32> &jobTarget) {
             jobDifficulty = targetToDifficultyApprox(jobTarget);
+            this->jobTarget = jobTarget;
             deviceDifficulty = std::min(deviceDifficulty, jobDifficulty); //make sure deviceDiff is not harder than jobDiff
             deviceTarget = difficultyToTargetApprox(deviceDifficulty);
         }
