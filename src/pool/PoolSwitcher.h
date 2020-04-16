@@ -6,6 +6,7 @@
 #include <list>
 #include <src/config/Config.h>
 #include <src/application/Registry.h>
+#include <atomic>
 
 namespace riner {
 
@@ -34,10 +35,6 @@ namespace riner {
             std::lock_guard<std::mutex> lock(mut);
             pools.emplace_back(pool);
 
-            if (pools.size() == 1) {//if first pool was added, treat it as if it was alive (TODO: is this really desired behavior?)
-                pools.back()->onStillAlive();
-            }
-
             return pool;
         }
 
@@ -62,7 +59,7 @@ namespace riner {
 
     private:
         //shutdown related variables
-        bool shutdown = false;
+        std::atomic_bool shutdown {false};
 
         mutable std::mutex mut;
         std::condition_variable notifyOnShutdown;
@@ -76,7 +73,7 @@ namespace riner {
         clock::duration durUntilDeclaredDead;
 
         std::vector<shared_ptr<Pool>> pools;
-        size_t activePoolIndex = 0; //if > pools.size(), no pool is active
+        size_t activePoolIndex = SIZE_T_MAX; //if > pools.size(), no pool is active
 
         std::shared_ptr<Pool> activePool();
 

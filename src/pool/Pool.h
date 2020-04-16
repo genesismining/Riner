@@ -5,11 +5,11 @@
 #include <src/common/Assert.h>
 #include <src/util/Copy.h>
 #include <src/pool/Work.h>
+#include <src/common/Chrono.h>
 #include <src/statistics/PoolRecords.h>
 #include <string>
 #include <list>
 #include <atomic>
-#include <chrono>
 
 namespace riner {
 
@@ -55,8 +55,15 @@ namespace riner {
         /**
          * if the lastKnownAliveTime is considered to long ago, this function is called to
          * declare this object 'dead' (and call onDeclaredDead internally).
+         * If subsequent OnStillAlive messages have been noticed, the dead state will be revoked
          */
-        void declareDead();
+        void setDead(bool isDead);
+
+        /**
+         * if the object's alive times suggest it has reawakened after it was declared dead
+         * this function is called
+         */
+        bool isDead() const;
 
         /**
          * @return the timestamp of the most recent onDeclaredDead call
@@ -88,8 +95,9 @@ namespace riner {
 
     private:
         const std::atomic<clock::time_point> objectCreationTime = {clock::now()};
-        std::atomic<clock::time_point> lastKnownAliveTime = {clock::time_point::min()};
-        std::atomic<clock::time_point> latestDeclaredDeadTime = {clock::time_point::min()};
+        std::atomic_bool _isDead {true}; //starts in dead state
+        std::atomic<clock::time_point> lastKnownAliveTime     = {clock::now() - std::chrono::hours(24 * 365)};
+        std::atomic<clock::time_point> latestDeclaredDeadTime = {clock::now() - std::chrono::hours(24 * 365)}; //lets set the default value to one year ago, since clock::time_point::min() results in integer overflow bugs
     };
 
     /**

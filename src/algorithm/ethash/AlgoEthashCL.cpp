@@ -88,6 +88,8 @@ namespace riner {
 
                 if (!dag.generate(*readCache, plat.clContext, clDevice, plat.clProgram)) {
                     LOG_N_TIMES(10, ERROR) << "generating dag file failed.";
+                    LOG(ERROR) << "aborting algorithm.";
+                    shutdown = true;
                     continue;
                 }
             }
@@ -107,7 +109,7 @@ namespace riner {
             //tasks destructor waits
             //tasks terminate if epoch has changed for every task's work
         }
-
+        VLOG(5) << "gpuTask done";
     }
 
     void AlgoEthashCL::gpuSubTask(size_t /*subTaskIndex*/, PerPlatform &plat, cl::Device &clDevice, DagFile &dag, Device &device) {
@@ -169,6 +171,7 @@ namespace riner {
                 }
             }
         }
+        VLOG(5) << "gpuSubTask done";
     }
 
     void AlgoEthashCL::submitShare(std::shared_ptr<const WorkEthash> work, uint64_t nonce, Device &device) {
