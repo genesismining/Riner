@@ -32,9 +32,17 @@ namespace riner {
         lastKnownAliveTime = time;
     }
 
-    void StillAliveTrackable::declareDead() {
-        latestDeclaredDeadTime = clock::now();
-        onDeclaredDead();
+    void StillAliveTrackable::setDead(bool dead) {
+        bool changed = dead != _isDead;
+        _isDead = dead;
+        if (_isDead && changed) {
+            latestDeclaredDeadTime = clock::now();
+            onDeclaredDead();
+        }
+    }
+
+    bool StillAliveTrackable::isDead() const {
+        return _isDead;
     }
 
     StillAliveTrackable::clock::time_point
