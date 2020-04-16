@@ -118,7 +118,7 @@ namespace riner {
 
                 // TODO: check whether difficulty of submitted share is 1
                 records.reportShare(1., accepted, false);
-                std::string acceptedStr = accepted ? "accepted" : "rejected";
+                std::string acceptedStr = accepted ? std::string("accepted") : "rejected - " + res.getIfError()->message;
                 LOG(INFO) << "share with id " << idStr << " got " << acceptedStr;
 
                 if (!accepted) {
