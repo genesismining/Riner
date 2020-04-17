@@ -304,7 +304,7 @@ namespace riner {
                     SCLK,
                     MCLK,
                     RANGE
-                } stage;
+                } stage = UNDEFINED;
                 while (std::getline(api->vddcTable, line)) {
                     int idx, freq, voltage;
                     int min, max;
