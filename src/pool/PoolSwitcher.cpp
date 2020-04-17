@@ -42,7 +42,7 @@ namespace riner {
         clock::duration usedCheckInterval = milliseconds(500);
 
         while(!shutdown) {
-            float flt_sec = 0.001f * duration_cast<milliseconds>(usedCheckInterval).count();
+            auto flt_sec = duration<float>(usedCheckInterval).count();
 
             if (!pools.empty()) {
                 VLOG(2) << "periodic pool connection status check (every " << flt_sec << "s)";
