@@ -37,7 +37,7 @@ namespace riner {namespace configUtils {
     std::vector<std::reference_wrapper<const proto::Config_Pool>> getConfigPoolsForPowType(const proto::Config &config, const std::string &powType) {
         std::vector<std::reference_wrapper<const proto::Config_Pool>> result;
 
-        for (size_t i = 0; i < config.pool_size(); ++i) {
+        for (int i = 0; i < config.pool_size(); ++i) {
             auto &pool = config.pool(i);
             if (powType == pool.pow_type())
                 result.emplace_back(pool);
@@ -93,7 +93,7 @@ namespace riner {namespace configUtils {
     optional_cref<proto::Config_Profile_Task> getTaskForDevice(const proto::Config_Profile &prof, size_t deviceIndex) {
 
         optional<size_t> chosen_task_i;
-        for (size_t i = 0; i < prof.task_size(); ++i) {
+        for (int i = 0; i < prof.task_size(); ++i) {
             auto &task = prof.task(i);
 
             if (task.has_run_on_all_remaining_devices() && task.run_on_all_remaining_devices()) {

@@ -11,7 +11,7 @@ namespace riner {
         //trying to approximate (2^256 - 1) / targetBytes
         uint64_t target;
 
-        int offset = targetBytes.size() - 1; //31
+        size_t offset = targetBytes.size() - 1; //31
         for (; offset >= sizeof(target) && targetBytes[offset] == 0; offset--);
 
         memcpy(&target, targetBytes.data() + offset - (sizeof(target)-1), sizeof(target));

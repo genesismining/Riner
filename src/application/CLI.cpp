@@ -256,7 +256,7 @@ namespace riner {
         std::string concat_unsupported; //e.g. "arg0, arg4, arg8"
 
         //skip first arg
-        for (size_t i = 1; i < argc; ++i) {
+        for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
             arg = partBefore("=", arg); //take only the part of the arg before a possible '='
 
@@ -307,7 +307,7 @@ namespace riner {
     optional<std::string> getPathAfterArg(const std::string &minusminusArg, int argc, const char **argv) {
         //minusminusArg is something like "--config"
         if (auto i = argIndex(minusminusArg, argc, argv)) {
-            size_t next = *i + 1;
+            int next = *i + 1;
             if (next < argc)
                 return std::string{argv[next]};
         }
