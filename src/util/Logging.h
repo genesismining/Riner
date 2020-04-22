@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #define ELPP_CUSTOM_COUT std::cout
-#define ELPP_CUSTOM_COUT_LINE(msg) riner::fancifyLog(msg)
+#define ELPP_CUSTOM_COUT_LINE(msg) riner::fancifyLog(msg) << std::flush //TODO: consider only flushing on non-verbose logs or for every nth log
 #include <easylogging++.h>
 
 namespace riner {

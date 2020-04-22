@@ -54,7 +54,7 @@ namespace riner {
         c.setGlobally(CT::ToFile, "true"); //log to a file
         c.setGlobally(CT::Filename, logFile0);
         c.setGlobally(CT::MaxLogFileSize, logFileSizeBytes);
-        //c.setGlobally(CT::LogFlushThreshold, 4);
+        //c.setGlobally(CT::LogFlushThreshold, "4");
 
         std::string time_fmt = "%datetime";
         if (hasArg({"--sec"}, argc, argv)) {
