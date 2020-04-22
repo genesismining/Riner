@@ -33,13 +33,13 @@ profile {
     #run this task on every gpu except gpu 1, which will run the task below
 
     run_algoimpl_with_name: "EthashCL"
-    #run the OpenCL ethash AlgoImpl. run riner --list_algoimpls for a list of all available AlgoImpls
+    #run the OpenCL ethash AlgoImpl. run riner --list-algoimpls for a list of all available AlgoImpls
 
     use_device_profile_with_name: "my_default_gpu_profile" 
     #my_gpu_profile has specific settings for AlgoEthashCL for this gpu type.
   }
 
-  # Task 1: run AlgoCuckatoo31 on GPU 1 (use --list_devices to find out about indices)
+  # Task 1: run AlgoCuckatoo31 on GPU 1 (use --list-devices to find out about indices)
   task {
     device_index: 1
     #gpu 1 will not run the task above, but this one.
