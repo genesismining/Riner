@@ -13,7 +13,7 @@ namespace riner {
      * @param target target as a little endian 32 byte number
      * @return approximate difficulty
      */
-    double targetToDifficultyApprox(Bytes<32> targetBytes);
+    double targetToDifficultyApprox(const Bytes<32> &targetBytes);
 
     /**
      * The opposite of targetToDifficultyApprox (not exact inverse! only an approximation)

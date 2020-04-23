@@ -69,6 +69,7 @@ add_library(lib_riner
         src/pool/Work.cpp src/pool/Work.h
         src/pool/WorkCuckoo.h
         src/pool/WorkEthash.h
+        src/pool/WorkDummy.h
         src/pool/WorkQueue.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h

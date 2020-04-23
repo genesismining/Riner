@@ -30,7 +30,7 @@ namespace riner {
          * IMPORTANT: makeWork() is usually called by mechanisms that run in various threads which hold a lock while calling into makeWork().
          * Be cautious if you need to acquire any locks within makeWork().
          *
-         * If used by a WorkQueue, makeWork is always called sequentially while a lock is held (so no concurrent invocations of makeWork() can exist).
+         * If used by a WorkQueue, makeWork is always called sequentially while a lock is held (so no concurrent invocations of makeWork() on the same PoolJob can exist).
          *
          * @return: a unique_ptr to a subclass of Work that was created by this function, based on this PoolJob
          */
@@ -124,7 +124,7 @@ namespace riner {
      * this unit of work does not necessarily correspond to e.g. a stratum job, it may be a work representation of smaller granularity.
      * The pool protocol implementation is incentivized to make this work of appropriate size (read: amount of work, not byte size) so that minimal overhead is
      * required on the AlgoImpl side to make use of it.
-     * Data that is specific to Pool protocol implementations may not be added to a Work subclass, but rather to a WorkProtocolData subclass
+     * Data that is specific to Pool protocol implementations may not be added to a Work subclass, but rather to a PoolJob subclass
      */
     class Work {
 

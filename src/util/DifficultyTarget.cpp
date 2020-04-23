@@ -5,7 +5,7 @@
 
 namespace riner {
 
-    double targetToDifficultyApprox(Bytes<32> targetBytes) {
+    double targetToDifficultyApprox(const Bytes<32> &targetBytes) {
         using limits = std::numeric_limits<double>;
 
         //trying to approximate (2^256 - 1) / targetBytes

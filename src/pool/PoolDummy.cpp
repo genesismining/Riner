@@ -3,7 +3,7 @@
 
 #include <src/util/HexString.h>
 #include "PoolDummy.h"
-#include "PoolEthash.h"
+#include "WorkDummy.h"
 
 namespace riner {
 
@@ -147,7 +147,7 @@ namespace riner {
 
     void PoolDummy::submitSolutionImpl(unique_ptr<WorkSolution> solutionBase) {
         //this function obtains a generic WorkSolution, but our pool knows that it must be a WorkSolutionEthash, because this is an Ethash Pool
-        auto solution = static_unique_ptr_cast<WorkSolutionEthash>(std::move(solutionBase));
+        auto solution = static_unique_ptr_cast<WorkSolutionDummy>(std::move(solutionBase));
 
         //this function must construct and send a submit message on the ioThread.
         //to achieve that, enqueue a lambda to the ioThread via io.postAsync
@@ -158,7 +158,7 @@ namespace riner {
         io.postAsync([this, solution = move(solution)] { //move capture the solution, so it is alive until submission
 
             //get the PoolJob as its dynamic type EthashStratumJob, so that we can take the stratum jobId from it
-            auto job = solution->tryGetJobAs<EthashStratumJob>();
+            auto job = solution->tryGetJobAs<DummyPoolJob>();
             if (!job) {
                 LOG(INFO) << "ethash solution cannot be submitted because its PoolJob has expired";
                 return; //work has expired, cancel
@@ -175,13 +175,11 @@ namespace riner {
                     .method("mining.submit")
                     .param(constructionArgs.username)
                     .param(job->jobId)
-                    .param("0x" + HexString(toBytesWithBigEndian(solution->nonce)).str()) //nonce must be big endian
-                    .param("0x" + HexString(solution->header).str())
-                    .param("0x" + HexString(solution->mixHash).str())
+                    .param("0x" + HexString(toBytesWithBigEndian(solution->nonce)).str()) //just to show some of the HexString and endian helpers we provide
                     .done(); //call "done()" to convert the RequestBuilder to a jrpc::Message
 
             //this lambda will get called if we get a response, either the share was accepted or rejected
-            auto onResponse = [this, difficulty = solution->jobDifficulty] (CxnHandle cxn, jrpc::Message response) {
+            auto onResponse = [this, difficulty = job->difficulty] (CxnHandle cxn, jrpc::Message response) {
                 //
                 records.reportShare(difficulty, response.isResultTrue(), false);
                 std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
@@ -204,29 +202,34 @@ namespace riner {
     }
 
     void PoolDummy::onMiningNotify (const nl::json &jparams) {
-        //parse the jparams and create a PoolJob object
+        //parse the json message params "jparams" and create a PoolJob object
         //push that PoolJob object into the WorkQueue so it can be divided into individual Work objects
 
-        bool cleanFlag = jparams.at(4);
+        //you can parse json with the nlohmann::json library (see their documentation)
         const auto &jobId = jparams.at(0).get<std::string>();
 
-        auto job = std::make_unique<EthashStratumJob>(_this, jobId);
+        //make a new job as a unique_ptr so you can use it with queue.pushJob down below
+        auto job = std::make_unique<DummyPoolJob>(_this, jobId);
+
+        //this is an example of the HexString utilities we provide, which you will probably need in your onMiningNotify
         HexString(jparams[1]).getBytes(job->workTemplate.header);
-        HexString(jparams[2]).getBytes(job->workTemplate.seedHash);
 
-        Bytes<32> jobTarget;
-        HexString(jparams[3]).swapByteOrder().getBytes(jobTarget);
+        //parse json param 3 as hex-string, swap the byte order and write it to workTemplate's target.
+        HexString(jparams[3]).swapByteOrder().getBytes(job->workTemplate.target);
 
-        job->workTemplate.setDifficultiesAndTargets(jobTarget);
+        //helper function to calculate approximate difficulty from target
+        job->difficulty = targetToDifficultyApprox(job->workTemplate.target);
 
-        //workTemplate->epoch will be calculated in EthashStratumJob::makeWork()
-        //so that not too much time is spent on this thread.
+        bool shouldClean = false; //you can set this to true to clear all existing
+        // contents of the workQueue. That way AlgoImpls won't pop any older work from now on
 
         //mark pool as connected because the first job was received
         setConnected(true);
-        //add job to job to job queue
-        queue.pushJob(std::move(job), cleanFlag);
-        //job will now be used (via job->makeWork()) to generate new Work instances for AlgoImpls that call pool.tryGetWork())
+        //add job to job queue
+        queue.pushJob(std::move(job), shouldClean);
+        //now that the job is pushed, `queue`'s background thread will every now and then call
+        //job->makeWork() to produce enough work objects.
+        //these work objects will be handed out in "PoolDummy::tryGetWorkImpl()" above.
     }
 
 }
