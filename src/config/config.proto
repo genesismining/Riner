@@ -74,12 +74,14 @@ message Config {
     }
 
     message Pool {
-        optional string pow_type = 1;
-        optional string protocol = 2;
-        optional string host = 3;
-        optional uint32 port = 4;
-        optional string username = 5;
-        optional string password = 6;
+        required string pow_type = 1;
+        optional string protocol = 2 [default = ""];
+        required string host = 3;
+        required uint32 port = 4;
+        required string username = 5;
+        optional string password = 6 [default = ""];
+        optional bool enable_ssl = 7 [default = false];
+        optional string certificate_file = 8;
     }
 
 }

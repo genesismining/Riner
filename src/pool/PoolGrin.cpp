@@ -176,6 +176,9 @@ namespace riner {
 
     PoolGrinStratum::PoolGrinStratum(const PoolConstructionArgs &args)
             : Pool(args) {
+        if (args.sslDesc.client) {
+            io.io().enableSsl(args.sslDesc);
+        }
         tryConnect();
     }
 

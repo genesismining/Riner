@@ -72,8 +72,16 @@ namespace riner {
             for (auto &configPool : configPools) {
                 auto &p = configPool.get();
 
-                RNR_EXPECTS(p.port() == (uint32_t)(uint16_t)p.port());
-                PoolConstructionArgs args {p.host(), (uint16_t)p.port(), p.username(), p.password()};
+                auto port = uint16_t(p.port());
+                RNR_EXPECTS(p.port() == port);
+                SslDesc sslDesc;
+                if (p.has_enable_ssl() && p.enable_ssl()) {
+                    sslDesc.client.emplace();
+                    if (p.has_certificate_file()) {
+                        sslDesc.client->certFile = std::string(p.certificate_file());
+                    }
+                }
+                PoolConstructionArgs args {p.host(), port, p.username(), p.password(), std::move(sslDesc)};
 
                 const std::string poolImplName = registry.poolImplForProtocolAndPowType(p.protocol(), powType);
                 if (poolImplName.empty()) {

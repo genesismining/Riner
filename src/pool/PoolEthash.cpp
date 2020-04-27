@@ -160,6 +160,9 @@ namespace riner {
 
     PoolEthashStratum::PoolEthashStratum(const PoolConstructionArgs &args)
             : Pool(args) {
+        if (args.sslDesc.client) {
+            io.io().enableSsl(args.sslDesc);
+        }
         tryConnect();
     }
 

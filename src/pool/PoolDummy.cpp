@@ -10,6 +10,9 @@ namespace riner {
     PoolDummy::PoolDummy(const PoolConstructionArgs &args)
             : Pool(args) {//set args in base class, can be accessed via this->constructionArgs
 
+        if (args.sslDesc.client) {
+            io.io().enableSsl(args.sslDesc);
+        }
         tryConnect();
         //make sure tryConnect() is the final thing you do in this ctor.
         //things that get initialized after the io operations started are not guaranteed to be ready when

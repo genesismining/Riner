@@ -3,6 +3,7 @@
 #include <src/common/Pointers.h>
 #include <src/common/Optional.h>
 #include <src/common/Assert.h>
+#include <src/network/SslDesc.h>
 #include <src/util/Copy.h>
 #include <src/pool/Work.h>
 #include <src/common/Chrono.h>
@@ -25,6 +26,7 @@ namespace riner {
         uint16_t port;
         std::string username;
         std::string password;
+        SslDesc sslDesc;
     };
 
     /**
