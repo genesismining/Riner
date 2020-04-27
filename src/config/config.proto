@@ -59,7 +59,7 @@ message Config {
             optional uint32 core_clock_MHz = 3;
             optional uint32 memory_clock_MHz = 4;
             optional uint32 core_voltage_mV = 5;
-            optional uint32 core_voltage_offset_mV = 6;
+            optional int32 core_voltage_offset_mV = 6;
 
             oneof power_limit {
                 uint32 power_limit_W = 7;
