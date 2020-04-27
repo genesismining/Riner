@@ -123,7 +123,31 @@ namespace riner {
                             {"workUnits", jsonSerialize(data.validWorkUnits, now)},
                             {"hwErrors", jsonSerialize(data.invalidWorkUnits, now)}
                     };
-
+                    if (d.api) {
+                        nl::json hw = nl::json::object();
+                        if (auto temp = d.api->getTemperature()) {
+                            hw["temperature_C"] = *temp;
+                        }
+                        if (auto voltage = d.api->getVoltage()) {
+                            hw["voltage_mV"] = *voltage;
+                        }
+                        if (auto freq = d.api->getEngineClock()) {
+                            hw["coreFrequency_MHz"] = *freq;
+                        }
+                        if (auto freq = d.api->getMemoryClock()) {
+                            hw["memoryFrequency_MHz"] = *freq;
+                        }
+                        if (auto percent = d.api->getFanPercent()) {
+                            hw["fanPercent"] = *percent;
+                        }
+                        if (auto rpm = d.api->getFanRpm()) {
+                            hw["fanRpm"] = *rpm;
+                        }
+                        if (auto power = d.api->getPower()) {
+                            hw["power_W"] = *power;
+                        }
+                        j["hwReports"] = std::move(hw);
+                    }
                 } else {
                     j = {
                             {"index", i},
