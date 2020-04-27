@@ -59,13 +59,6 @@ if (!obj. has_##member () ) { \
 
                 //algo_settings default values
 
-                if (as.has_power_limit_w()) {
-                    //no defaults
-                }
-                else if (as.has_power_limit_percent()) {
-                    default_value(as, power_limit_percent, 100);
-                }
-
                 default_value(as, num_threads, 1);
                 default_value(as, work_size, 128);
                 default_value(as, raw_intensity, 1048576);
@@ -118,12 +111,12 @@ if (!(_min <= x && x <= _max)) { \
                     }
 
                     check_between(as.num_threads(), 1, u32_max);
-                    check_between(as.work_size(), 128, u32_max);
+                    check_between(as.work_size(), 1, u32_max);
                     if (as.work_size() > 1024) {
                         LOG(WARNING) << "unusually high work_size of " << as.work_size() << " found. proceeding.";
                     }
 
-                    check_between(as.raw_intensity(), 1, u32_max)//TODO: values
+                    check_between(as.raw_intensity(), 1, u32_max); //TODO: values
 
                 }
             }
