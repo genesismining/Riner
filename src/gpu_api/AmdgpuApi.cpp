@@ -169,6 +169,7 @@ namespace riner {
     }
 
     bool AmdgpuApi::setEngineClock(int freq) {
+        VLOG(4) << "[AmdgpuApi] set core clock to " << freq << "MHz";
         std::call_once(manualPowerProfile, &AmdgpuApi::setPowerProfile, this, "manual");
         freq = std::min(std::max(sclk.range.first, freq), sclk.range.second);
         if (sclk.freqTarget.has_value() && *sclk.freqTarget == freq)
@@ -183,6 +184,7 @@ namespace riner {
     }
 
     bool AmdgpuApi::setMemoryClock(int freq) {
+        VLOG(4) << "[AmdgpuApi] set memory clock to " << freq << "MHz";
         std::call_once(manualPowerProfile, &AmdgpuApi::setPowerProfile, this, "manual");
         freq = std::min(std::max(mclk.range.first, freq), mclk.range.second);
         if (mclk.freqTarget.has_value() && *mclk.freqTarget == freq)
@@ -196,6 +198,7 @@ namespace riner {
     }
 
     bool AmdgpuApi::setVoltage(int voltage) {
+        VLOG(4) << "[AmdgpuApi] set voltage to " << voltage << "mV";
         std::call_once(manualPowerProfile, &AmdgpuApi::setPowerProfile, this, "manual");
         voltage = std::min(std::max(vddcRange.first, voltage), vddcRange.second);
         if (vddcTarget.has_value() && *vddcTarget == voltage)
@@ -213,11 +216,13 @@ namespace riner {
     }
 
     bool AmdgpuApi::setFanPercent(int percent) {
+        VLOG(4) << "[AmdgpuApi] set fan to " << percent << "%";
         std::call_once(manualFan, &AmdgpuApi::setFanProfile, this, 1);
         return writeToFile(fanPwm, std::to_string((255 * percent + 50) / 100));
     }
 
     bool AmdgpuApi::setTdp(int tdp) {
+        VLOG(4) << "[AmdgpuApi] set TDP to " << tdp << "W";
         return writeToFile(powerCap, std::to_string(1000000 * tdp));
     }
 
@@ -336,7 +341,7 @@ namespace riner {
                                 else if (sscanf(line.c_str(), "VDDC: %dmV %dmV", &min, &max) == 2)
                                     api->vddcRange = std::make_pair(min, max);
                                 else {
-                                    LOG(WARNING) << "Error while parsing OD_RANGE in " << api->pciePath << "pp_od_clk_voltage";
+                                    LOG(WARNING) << "[AmdgpuApi] Error while parsing OD_RANGE in " << api->pciePath << "pp_od_clk_voltage";
                                     stage = UNDEFINED;
                                 }
                                 break;
@@ -347,9 +352,9 @@ namespace riner {
                             if (sscanf(line.c_str(), "%d: %dMHz %dmV", &idx, &freq, &voltage) == 3 &&
                                 idx == table->size()) {
                                 table->emplace_back(table_entry{freq, voltage, realVoltage});
-                                LOG(INFO) << idx << ": " << voltage << "mV / " << realVoltage.value_or(-1) << "mV";
+                                VLOG(4) << "[AmdgpuApi] " << (stage == SCLK ? "SCLK[" : "MCLK[") << idx << "]: " << voltage << "mV / " << realVoltage.value_or(-1) << "mV";
                             } else {
-                                LOG(WARNING) << "Error while parsing " << api->pciePath << "pp_od_clk_voltage";
+                                LOG(WARNING) << "[AmdgpuApi] Error while parsing " << api->pciePath << "pp_od_clk_voltage";
                                 stage = UNDEFINED;
                             }
                         }
@@ -365,7 +370,7 @@ namespace riner {
                         api->sclk.table.emplace_back(table_entry{freq});
                     }
                     else {
-                        LOG(WARNING) << "Error while parsing " << api->pciePath << "pp_dpm_sclk";
+                        LOG(WARNING) << "[AmdgpuApi] Error while parsing " << api->pciePath << "pp_dpm_sclk";
                         break;
                     }
                 }
@@ -375,7 +380,7 @@ namespace riner {
                         api->mclk.table.emplace_back(table_entry{freq});
                     }
                     else {
-                        LOG(WARNING) << "Error while parsing " << api->pciePath << "pp_dpm_mclk";
+                        LOG(WARNING) << "[AmdgpuApi] Error while parsing " << api->pciePath << "pp_dpm_mclk";
                         break;
                     }
                 }

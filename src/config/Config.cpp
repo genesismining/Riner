@@ -192,7 +192,6 @@ if (!(_min <= x && x <= _max)) { \
         algoImplName = algoImplNameArg;
         set_if_has(gpuSettings.memory_clock_MHz, memory_clock_mhz);
         set_if_has(gpuSettings.core_clock_MHz, core_clock_mhz);
-        set_if_has(gpuSettings.memory_clock_MHz, memory_clock_mhz);
         set_if_has(gpuSettings.power_limit_W, power_limit_w);
         set_if_has(gpuSettings.power_limit_percent, power_limit_percent);
         set_if_has(gpuSettings.core_voltage_mV, core_voltage_mv);

@@ -67,8 +67,8 @@ namespace riner {
                     instance->setVoltage(*settings.core_voltage_mV);
                 if (settings.memory_clock_MHz)
                     instance->setMemoryClock(*settings.memory_clock_MHz);
-                if (settings.core_clock_MHz || settings.core_clock_MHz_min)
-                    instance->setEngineClock(settings.core_clock_MHz.value_or(settings.core_clock_MHz_min.value_or(0)));
+                if (settings.core_clock_MHz)
+                    instance->setEngineClock(*settings.core_clock_MHz);
 
                 LOG(INFO) << "successfully created GpuApi instance: '" << gpuApiName << "'";
                 return instance;

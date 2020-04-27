@@ -19,13 +19,12 @@ namespace riner {
 
     struct GpuSettings {
         optional<uint32_t>
-                core_clock_MHz_min, //engine_min
-                core_clock_MHz_max, //engine_max
                 core_clock_MHz,
                 memory_clock_MHz,
                 power_limit_W, //power limit is either expressed in watts or percentage
                 power_limit_percent,
-                core_voltage_mV,
+                core_voltage_mV;
+        optional<int32_t>
                 core_voltage_offset_mV;
     };
 
