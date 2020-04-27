@@ -96,19 +96,21 @@ namespace riner {
     }
 
     std::string Registry::poolImplForProtocolAndPowType(const std::string &protocolType, const std::string &powType) const {
-        if (protocolType != "") { //don't accidentally match "" with an unspecified protocolTypeAlias
-            for (auto &pair : _poolWithName) {
-                std::string poolImplName = pair.first;
-                const EntryPool &e = pair.second;
-                bool samePow = toLower(e.powType) == toLower(powType);
+        for (auto &pair : _poolWithName) {
+            const std::string &poolImplName = pair.first;
+            const EntryPool &e = pair.second;
+            bool samePow = toLower(e.powType) == toLower(powType);
 
-                bool sameProto = false;
-                sameProto |= toLower(protocolType) == toLower(e.protocolType);
-                sameProto |= toLower(protocolType) == toLower(e.protocolTypeAlias);
+            bool sameProto = protocolType.empty(); // pick first protocol if powType is empty
+            if (sameProto && samePow) {
+                LOG(WARNING) << "no protocol specified for '" << powType << "'-pool - trying '" << e.protocolType << "'-protocol";
+                return poolImplName;
+            }
+            sameProto |= toLower(protocolType) == toLower(e.protocolType);
+            sameProto |= toLower(protocolType) == toLower(e.protocolTypeAlias);
 
-                if (sameProto && samePow) {
-                    return poolImplName;
-                }
+            if (sameProto && samePow) {
+                return poolImplName;
             }
         }
         return "";
