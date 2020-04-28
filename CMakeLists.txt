@@ -6,6 +6,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
+#TODO: fix compililation flags. Some flags are not supported by every compiler
 set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS}         -Wall -Werror=return-type -Wno-unknown-attributes -Wno-ignored-attributes -Wno-deprecated-declarations -Wno-noexcept-type")
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   ${CMAKE_CXX_FLAGS} -Og -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS} -O2 -mtune=native -msse4.1")
