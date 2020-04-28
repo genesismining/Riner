@@ -167,7 +167,7 @@ namespace riner {
                 device.records.reportScannedNoncesAmount(raw_intensity);
 
                 if (work->expired()) {
-                    VLOG(0) << "aborting kernel loop because work has expired on " << std::this_thread::get_id();
+                    VLOG(0) << "aborting kernel loop because work has expired on " << getThreadName();
                     break; //get new work
                 }
             }

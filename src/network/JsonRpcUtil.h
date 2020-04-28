@@ -57,7 +57,9 @@ namespace riner { namespace jrpc {
 
             template<class Func, class ... ArgNames>
             void addMethod(const char *name, Func &&func, ArgNames &&... argNames) {
-                RNR_EXPECTS(!hasMethod(name)); //method overloading not supported
+                if (hasMethod(name)) {
+                    VLOG(6) << "jrpc io: adding already existing method '" << name << "'. Replacing previously stored method.";
+                }
 
                 //method overloading not supported, same-name methods are likely added after reconnect
                 _methods.erase(std::remove_if(_methods.begin(), _methods.end(), [name] (const Method &method) {
