@@ -80,7 +80,7 @@ message Config {
         required uint32 port = 4;
         required string username = 5;
         optional string password = 6 [default = ""];
-        optional bool enable_ssl = 7 [default = false];
+        optional bool use_ssl = 7 [default = false];
         optional string certificate_file = 8;
     }
 

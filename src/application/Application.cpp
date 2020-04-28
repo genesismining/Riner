@@ -75,7 +75,7 @@ namespace riner {
                 auto port = uint16_t(p.port());
                 RNR_EXPECTS(p.port() == port);
                 SslDesc sslDesc;
-                if (p.has_enable_ssl() && p.enable_ssl()) {
+                if (p.has_use_ssl() && p.use_ssl()) {
                     sslDesc.client.emplace();
                     if (p.has_certificate_file()) {
                         sslDesc.client->certFile = std::string(p.certificate_file());
