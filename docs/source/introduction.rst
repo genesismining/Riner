@@ -20,50 +20,71 @@ Getting Started
 
 Dependencies
 ------------
-In order to build Riner the following dependencies need to be installed:
+
+In order to build Riner the following dependencies should be installed:
+
+- C++ compiler with support of the C++-14 standard
+
+- `CMake <https://cmake.org/>`_ (version 3.9 or later)
+
+- Build tool supported by :code:`cmake` like :code:`make` (Unix), :code:`Visual Studio` (Windows), :code:`Xcode` (macOS) etc.
 
 - `OpenCL <https://www.khronos.org/registry/OpenCL/specs/2.2/html/OpenCL_ICD_Installation.html>`_
 
-- `CMake <https://cmake.org/>`_
+- `Protocol Buffers <https://github.com/protocolbuffers/protobuf>`_
 
-- `GoogleTest <https://github.com/google/googletest>`_
+- for SSL/TLS support (optional): `OpenSSL <https://www.openssl.org/source/>`_
 
-.. | `OpenSSL <https://www.openssl.org/source/>`_
+- for building tests (optional): `GoogleTest <https://github.com/google/googletest>`_
 
 Build
 -----
 
-first, clone the Riner repository and update submodules
+First, install the required dependencies. On Ubuntu 18.04 the following packages might be installed:
+
+.. code::
+
+    sudo apt install cmake make g++
+    sudo apt install opencl-headers ocl-icd-libopencl1
+    # if /usr/lib/libOpenCL.so does not exist, then create it as symlink to /usr/lib/x86_64-linux-gnu/libOpenCL.so.1
+    sudo apt install libprotobuf-dev protobuf-compiler
+    sudo apt install libssl-dev
+    sudo apt install googletest && ( cd /usr/src/googletest; sudo cmake . && sudo make install; cd - )
+    sudo apt install git
+
+Some distributions split :code:`GoogleTest` into two packages, e.g. :code:`gtest` and :code:`gmock`.
+
+Afterwards, clone the Riner repository and update submodules
 
 .. code::
 
     git clone --recurse-submodules https://github.com/genesismining/Riner.git
 
-then build the project using :code:`cmake` and :code:`make` or configure CMake to output build files for your favourite IDE.
+Then build the project using :code:`cmake` and :code:`make` or configure CMake to output build files for your favourite IDE.
 
 .. code::
 
     cmake .
-    make
+    make riner
 
 .. note:: 
 
     Running cmake will also download additional files such as ethash.cl from other repositories.
 
-now if we run the resulting executable, the following message will show up in the console output:
+Now if we run the resulting executable, the following message will show up in the console output:
 
 .. code::
 
-    no config path command line argument (--config /path/to/config.json)
+    no config path command line argument (--config=/path/to/config.textproto)
 
-Riner requires a .json configuration file to run any algorithms. For now only a basic OpenCL implementation of ethash can be run (which requires a GPU with 4GB of memory). Alternatively an example algorithm is available that can be used as a starting point for implementing your own proof of work in Riner.
+Riner requires a .textproto configuration file to run any algorithms. For now only a basic OpenCL implementation of Cuckatoo31 and ethash can be run, which requires a GPU with 4GB of memory and a working OpenCL driver. Alternatively an example algorithm is available that can be used as a starting point for implementing your own proof of work in Riner.
 
 In either case, providing a configuration file as described in the following section is required
 
 Configuration
 -------------
 
-Here is an example of a valid config.json file
+Here is an example of a valid config.textproto file
 
 .. code::
 
