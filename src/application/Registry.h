@@ -16,8 +16,14 @@ namespace riner {
     struct AlgoConstructionArgs;
     struct PoolConstructionArgs;
 
+    /**
+     * Factory class for creating AlgoImpl, PoolImpl and GpuApi instances given the text name
+     */
     class Registry {
     public:
+        /**
+         * Default constructor initializes the name<->factory function mappings
+         */
         Registry() {
             registerAllAlgoImpls();
             registerAllPoolImpls();
@@ -36,11 +42,16 @@ namespace riner {
          */
         unique_ptr<Algorithm> makeAlgo(const std::string &name, AlgoConstructionArgs args) const;
 
-        //may return nullptr if name wasn't found
-        //shared_ptr for the owner so weak_ptrs of this object can be distributed
+        /**
+         * factory method to construct a Pool subclass
+         * return shared_ptr of the pool (so that weak_ptrs of it can be distributed) or nullptr if `name` wasn't found
+         */
         shared_ptr<Pool> makePool(const std::string &name, PoolConstructionArgs args) const;
-
-        //will return nullptr if the GpuApi could not be initialized or the name wasn't found
+        
+        /**
+         * factory method to construct a GpuApi subclass
+         * return unique_ptr containing the upcast GpuApi or nullptr if the GpuApi could not be initialized or the name wasn't found
+         */
         unique_ptr<GpuApi> tryMakeGpuApi(const std::string &name, const GpuApiConstructionArgs &args) const;
 
         struct Listing { //return values of listAlgoImpls() and listPoolImpls()
@@ -49,30 +60,40 @@ namespace riner {
             std::string protocolType = ""; //only for PoolImpls
             std::string protocolTypeAlias = ""; //only for PoolImpls
         };
+        
+        std::vector<Listing> listAlgoImpls() const; //infos of all registered AlgoImpls
+        std::vector<Listing> listPoolImpls() const; //infos of all registered PoolImpls
+        std::vector<std::string> listGpuApis() const; //names of all registered GpuApis
 
-        std::vector<Listing> listAlgoImpls() const;
-        std::vector<Listing> listPoolImpls() const;
-        std::vector<std::string> listGpuApis() const;
+        bool algoImplExists(std::string name) const; //test if a algoImpl with a given name exists
+        bool poolImplExists(std::string name) const; //test if a poolImpl with a given name exists
+        bool gpuApiExists(std::string name) const; //test if a gpuApi with a given name exists
 
-        bool algoImplExists(std::string name) const;
-        bool poolImplExists(std::string name) const;
-        bool gpuApiExists(std::string name) const;
-
+        //convenience getters
         std::string powTypeOfAlgoImpl(const std::string &algoImplName) const; //returns empty string "" if not found
         std::string powTypeOfPoolImpl(const std::string &algoImplName) const; //returns empty string "" if not found
         std::string poolImplForProtocolAndPowType(const std::string &protocolType, const std::string &powType) const; // "" if not found
 
 
     private:
+        /**
+         * registers all AlgoImpls(), see the implementation of this method in `Registry.cpp` to add an algoImpl
+         */
         void registerAllAlgoImpls();
-        void registerAllPoolImpls();
-        void registerAllGpuApis();
+        void registerAllPoolImpls(); //same as registerAllAlgoImpls but for PoolImpls
+        void registerAllGpuApis(); //same as registerAllAlgoImpls but for GpuApis
 
+        /**
+         * map entry that associates an AlgoImpl name with a factory function
+         */
         struct EntryAlgo {
             std::string powType;
             std::function<unique_ptr<Algorithm>(AlgoConstructionArgs &&)> makeFunc;
         };
 
+        /**
+         * map entry that associates a PoolImpl name with a factory function
+         */
         struct EntryPool {
             std::string powType;
             std::string protocolType;
@@ -80,6 +101,9 @@ namespace riner {
             std::function<shared_ptr<Pool>(PoolConstructionArgs &&)> makeFunc;
         };
 
+        /**
+         * map entry that contains a factory function for a GpuApi that may fail
+         */
         struct EntryGpuApi {
             std::function<std::unique_ptr<GpuApi>(const GpuApiConstructionArgs &)> tryMakeFunc; //can fail => nullptr
         };
@@ -88,6 +112,12 @@ namespace riner {
         std::map<std::string, EntryPool> _poolWithName;
         std::map<std::string, EntryGpuApi> _gpuApiWithName;
 
+        /**
+         * Register an AlgoImpl type and generate a factory function for it.
+         * param AlgoT the type of the Algorithm subclass (e.g. AlgoEthashCL)
+         * param algoImplName the algo's name as it should be referred to in the config file
+         * param powType the pow type string for checking compatibility with pools/work
+         */
         template<class AlgoT>
         void addAlgoImpl(const std::string &algoImplName, const std::string &powType) {
             static_assert(std::is_base_of<Algorithm, AlgoT>::value, "AlgoT must derive from Algorithm");
@@ -101,6 +131,12 @@ namespace riner {
             };
         }
 
+        /**
+         * Register a PoolImpl type and generate a factory function for it.
+         * param PoolT the type of the Pool subclass (e.g. PoolEthashStratum)
+         * param poolImplName the pool's name as it should be referred to in the config file
+         * param powType the pow type string for checking compatibility with pools/work
+         */
         template<class PoolT>
         void addPoolImpl(const std::string &poolImplName, const std::string &powType, const std::string &protocolType, const std::string &protocolTypeAlias = "") {
             static_assert(std::is_base_of<Pool, PoolT>::value, "PoolT must derive from Pool");
@@ -118,6 +154,11 @@ namespace riner {
             };
         }
 
+        /**
+         * Register a GpuApi type and generate a factory function for it.
+         * param GpuApiT the type of the GpuApi subclass (e.g. AmdgpuApi)
+         * param gpuApiName the the name of the GpuApi (used as a key)
+         */
         template<class GpuApiT>
         void addGpuApi(const std::string &gpuApiName) {
             static_assert(std::is_base_of<GpuApi, GpuApiT>::value, "GpuApiT must derive from GpuApi");

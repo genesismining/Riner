@@ -9,11 +9,18 @@
 
 namespace riner {
 
+    /**
+     * This struct represents the constructor args passed into every GpuApi subclass upon creation
+     * see `Registry`
+     */
     struct GpuApiConstructionArgs {
         DeviceId id;
         GpuSettings settings;
     };
 
+    /**
+     * Base class for GpuApis that allow reading or writing of voltage/Fanspeed etc...
+     */
     class GpuApi {
     public:
         virtual ~GpuApi() = default;

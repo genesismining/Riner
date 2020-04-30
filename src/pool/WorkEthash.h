@@ -11,6 +11,7 @@
 
 namespace riner {
 
+    //see WorkDummy for explanation of the basic concepts of Work/PowType/Solution
     struct HasPowTypeEthash {
         static inline constexpr auto &getPowType() {
             return "ethash";
@@ -34,12 +35,18 @@ namespace riner {
         uint32_t epoch = std::numeric_limits<uint32_t>::max();
         uint32_t extraNonce;
 
+        /**
+         * setEpoch is called on the work templte in the Ethash Pool's workQueue, so that the epoch calculation doesn't happen on the io thread, but the queue's refill thread instead
+         */
         void setEpoch() {
-            if (epoch == std::numeric_limits<uint32_t>::max()) {//calculate epoch for workTemplate if it didn't happen yet
-                epoch = calculateEthEpoch(seedHash);
+            if (epoch == std::numeric_limits<uint32_t>::max()) {
+                epoch = calculateEthEpoch(seedHash); //expensive-ish
             }
         }
 
+        /**
+         * called to finish initializing by setting difficulty related members
+         */
         void setDifficultiesAndTargets(const Bytes<32> &jobTarget) {
             jobDifficulty = targetToDifficultyApprox(jobTarget);
             this->jobTarget = jobTarget;

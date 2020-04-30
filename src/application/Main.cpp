@@ -8,9 +8,13 @@
 #include <src/application/ShutdownState.h>
 
 namespace riner {
+    /**
+     * ShutdownState deals with shutting down the application after SIGINT or SIGTERM. See more in ShutdownState.
+     */
     unique_ptr<ShutdownState> shutdownState; //global, so that the SIGINT handler can access it
 }
 
+//registered in main()
 void sigintHandler(int signum) {
     riner::shutdownState->launchShutdownTask(signum);
 }
@@ -48,7 +52,7 @@ int main(int raw_argc, const char *raw_argv[]) {
     bool use_log_colors = hasArg({"--color", "--colors"}, argc, argv);
     bool use_log_emojis = hasArg({"--emoji", "--emojis"}, argc, argv);
     initLogging(argc, argv, use_log_colors, use_log_emojis);
-    setThreadName("main");
+    setThreadName("main"); //sets the thread name for logging
 
     VLOG(5) << "interpreting args as: " << expandedArgs.allArgsAsOneString;
 
@@ -59,6 +63,8 @@ int main(int raw_argc, const char *raw_argv[]) {
 
     bool did_respond_already = false; //if we responded to something we won't complain about e.g. "--config" missing
 
+    //check command line arguments and respond accordingly
+    
     if (hasArg({"--help", "-h"}, argc, argv)) {
         std::cout << commandHelp(command_infos, format_as_json);
         did_respond_already = true;
@@ -94,8 +100,9 @@ int main(int raw_argc, const char *raw_argv[]) {
             if (optional<Config> config = configUtils::loadConfig(*configPath)) {
 
                 try {
+                    //app will launch here and run until the destructor.
                     Application app{std::move(*config)};
-                    shutdownState->waitUntilShutdownRequested();
+                    shutdownState->waitUntilShutdownRequested(); //this call will block until there is a SIGINT or SIGTERM interrupt (e.g. via CTRL+C
                 }
                 catch(const std::exception &e) {
                     LOG(ERROR) << "uncaught exception: " << e.what();

@@ -14,6 +14,9 @@
 
 namespace riner {
 
+    /**
+     * PoolJob for PoolEthashStratum's WorkQueue
+     */
     struct EthashStratumJob : public PoolJob {
         const std::string jobId;
         WorkEthash workTemplate;
@@ -35,6 +38,10 @@ namespace riner {
         static const uint32_t uniqueNonce;
     };
 
+
+    /**
+     * PoolImpl for ethash, see "Registry.cpp"
+     */
     class PoolEthashStratum : public Pool {
     public:
         explicit PoolEthashStratum(const PoolConstructionArgs &);

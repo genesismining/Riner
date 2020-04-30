@@ -98,6 +98,7 @@ namespace riner {
      * LockGuarded contains a T instance t that is associated with a mutex. t is only accessible via the lock()
      * method which returns an object of type Locked<...>. This Locked<...> object acts as a RAII-style lock guard, but also provides
      * operator-> and operator* for accessing the T instance.
+     * This was inspired by lock_guard and the mutex<T> type of the rust language.
      *
      * @tparam T type of the instance which is to be protected by the mutex
      */

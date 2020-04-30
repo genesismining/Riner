@@ -123,8 +123,10 @@ namespace riner {
             };
 
             unique_ptr<Algorithm> algo = registry.makeAlgo(implName, args);
-
-            algorithms.emplace_back(std::move(algo));
+            
+            if (algo) {
+                algorithms.emplace_back(std::move(algo));
+            }
         }
     }
 

@@ -73,12 +73,18 @@ namespace riner {
 
         virtual ~WorkSolution() = default;
 
+        /**
+         * functions like a dynamic_cast but doesn't rely on RTTI
+         */
         template<class T>
         T *downCast() {
             static_assert(std::is_base_of<WorkSolution, T>::value, "");
             return T::getPowType() == powType ? static_cast<T*>(this) : nullptr;
         }
 
+        /**
+         * const version of the above function
+         */
         template<class T>
         const T *downCast() const {
             static_assert(std::is_base_of<WorkSolution, T>::value, "");
@@ -134,19 +140,27 @@ namespace riner {
         const std::string powType;
         virtual ~Work() = default;
 
+        /**
+         * functions like a dynamic_cast but doesn't rely on RTTI
+         */
         template<class T>
         T *downCast() {
             static_assert(std::is_base_of<Work, T>::value, "");
             return T::getPowType() == powType ? static_cast<T*>(this) : nullptr;
         }
 
+        /**
+         * const version of the above function
+         */
         template<class T>
         const T *downCast() const {
             static_assert(std::is_base_of<Work, T>::value, "");
             return T::getPowType() == powType ? static_cast<const T*>(this) : nullptr;
         }
 
-        //may return nullptr
+        /**
+         * return the associated poolJob or nullptr if the job expired
+         */
         inline std::shared_ptr<const PoolJob> tryGetJob() const {
             return job.lock();
         }
@@ -186,8 +200,8 @@ namespace riner {
          * creates a solution object which can be filled with the algorithm results to then be submitted to the Pool.
          * There can be many WorkSolution objects generated from a single Work instance.
          * A solution object does not necessarily need to be submitted.
-         * WorkSolution objects must be created through this function in order to be properly tied to a Work object (via the private protocolData member)
-         * That way the pool protocol implementation can track which solution belongs to which work package.
+         * WorkSolution objects must be created through this function in order to be properly tied to a Work object (via the private job member)
+         * That way the PoolImpl can track which solution belongs to which work package.
          * A pool can make work objects expire (which can be queried via Work::expired()). This may be used as a hint to abort any calculations
          * and acquire a new work object, however it is not required to do so.
          * There is no obligation to check for expiration before submitting a solution

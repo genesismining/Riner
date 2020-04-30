@@ -1,5 +1,10 @@
 #pragma once
 
+/**
+ * use this header to wrap platform/compiler dependent features into generic macros
+ * (see for example how RNR_RESTRICT is defined)
+ */
+
 #if defined (__unix__)
 #   define RNR_PLATFORM_UNIX
 #endif

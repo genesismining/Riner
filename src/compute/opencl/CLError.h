@@ -7,8 +7,12 @@
 #include <lib/cl2hpp/include/cl2.hpp>
 
 namespace riner {
-
-    const char *cl_error_name(cl_int);
+    
+    /**
+     * param err an opencl opencl error value
+     * return a c_string containing the opencl error macro name (e.g. CL_SUCCESS => "CL_SUCCESS")
+     */
+    const char *cl_error_name(cl_int err);
 
 #define RNR_RETURN_ON_CL_ERR(err, msg, return_) \
 do { \

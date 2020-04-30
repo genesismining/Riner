@@ -10,7 +10,7 @@
 namespace riner {
 
 /**
- * All struct HasPowType* used by PoolGrin have to implement int edgeBits()
+ * All struct `HasPowTypeX` used by `PoolGrin` have to implement `int edgeBits()`
  */
 
 template<int EDGE_BITS>

@@ -7,8 +7,10 @@
 
 namespace riner {
 
-    //a barrier object that multiple threads can wait() on until another thread calls unblock()
-    //probably crazy inefficient. Used for writing tests
+   /**
+    * a barrier object that multiple threads can wait() on until another thread calls unblock().
+    * not designed for efficiency. Used for writing tests
+    */
     class Barrier {
 
         mutable std::mutex promise_set_value_mutex; //locked when promise.set_value is (maybe) called, and promise_has_value is set to true
@@ -25,21 +27,27 @@ namespace riner {
             unblock();
         }
 
-        //wait from one or more threads (no spurious wakes)
-        //see std::shared_future documentation for specifics
+        /**
+         * wait from one or more threads (no spurious wakes)
+         * see std::shared_future documentation for specifics
+         */
         void wait() const {
             copyFuture().wait();
         }
-
-        //wait from one or more threads with timeout (no spurious wakes)
-        //return value can be used to find out if timeout happened
-        //see std::shared_future documentation for specifics
+        
+        /**
+         * wait from one or more threads with timeout (no spurious wakes)
+         * return value can be used to find out if timeout happened
+         * see std::shared_future documentation for specifics
+         */
         std::future_status wait_for(std::chrono::milliseconds duration) const {
             return copyFuture().wait_for(duration);
         }
-
-        //lets the threads waiting at wait() continue. after calling this, wait() returns immediately
-        //see std::promise documentation for specifics
+        
+        /**
+         * lets the threads waiting at wait() continue. after calling this, wait() returns immediately
+         * see std::promise documentation for specifics
+         */
         void unblock() {
             std::lock_guard<std::mutex> lock{promise_set_value_mutex};
 

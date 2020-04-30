@@ -9,11 +9,17 @@
 
 namespace riner {
 
-    //TODO: write some nice documentation about StatisticNode because theres a lot of stuff going on
-    //TODO: should this node use Ctor/Dtor to call AddListener/RemoveListener instead of relying on weak_ptrs that clean up on iteration?
+    /**
+     * helper class for propagating changes to T (which contains statistic data) along a listener chain.
+     * This means that, e.g. there is a StatisticNode for every Gpu, but also a StatisticNode that gathers information from all of the Gpu's individual nodes and aggregates their data.
+     * This is mostly done by using the public lockedForEach and lockedApply
+     */
     template<class T>
     class StatisticNode {
 
+        /**
+         * this Node class is just a wrapper so the entire thing can be put into a std::shared_ptr, which allows std::weak_ptr functionality (figuring out whether the instance was deleted)
+         */
         struct Node {
             LockGuarded<T> _content;
             LockGuarded<std::list<weak_ptr<Node>>> _listeners;
@@ -92,30 +98,38 @@ namespace riner {
             _node->removeListener(listener._node);
         }
 
-        //use this function to modify the T instance of this node and all child nodes by the same func.
-        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+        /**
+         * use this function to modify the T instance of this node and all child nodes by the same func.
+         * !!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+         */
         void lockedForEach(std::function<void(T &)> &&func) {
             RNR_EXPECTS(_node);
             _node->lockedForEach(std::move(func));
         }
-
-        //use this function in case you want to modify the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
-        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+        
+        /**
+         * use this function in case you want to modify the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
+         * !!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+         */
         void lockedApply(std::function<void(T &)> &&func) {
             RNR_EXPECTS(_node);
             auto content = _node->_content.lock();
             func(*content);
         }
 
-        //use this function in case you want to read the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
-        //!!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+        /**
+         * use this function in case you want to read the T instance of this particular node but don't want a copy operation to happen, otherwise call getValue()
+         * !!! DEADLOCK possible! this function holds a lock while calling a callback! be careful!
+         */
         void lockedApply(std::function<void(const T &)> &&func) const {
             RNR_EXPECTS(_node);
             auto content = _node->_content.lock();
             func(*content);
         }
 
-        //get a copy of the T instance of this node
+        /**
+         * get a copy of the T instance of this node
+         */
         T getValue() const {
             auto locked = _node->_content.lock();
             T copy = *locked;

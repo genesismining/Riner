@@ -8,11 +8,13 @@
 
 namespace riner {
 
-    //simple replacement for std::vector<char> in situations where huge
-    //allocations happen, since the standard doesn't define how
-    //much more memory std::vector allocates on reserve or resize.
-
-    //basically an owning gsl::span
+    /**
+     * simple replacement for std::vector<char> in situations where huge
+     * allocations happen, since the standard doesn't define how
+     * much more memory std::vector allocates on reserve or resize.
+     *
+     * basically an owning gsl::span
+     */
     template<class T = uint8_t>
     class DynamicBuffer {
 

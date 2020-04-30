@@ -7,6 +7,9 @@
 
 namespace riner {
 
+    /**
+     * contains Dag Caches on the CPU which are used for verification of ethash shares
+     */
     class DagCacheContainer {
 
         uint32_t currentEpoch = std::numeric_limits<uint32_t>::max();
@@ -28,8 +31,17 @@ namespace riner {
             Bytes<32> mixHash;
         };
 
+        /**
+         * generates the dag cache for a given epoch and seedhash
+         * WARNING: takes very long, expect the call to block for a while
+         * param epoch the ethash epoch
+         * param seedHash the seedHash from the ethash Work
+         */
         void generate(uint32_t epoch, cByteSpan<32> seedHash);
 
+        /**
+         * return whether the dag cache was generated for `epoch`
+         */
         bool isGenerated(uint32_t epoch) const;
 
         uint32_t getEpoch() const;
@@ -45,6 +57,10 @@ namespace riner {
         operator bool() const;
     };
 
+    /**
+     * rather expensive function that calculates the ethash epoch by hashing 0 until the provided seedhash is reached.
+     * return the Ethash Epoch number, or std::numeric_limits<uint32_t>::max() if the hash could not be reproduced
+     */
     uint32_t calculateEthEpoch(cByteSpan<32> seedHash);
 
 }

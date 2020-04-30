@@ -3,6 +3,10 @@
 
 #include <memory>
 
+/**
+ * This header is mainly for shorthands when dealing with c++11 smart pointers
+ */
+
 namespace riner {
 
     using std::unique_ptr;
@@ -11,6 +15,10 @@ namespace riner {
     using std::make_unique;
     using std::make_shared;
 
+    /**
+     * cast a unique_ptr<U> to a unique_ptr<T> (like dynamic_cast)
+     * return the downcast version of uUnique
+     */
     template<class T, class U>
     unique_ptr<T> static_unique_ptr_cast(unique_ptr<U> uUnique) {
         U *u = uUnique.release(); //drop ownership of *u
@@ -18,7 +26,10 @@ namespace riner {
         return unique_ptr<T>(t); //make new owning unique_ptr for *t
     }
 
-    //convenience function for creating weak_ptr out of shared_ptr
+    /**
+     * function that clearly indicates intent when creating a weak_ptr from a shared_ptr
+     * return a weak_ptr that points to the same object as `sharedPtr`
+     */
     template<class T>
     std::weak_ptr<T> make_weak(const std::shared_ptr<T> &sharedPtr) {
         return sharedPtr;

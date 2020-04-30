@@ -4,6 +4,10 @@
 
 namespace riner {
 
+/**
+ * convenience wrapper around std::mt19937
+ * used in Grin code.
+ */
 class Random {
 public:
     Random() :

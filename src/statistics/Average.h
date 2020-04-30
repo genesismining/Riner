@@ -6,6 +6,10 @@
 
 namespace riner {
 
+    /**
+     * running Exponential Average class used by statistics objects
+     * use addRecord to add additional data points and getRate() or getWeightRate() for reading results
+     */
     class ExpAverage {
         seconds decay_exp;
         double rate{0};
@@ -25,6 +29,10 @@ namespace riner {
         double getWeightRate(clock::time_point time = clock::now()) const;
     };
 
+    /**
+     * running mean class used by statistics objects
+     * use addRecord to add additional data points and getRate() or getWeightRate() for reading results
+     */
     class Mean {
         uint64_t total{0};
         double weight_total{0};

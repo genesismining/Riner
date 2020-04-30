@@ -4,7 +4,13 @@
 #include <src/statistics/StatisticNode.h>
 
 namespace riner {
-
+    /**
+     * class for gathering statistics per pool connection
+     * XRecords types are wired in a tree structure that aggregates their statistics data.
+     * The tree structure is created via the `XRecords(XRecords &parent)` constructor
+     *
+     * The layout of this class is similar to `DeviceRecords`. see `DeviceRecords.h` for more documentation
+     */
     class PoolRecords {
 
         struct Averages {
@@ -32,6 +38,9 @@ namespace riner {
             Averages rejectedShares;
             Averages duplicateShares;
 
+            /**
+             * returns a pool connection duration estimate based on accepted shares time interval
+             */
             clock::duration connectionDuration() const;
         };
 
@@ -39,10 +48,17 @@ namespace riner {
         PoolRecords(PoolRecords &&) = delete;
         void addListener(PoolRecords &parentListening);
 
+        /**
+         * call this method to report that a share of a certain difficulty was sent to
+         * the pool and whether the pool accepted it (and whether it was a duplicate or not)
+         */
         void reportShare(double difficulty, bool isAccepted, bool isDuplicate);
 
         Data read() const;
-
+        
+        /**
+         * reset the averaging intervals of Data's members for all listeners
+         */
         void resetInterval();
 
     private:

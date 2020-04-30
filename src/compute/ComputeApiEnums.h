@@ -12,6 +12,9 @@ namespace riner {
         kCompApiCount
     };
 
+    /**
+     * enum representing common compute device vendors. used by `DeviceId`
+     */
     enum VendorEnum {
         kUnknown,
         kNvidia,
@@ -21,7 +24,9 @@ namespace riner {
         kVendorEnumCount
     };
 
-
+    /**
+     * convert Vendor enum to a printable string (e.g. "AMD" for kAMD)
+     */
     std::string stringFromVendorEnum(VendorEnum e);
 
 }

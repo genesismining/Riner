@@ -18,7 +18,7 @@ namespace riner {
     struct AlgoConstructionArgs {
         ComputeModule &compute;
         std::vector<std::reference_wrapper<Device>> assignedDevices;
-        Pool &workProvider;
+        Pool &workProvider; //reference to the poolswitcher
     };
 
     /**

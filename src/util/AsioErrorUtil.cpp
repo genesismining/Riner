@@ -47,12 +47,7 @@ namespace riner {
             default: return "unknown error";
         }
     }
-
     std::string asio_error_name_num(const asio::error_code &e) {
         return asio_error_name(e) + " (#" + std::to_string(e.value()) + ")";
     }
 }
-
-/*
- *
- */

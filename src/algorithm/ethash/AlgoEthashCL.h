@@ -16,6 +16,9 @@
 
 namespace riner {
 
+    /**
+     * AlgoImpl for powType "ethash" with compute Api "OpenCL"
+     */
     class AlgoEthashCL : public Algorithm {
 
         UpgradeableLockGuarded<DagCacheContainer> dagCache;
@@ -24,12 +27,12 @@ namespace riner {
 
         std::atomic<bool> shutdown {false};
 
-        struct PerPlatform {
+        struct PerPlatform { //this struct exists once per opencl platform
             cl::Context clContext;
             cl::Program clProgram; //ethash.cl
         };
 
-        struct PerGpuSubTask {
+        struct PerGpuSubTask { //this struct exists once per gpu subtask (which is usually more than one task per gpu)
             cl::Kernel clSearchKernel;
             cl::CommandQueue cmdQueue; //for clFinish(queue);
             cl::Buffer header;
@@ -62,6 +65,7 @@ namespace riner {
                 uint64_t nonceBegin, uint64_t nonceEnd);
 
     public:
+        //algorithm starts working as soon as constructor is called
         explicit AlgoEthashCL(AlgoConstructionArgs);
 
         //destructor shuts down all working threads and joins them

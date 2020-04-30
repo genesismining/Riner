@@ -9,10 +9,11 @@ namespace riner {
 
     std::string stringFromVendorEnum(VendorEnum e) {
         switch(e) {
+            case kUnknown:  return "unknown vendor";
             case kAMD:      return "AMD";
             case kNvidia:   return "Nvidia";
             case kIntel:    return "Intel";
-            default: return "invalid algo type";
+            default: return "invalid vendor type";
         }
     }
 

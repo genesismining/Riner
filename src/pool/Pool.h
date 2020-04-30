@@ -119,34 +119,64 @@ namespace riner {
     public:
         Pool() = delete;
 
+        //the arguments from construction stay accessible here throughout the lifetime of the object
         const PoolConstructionArgs constructionArgs;
 
-        static void postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType) { //inits private/protected base class members without requiring the user to pass them through
+        /**
+         * inits private/protected base class members without requiring the user to pass them through. called by the poolswitcher during initialization
+         * param w a shared pointer owning *this, which gets stored in this->_this
+         * param poolImplName the implementation name according to Registry
+         * param powType the powtype string according to Registry
+         */
+        static void postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType) {
             w->_this = w;
             w->_poolImplName = poolImplName;
             w->_powType = powType;
         }
+        
+        /**
+         * simple uid creation function for pools (thread safe)
+         */
         static uint64_t generateUid();
 
         const uint64_t poolUid = generateUid();
 
+        /**
+         * get a copy of current PoolRecords data state
+         */
         inline auto readRecords() const {
             return records.read();
         }
 
+        /**
+         * adds a listener to the PoolRecords associated with this pool, which can aggregate stat changes
+         */
         inline void addRecordsListener(PoolRecords &parent) {
             records.addListener(parent);
         }
 
+        /**
+         * return host:port in a printable way
+         */
         virtual std::string getName() const {
             return constructionArgs.host + ":" + std::to_string(constructionArgs.port);
         }
 
+        /**
+         * return whether the pool job is considered expired. Most implementations forward this call to the WorkQueue's `WorkQueue::isExpiredJob()` method, which returns false as soon as a newer job was pushed.
+         */
         virtual bool isExpiredJob(const PoolJob &job) {
-            return true;
+            return true; //if the non-overloaded version of this function is called, return true. (this shouldn't really happen)
         }
 
-        virtual void onDeclaredDead() override = 0; //override this function to handle trying to reconnect after being declared dead
+        /**
+         * The pool switcher will declare pools dead if they didn't respond for a certain amount of time.
+         * PoolImpls are supposed to call `StillAliveTrackable::onStillAlive` every time they receive a
+         * message from the pool. The StillAliveTrackable interface is used to figure out whether to
+         * declare a pool dead. Once it is declared dead the PoolImpl can react by overloading this
+         * function and trying to disconnect and reconnect to the pool.
+         */
+        virtual void onDeclaredDead() override = 0;
 
         /**
          * @brief tryGetWorkImpl call as implemented by the Pool subclasses (aka PoolImpls)

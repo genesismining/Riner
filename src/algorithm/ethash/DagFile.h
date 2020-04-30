@@ -9,7 +9,11 @@
 #include <src/algorithm/ethash/DagCache.h>
 
 namespace riner {
-
+    
+    /**
+     * Utility for generating the ethash DagFile on the gpu via opencl
+     * see the generate method.
+     */
     class DagFile {
 
         uint32_t epoch = std::numeric_limits<uint32_t>::max();
@@ -23,7 +27,6 @@ namespace riner {
 
         bool valid = false;
     public:
-
         bool generate(const DagCacheContainer &cache,
                 const cl::Context &, const cl::Device &, cl::Program &generateDagProgram);
 
