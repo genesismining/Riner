@@ -43,6 +43,7 @@ namespace riner {
             RNR_EXPECTS(pool != nullptr);
 
             pool->addRecordsListener(records);
+            pool->setOnStateChangeCv(onStateChange);
             std::lock_guard<std::mutex> lock(mut);
             pools.emplace_back(pool);
 
@@ -93,23 +94,17 @@ namespace riner {
         std::atomic_bool shutdown {false};
 
         mutable std::mutex mut;
-        std::condition_variable notifyOnShutdown;
 
         //periodic checking
         void periodicAliveCheck();
         std::future<void> periodicAliveCheckTask;
 
-        const std::string powType;
         clock::duration checkInterval;
         clock::duration durUntilDeclaredDead;
 
         std::vector<shared_ptr<Pool>> pools;
+        std::shared_ptr<Pool> active_pool;
         size_t activePoolIndex = std::numeric_limits<size_t>::max(); //if > pools.size(), no pool is active
-
-        /**
-         * return either the active pool or nullptr if no pool is active
-         */
-        std::shared_ptr<Pool> activePool();
 
         /**
          * check which pools are still alive and if the active pool is no longer alive, switch active pool.

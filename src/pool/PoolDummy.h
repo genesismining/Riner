@@ -22,6 +22,9 @@ namespace riner {
         explicit PoolDummy(const PoolConstructionArgs &);
         ~PoolDummy() override;
 
+        void expireJobs() override;
+        void clearJobs() override;
+
     private:
         WorkQueue queue;
 

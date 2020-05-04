@@ -15,7 +15,6 @@
 namespace riner {
 
     void PoolEthashStratum::onConnected(CxnHandle cxn) {
-        LOG(DEBUG) << "onConnected";
         acceptMiningNotify = false;
 
         jrpc::Message subscribe = jrpc::RequestBuilder{}
@@ -30,7 +29,8 @@ namespace riner {
 
             //return if it's not a {"result": true} message
             if (!response.isResultTrue()) {
-                LOG(INFO) << "mining subscribe is not result true, instead it is " << response.str();
+                LOG(INFO) << "Pool disabled because mining subscribe failed: " << response.str();
+                setDisabled(true);
                 return;
             }
 
@@ -46,10 +46,11 @@ namespace riner {
                     acceptMiningNotify = true;
                     _cxn = cxn; //store connection for submit
                 }
+                else {
+                    LOG(INFO) << "Pool disabled because authorization failed (" << response.str() << "). Please check whether the correct pool credentials are supplied";
+                    setDisabled(true);
+                }
             });
-
-            records.resetInterval();
-            connected = true;
         });
 
         io.addMethod("mining.notify", [this] (nl::json params) {
@@ -91,7 +92,16 @@ namespace riner {
         //workTemplate->epoch is calculated in EthashStratumJob::makeWork()
         //so that not too much time is spent on this thread.
 
+        setConnected(true);
         queue.pushJob(std::move(job), cleanFlag);
+    }
+
+    void PoolEthashStratum::expireJobs() {
+        queue.expireJobs();
+    }
+
+    void PoolEthashStratum::clearJobs() {
+        queue.clear();
     }
 
     bool PoolEthashStratum::isExpiredJob(const PoolJob &job) {
@@ -117,8 +127,8 @@ namespace riner {
 
             auto job = result->tryGetJobAs<EthashStratumJob>();
             if (!job) {
-                LOG(INFO) << "work result cannot be submitted because it has expired";
-                return; //work has expired
+                LOG(INFO) << "work result cannot be submitted because it is stale";
+                return; //work is stale
             }
 
             uint32_t shareId = io.nextId++;
@@ -136,7 +146,7 @@ namespace riner {
             auto onResponse = [this, difficulty = result->jobDifficulty] (CxnHandle cxn, jrpc::Message response) {
                 records.reportShare(difficulty, response.isResultTrue(), false);
                 std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
-                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
+                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr << " by '" << getName() << "'";
             };
 
             //this handler gets called if there was no response after the last try
@@ -151,10 +161,15 @@ namespace riner {
     }
 
     void PoolEthashStratum::tryConnect() {
+        setConnected(false);
+        if (isDisabled() || !isActive()) {
+            return;
+        }
         auto &args = constructionArgs;
         io.launchClientAutoReconnect(args.host, args.port, [this] (auto cxn) {
-            LOG(INFO) << "connected";
             onConnected(cxn);
+        }, [this] () {
+            setConnected(false);
         });
     }
 

@@ -9,6 +9,41 @@ namespace riner {
             : constructionArgs(std::move(args)) {
     }
 
+    void Pool::postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType) {
+        w->_this = w;
+        w->_poolImplName = poolImplName;
+        w->_powType = powType;
+    }
+
+    void Pool::setConnected(bool connected) {
+        if (connected != _connected && onStateChange) {
+            VLOG(5) << "changed connected flag to " << connected;
+            if (connected) {
+                clearJobs();
+                records.resetInterval();
+                _connected = true;
+            }
+            else {
+                _connected = false;
+                records.resetInterval();
+            }
+            onStateChange->notify_all();
+        }
+    }
+
+    void Pool::setDisabled(bool disabled) {
+        if (disabled != _disabled.exchange(disabled) && onStateChange) {
+            onStateChange->notify_all();
+        }
+    }
+
+    void Pool::setActive(bool active) {
+        if (active != _active.exchange(active) && onStateChange) {
+            onDeclaredDead();
+        }
+    }
+
+
     uint64_t Pool::generateUid() {
         static std::atomic<uint64_t> nextUid = {1};
         return nextUid++;

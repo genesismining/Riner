@@ -17,6 +17,12 @@
 
 namespace riner {
 
+    /**
+     * @brief provides an implementation of a queue with PoolJob instances, which is able to generate Work
+     * This queue blocks while PoolJob::makeWork() is called. Therefore its usage is anticipated if makeWork()
+     * returns quickly, i.e. when it increments a counter only. Do not use this implementations if makeWork()
+     * includes a hash calculation or if it could block!
+     */
     class LazyWorkQueue {
 
         friend struct PoolJob;
@@ -47,7 +53,7 @@ namespace riner {
             std::unique_lock<std::mutex> lock(mutex);
             if (jobQueue.empty())
                 return nullptr;
-            std::unique_ptr<Work> work = jobQueue.front()->makeWork(); //TODO: this is a callback into user code while a lock is being held! refactor so that no lock is held!
+            std::unique_ptr<Work> work = jobQueue.front()->makeWork(); //NOTE: this is a callback into user code while a lock is being held
             work->job = jobQueue.front();
             return work;
         }
@@ -55,9 +61,30 @@ namespace riner {
         inline bool isExpiredJob(const PoolJob &job) {
             return latestJobId.load(std::memory_order_relaxed) != job.id;
         }
+
+        /**
+         * @brief clears the job queue
+         */
+        inline void clear() {
+            std::unique_lock<std::mutex> lock(mutex);
+            jobQueue.clear();
+        }
+
+        /**
+         * @brief increases the latestJobId counter, so that all Work from this queue is marked as expired
+         */
+        inline void expireJobs() {
+            latestJobId.fetch_add(1, std::memory_order_relaxed);
+        }
     };
 
 
+    /**
+     * @brief provides an implementation of a queue with PoolJob instances, which is able to generate Work
+     * This queue returns work from a work queue, which is filled asyncronously by a batch operation.
+     * Use this queue if the implemenation of PoolJob::makeWork() is complex, i.e. when it performs
+     * cryptographic hash calculations or when it could block.
+     */
     class WorkQueue {
 
         friend struct PoolJob;
@@ -65,6 +92,7 @@ namespace riner {
     protected:
         std::atomic_int64_t latestJobId {0};
         std::mutex mutex;
+        bool shutdown {false};
         std::deque<std::shared_ptr<PoolJob>> jobQueue;
 
     public:
@@ -202,9 +230,21 @@ namespace riner {
             return latestJobId.load(std::memory_order_relaxed) != job.id;
         }
 
-    protected:
 
-        bool shutdown {false};
+        /**
+         * @brief clears the job queue
+         */
+        inline void clear() {
+            std::unique_lock<std::mutex> lock(mutex);
+            jobQueue.clear();
+        }
+
+        /**
+         * @brief increases the latestJobId counter, so that all Work from this queue is marked as expired
+         */
+        inline void expireJobs() {
+            latestJobId.fetch_add(1, std::memory_order_relaxed);
+        }
 
     private:
         std::condition_variable notifyNotEmptyAnymore;

@@ -40,6 +40,8 @@ namespace riner {
         ~PoolGrinStratum() override;
 
         // Pool interface
+        void expireJobs() override;
+        void clearJobs() override;
         bool isExpiredJob(const PoolJob &job) override;
         unique_ptr <Work> tryGetWorkImpl() override;
         void submitSolutionImpl(unique_ptr<WorkSolution> result) override;

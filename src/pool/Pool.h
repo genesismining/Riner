@@ -107,14 +107,33 @@ namespace riner {
      * when subclassing Pool, do not forget to add your PoolImpl class to the registry in 'Registry.cpp'
      */
     class Pool : public StillAliveTrackable {
+
+    private:
+        std::atomic_bool _active {true};
+        std::atomic_bool _connected {false};
+        std::atomic_bool _disabled {false};
+
     protected:
 
         explicit Pool(PoolConstructionArgs args);
         std::weak_ptr<Pool> _this; //assigned in Registry's initFunc lambda, which creates the shared_ptr, which is ok because even if the Pool ctor starts iothreads which use _this before it is assigned, the mechanisms that use it are nullptr safe.
         std::string _poolImplName = ""; //assigned in Registry...
         std::string _powType = ""; //assigned in Registry...
-        std::atomic_bool connected {false};
         PoolRecords records;
+        std::shared_ptr<std::condition_variable> onStateChange;
+
+        /**
+         * @brief writes the connected flag of the pool, which indicates whether a connection is established and whether it received a job yet
+         * @param connected new value of connected flag
+         */
+        void setConnected(bool connected);
+
+         /**
+         * @brief changes the disabled status of the pool
+         * If the disabled flag is set, then no further connection attempt to the pool will be made
+         * @param disabled new value of disabled flag
+         */
+        void setDisabled(bool disabled);
 
     public:
         Pool() = delete;
@@ -128,11 +147,7 @@ namespace riner {
          * param poolImplName the implementation name according to Registry
          * param powType the powtype string according to Registry
          */
-        static void postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType) {
-            w->_this = w;
-            w->_poolImplName = poolImplName;
-            w->_powType = powType;
-        }
+        static void postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType);
         
         /**
          * simple uid creation function for pools (thread safe)
@@ -156,6 +171,13 @@ namespace riner {
         }
 
         /**
+         * sets the onStateChange condition variable, so that the calling thread can be notified later
+         */
+        inline void setOnStateChangeCv(std::shared_ptr<std::condition_variable> cv) {
+            onStateChange = cv;
+        }
+
+        /**
          * return host:port in a printable way
          */
         virtual std::string getName() const {
@@ -168,6 +190,27 @@ namespace riner {
         virtual bool isExpiredJob(const PoolJob &job) {
             return true; //if the non-overloaded version of this function is called, return true. (this shouldn't really happen)
         }
+
+        /**
+        * on pool switch this method is called by the PoolSwitcher, so that all Work from this pool is marked as expired
+        * and the GPUs request new work after this
+        */
+        virtual void expireJobs() {
+        }
+
+        /**
+         * clears the job queue and therefore all Work and WorkSolution from this pool is invalidated.
+         */
+        virtual void clearJobs() {
+        }
+
+        /**
+         * @brief This method is called by the PoolSwitcher and it changes the active status of the pool
+         * As long as the active flag is cleared no connection attempt to the pool shall be made and
+         * when the flag is cleared, then the current connection is closed immediately
+         * @param active new value of active flag
+         */
+        void setActive(bool active);
 
         /**
          * The pool switcher will declare pools dead if they didn't respond for a certain amount of time.
@@ -238,10 +281,24 @@ namespace riner {
         }
 
         /**
-         * @return whether a connection is established
+         * @return whether the pool shall try to establish a connection
+         */
+        inline bool isActive() const {
+            return _active;
+        }
+
+        /**
+         * @return whether a connection is established and whether it received a job yet
          */
         inline bool isConnected() const {
-            return connected;
+            return _connected;
+        }
+
+        /**
+         * @return whether the pool is disabled, e.g. because of wrong pool credentials
+         */
+        inline bool isDisabled() const {
+            return _disabled;
         }
 
         /**

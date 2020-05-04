@@ -20,9 +20,17 @@ namespace riner {
     }
 
     void PoolDummy::tryConnect() {
+        setConnected(false);
+        if (isDisabled() || !isActive()) {
+            return;
+        }
         auto &args = this->constructionArgs; //get args from base class
         io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
             onConnected(cxn);
+        },
+        [this] () {
+            //mark pool as disconnected
+            setConnected(false);
         });
         //launch the json rpc 2.0 client
         //the passed lambda will get called once a connection got established. That connection is represented by cxn.
@@ -63,7 +71,8 @@ namespace riner {
 
             //return if it's not a {"result": true} message
             if (!response.isResultTrue()) {
-                LOG(INFO) << "mining subscribe is not result true, instead it is " << response.str();
+                LOG(INFO) << "mining subscribe failed: " << response.str();
+                setDisabled(true); //disable pool because other subscribe attempts will most probably fail, too
                 return;
             }
 
@@ -108,6 +117,14 @@ namespace riner {
 
         //since the io object keeps calling readAsync from now on, the connection will be kept alive (unless actively closed), to close the
         //connection from this side, a setReadAsyncLoopEnabled(false) is sufficient.
+    }
+
+    void PoolDummy::expireJobs() {
+        queue.expireJobs();
+    }
+
+    void PoolDummy::clearJobs() {
+        queue.clear();
     }
 
     bool PoolDummy::isExpiredJob(const PoolJob &job) {
@@ -168,7 +185,7 @@ namespace riner {
                 //
                 records.reportShare(difficulty, response.isResultTrue(), false);
                 std::string acceptedStr = response.isResultTrue() ? "accepted" : "rejected";
-                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr;
+                LOG(INFO) << "share with id '" << response.id << "' got " << acceptedStr << " by '" << getName() << "'";
             };
 
             //the following lambda gets called if there was no response even after the io object tried to send multiple times.
@@ -205,6 +222,9 @@ namespace riner {
         //workTemplate->epoch will be calculated in EthashStratumJob::makeWork()
         //so that not too much time is spent on this thread.
 
+        //mark pool as connected because the first job was received
+        setConnected(true);
+        //add job to job to job queue
         queue.pushJob(std::move(job), cleanFlag);
         //job will now be used (via job->makeWork()) to generate new Work instances for AlgoImpls that call pool.tryGetWork())
     }

@@ -11,12 +11,14 @@ namespace riner {
 
     PoolSwitcher::PoolSwitcher(std::string powType, clock::duration checkInterval, clock::duration durUntilDeclaredDead)
             : Pool(PoolConstructionArgs{})
-            , powType(powType)
             , checkInterval(checkInterval)
             , durUntilDeclaredDead(durUntilDeclaredDead) {
 
         RNR_EXPECTS(!powType.empty());
+        _powType = powType;
+        _poolImplName = powType + "-PoolSwitcher";
 
+        onStateChange = std::make_shared<std::condition_variable>();
         periodicAliveCheckTask = std::async(std::launch::async, [this, powType] () {
             SetThreadNameStream{} << "poolswitcher " << powType;
             VLOG(6) << "alive-check thread started";
@@ -29,32 +31,49 @@ namespace riner {
             std::lock_guard<std::mutex> lock(mut);
             shutdown = true;
         }
-        VLOG(6) << "shutting down poolswitcher " << powType << " thread";
-        notifyOnShutdown.notify_all();
+        VLOG(6) << "shutting down poolswitcher " << _powType << " thread";
+        onStateChange->notify_all();
         periodicAliveCheckTask.wait();
-        VLOG(6) << "sucessfully shut down poolswitcher " << powType << " thread";
+        VLOG(6) << "sucessfully shut down poolswitcher " << _powType << " thread";
     }
 
     void PoolSwitcher::periodicAliveCheck() {
-        using namespace std::chrono;
+        auto flt_sec = std::chrono::duration<float>(checkInterval).count();
         std::unique_lock<std::mutex> lock(mut);
 
-        clock::duration usedCheckInterval = milliseconds(500);
+        while (!shutdown) {
 
-        while(!shutdown) {
-            auto flt_sec = duration<float>(usedCheckInterval).count();
-
+            bool was_active = active_pool && (active_pool->isConnected() && !active_pool->isDisabled());
+            auto prevActivePoolIndex = activePoolIndex;
             if (!pools.empty()) {
                 VLOG(2) << "periodic pool connection status check (every " << flt_sec << "s)";
                 aliveCheckAndMaybeSwitch();
             }
-            else VLOG(2) << "no pools in poolswitcher, sleeping for " << flt_sec << "s";
-
-            usedCheckInterval = activePool() ? checkInterval : milliseconds(500);
+            else {
+                VLOG(2) << "no pools in poolswitcher, sleeping for " << flt_sec << "s";
+            }
+            //if pool switcher selects new pool, then the new pool should be active
+            was_active |= activePoolIndex != prevActivePoolIndex;
+            lock.unlock();
+            onStateChange->notify_all();
+            lock.lock();
 
             //use condition vairable to wait, so the wait can be interrupted on shutdown
-            notifyOnShutdown.wait_for(lock, usedCheckInterval, [this] {
-                return (bool)shutdown;
+            onStateChange->wait_for(lock, checkInterval, [this, was_active] {
+                bool wakeup = shutdown;
+                if (wakeup) {
+                }
+                else if (was_active && active_pool) {
+                    wakeup = active_pool->isDisabled() || !active_pool->isConnected();
+                }
+                else {
+                    for (const auto pool : pools) {
+                        if (wakeup = pool->isConnected() && !pool->isDisabled()) {
+                            break;
+                        }
+                    }
+                }
+                return wakeup;
             });
         }
     }
@@ -72,6 +91,8 @@ namespace riner {
             size_t index = 0; //index in pools
             bool was_dead{}; //pool was dead during last check
             bool now_dead{}; //pool is now dead in this check
+            bool disabled{};
+            bool connected{};
         };
         std::vector<Info> poolInfos{pools.size()};
 
@@ -80,19 +101,30 @@ namespace riner {
             poolInfos[i].index = i;
             poolInfos[i].was_dead = pools[i]->isDead();
             poolInfos[i].now_dead = now - pools[i]->getLastKnownAliveTime() > durUntilDeclaredDead;
+            poolInfos[i].disabled = pools[i]->isDisabled();
+            poolInfos[i].connected = pools[i]->isConnected();
         }
 
         //decide new active pool
         for (const Info &p : poolInfos) {
-            if (!p.now_dead) {
+            if (p.connected && !p.now_dead && !p.disabled) {
+                bool is_another_pool = active_pool && active_pool != pools[p.index];
+                active_pool = pools[p.index];
+                if (is_another_pool) {
+                    pools[activePoolIndex]->expireJobs();
+                }
                 activePoolIndex = p.index;
                 break; //first one that is not dead is chosen
             }
         }
 
-        //declare/undeclare pools as dead
+        //declare/undeclare pools as dead, close connections of disabled pools
         for (const Info &p : poolInfos) {
             pools[p.index]->setDead(p.now_dead);
+            if (p.disabled && p.connected) {
+                LOG(INFO) << "pool disabled. kill connection.";
+                pools[p.index]->onDeclaredDead();
+            }
         }
 
         {//write descriptive logs (collapse this scope if needed)
@@ -114,19 +146,21 @@ namespace riner {
                 if (!p.was_dead && p.now_dead) { //if just died
                     if (p.index == previousActivePoolIndex) { //pool that just died was the active pool
                         if (theres_no_active_pool) { //we now have no more backup
-                            LOG(WARNING) << "no more backup pools available for PowType '" << powType
+                            LOG(WARNING) << "no more backup pools available for PowType '" << _powType
                                          << "'. Waiting for pools to become available again.";
                             if (pools.size() == 1) {
                                 VLOG(0)
                                     << "note: you can put multiple pools per PowType into the config file. additional pools will be used as backup.";
                             }
-                        } else { //we have a working backup pool
+                        }
+                        else { //we have a working backup pool
                             LOG(WARNING) << "active pool #" << p.index << "(" << pool->getName()
                                          << ") was inactive for "
                                          << durUntilDeclaredDeadSecs
                                          << " sec, switching to next backup pool";
                         }
-                    } else { //pool that just died was not the active pool
+                    }
+                    else if (p.connected) { //pool that just died was not the active pool
                         LOG(INFO) << "currently unused backup pool #" << p.index << " (" << pool->getName()
                                   << ") was inactive for " << durUntilDeclaredDeadSecs << "s";
                     }
@@ -135,24 +169,17 @@ namespace riner {
         } //end of log scope
     }
 
-    std::shared_ptr<Pool> PoolSwitcher::activePool() {
-        if (activePoolIndex >= pools.size())
-            return nullptr;
-        auto pool = pools[activePoolIndex];
-        RNR_EXPECTS(pool != nullptr);
-        return pool;
-    }
-
     unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
-        std::lock_guard<std::mutex> lock(mut);
-        if (auto pool = activePool()) {
+        if (auto pool = active_pool) {
             return pool->tryGetWorkImpl();
         }
 
         VLOG(2) << "PoolSwitcher cannot provide work since there is no active pool";
-        //wait for a short period of time to prevent busy waiting in the algorithms' loops
-        //TODO: better solution would be to wait for a short time, and if a pool becomes available in that time period it can be used immediately and the function returns
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        //wait for event to prevent busy waiting in the algorithms' loops
+        std::unique_lock<std::mutex> lock(mut);
+        onStateChange->wait(lock, [this] () {
+            return active_pool || shutdown;
+        });
         return nullptr;
     }
 
@@ -172,28 +199,23 @@ namespace riner {
         auto activePoolUid = std::numeric_limits<decltype(solutionPoolUid)>::max();
         bool sameUid = true;
 
-        {
-            std::lock_guard<std::mutex> lock(mut);
+        if (pool->isConnected()) {
 
-            if (auto pool_ = activePool()) {
-
-                activePoolUid = pool_->poolUid;
-
-                sameUid = activePoolUid == solutionPoolUid;
-                if (sameUid) {
-                    return pool_->submitSolutionImpl(std::move(solution));
-                }
+            if (auto _active_pool = active_pool) {
+                activePoolUid = _active_pool->poolUid;
             }
-        } //unlock
 
-        if (sameUid)
-            LOG(INFO) << "solution could not be submitted, since there is no active pool";
-        else
-            LOG(INFO) << "solution belongs to another pool (uid " << solutionPoolUid << ") and will not be submitted to current pool (uid " << activePoolUid << ")";
+            sameUid = activePoolUid == solutionPoolUid;
+            if (!sameUid) {
+                LOG(INFO) << "solution will be submitted to non-active pool (uid " << solutionPoolUid << ") and not to current pool (uid " << activePoolUid << ")";
+            }
+            return pool->submitSolutionImpl(std::move(solution));
+        }
+        LOG(INFO) << "solution could not be submitted, since there is no active pool";
     }
 
     std::string PoolSwitcher::getName() const {
-        return powType + "-PoolSwitcher";
+        return _powType + "-PoolSwitcher";
     }
 
     size_t PoolSwitcher::poolCount() const {

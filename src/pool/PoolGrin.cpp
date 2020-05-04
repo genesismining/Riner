@@ -24,8 +24,8 @@ namespace riner {
 
         io.callAsync(cxn, login, [this] (CxnHandle cxn, jrpc::Message response) {
             if (response.isError()) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                onConnected(cxn);
+                LOG(INFO) << "Disable pool because login to pool has failed (" << response.getIfError()->what() << "). Please check the configured pool credentials";
+                setDisabled(true);
                 return;
             }
 
@@ -40,7 +40,6 @@ namespace riner {
                     onMiningNotify(*result);
                 }
             });
-
         });
 
         io.addMethod("job", [this] (nl::json params) {
@@ -50,6 +49,9 @@ namespace riner {
         io.setIncomingModifier([this] (jrpc::Message &) {
             onStillAlive();
         });
+
+        io.setReadAsyncLoopEnabled(true);
+        io.readAsync(cxn);//start listening
     }
 
 
@@ -68,7 +70,16 @@ namespace riner {
         job->workTemplate.prePow.resize(powHex.sizeBytes());
         powHex.getBytes(job->workTemplate.prePow);
 
+        setConnected(true);
         queue.pushJob(std::move(job), cleanFlag);
+    }
+
+    void PoolGrinStratum::expireJobs() {
+        queue.expireJobs();
+    }
+
+    void PoolGrinStratum::clearJobs() {
+        queue.clear();
     }
 
     bool PoolGrinStratum::isExpiredJob(const PoolJob &job) {
@@ -119,7 +130,7 @@ namespace riner {
                 // TODO: check whether difficulty of submitted share is 1
                 records.reportShare(1., accepted, false);
                 std::string acceptedStr = accepted ? std::string("accepted") : "rejected - " + res.getIfError()->message;
-                LOG(INFO) << "share with id " << idStr << " got " << acceptedStr;
+                LOG(INFO) << "share with id '" << idStr << "' got " << acceptedStr << " by '" << getName() << "'";
 
                 if (!accepted) {
                     if (auto error = res.getIfError()) {
@@ -141,6 +152,10 @@ namespace riner {
     }
 
     void PoolGrinStratum::tryConnect() {
+        setConnected(false);
+        if (isDisabled() || !isActive()) {
+            return;
+        }
         auto &args = constructionArgs;
 
         JsonIO &jsonLayer = io.io().layerBelow(); //Json layer is below Jrpc layer
@@ -169,8 +184,9 @@ namespace riner {
 
         io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
             onConnected(cxn);
-            io.setReadAsyncLoopEnabled(true);
-            io.readAsync(cxn);//start listening
+        },
+        [this] () {
+            setConnected(false);
         });
     }
 

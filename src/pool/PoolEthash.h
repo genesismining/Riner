@@ -47,6 +47,9 @@ namespace riner {
         explicit PoolEthashStratum(const PoolConstructionArgs &);
         ~PoolEthashStratum() override;
 
+        void expireJobs() override;
+        void clearJobs() override;
+
     private:
         WorkQueue queue;
 
