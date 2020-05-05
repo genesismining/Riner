@@ -72,11 +72,6 @@ namespace riner {
         size_t poolCount() const;
 
         /**
-         * return loggable descriptive name for this pool switcher
-         */
-        std::string getName() const override;
-
-        /**
          * return const references to the pools with shared ownership. useful for introspection of
          * pool data (e.g. by ApiServer)
          */

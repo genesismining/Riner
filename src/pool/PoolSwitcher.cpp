@@ -214,10 +214,6 @@ namespace riner {
         LOG(INFO) << "solution could not be submitted, since there is no active pool";
     }
 
-    std::string PoolSwitcher::getName() const {
-        return _powType + "-PoolSwitcher";
-    }
-
     size_t PoolSwitcher::poolCount() const {
         std::lock_guard<std::mutex> lock(mut);
         return pools.size();
