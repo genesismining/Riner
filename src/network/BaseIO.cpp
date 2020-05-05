@@ -359,7 +359,16 @@ namespace riner {
     void BaseIO::clientIterateEndpoints(const asio::error_code &error, tcp::resolver::iterator it) {
         RNR_EXPECTS(_resolver);
         auto it_end = tcp::resolver::iterator(); //default constructed iterator is "end"
-        if (!error) {
+        if (it == it_end) {
+            if (error) {
+                VLOG(3) << "async connect: " << asio_error_name_num(error) << ": " << error.message();
+            }
+	    else {
+                VLOG(3) << "async connect failed: no endpoint available";
+            }
+            _onDisconnected();
+        }
+        else if (!error) {
             LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
             //std::function that the upcoming lambda will be converted to demands copyability. so no unique_ptrs may be captured.
@@ -374,7 +383,7 @@ namespace riner {
                 }
             }, it->host_name());
         }
-        else if (it != it_end) {
+        else {
             //The connection failed, but there's another endpoint to try.
             _socket->tcpStream().close(); //socket operation
 
@@ -389,10 +398,6 @@ namespace riner {
                 VLOG(6) << "async_connect scheduled (B)";
                 clientIterateEndpoints(error, next);
             });
-        }
-        else {
-            VLOG(3) << "async connect: " << asio_error_name_num(error) << ": " << error.message();
-            _onDisconnected();
         }
     }
 
