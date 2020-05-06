@@ -187,22 +187,18 @@ namespace riner {
         /**
          * return whether the pool job is considered expired. Most implementations forward this call to the WorkQueue's `WorkQueue::isExpiredJob()` method, which returns false as soon as a newer job was pushed.
          */
-        virtual bool isExpiredJob(const PoolJob &job) {
-            return true; //if the non-overloaded version of this function is called, return true. (this shouldn't really happen)
-        }
+        virtual bool isExpiredJob(const PoolJob &job) = 0;
 
         /**
         * on pool switch this method is called by the PoolSwitcher, so that all Work from this pool is marked as expired
         * and the GPUs request new work after this
         */
-        virtual void expireJobs() {
-        }
+        virtual void expireJobs() = 0;
 
         /**
          * clears the job queue and therefore all Work and WorkSolution from this pool is invalidated.
          */
-        virtual void clearJobs() {
-        }
+        virtual void clearJobs() = 0;
 
         /**
          * @brief This method is called by the PoolSwitcher and it changes the active status of the pool

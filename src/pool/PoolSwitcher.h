@@ -63,8 +63,13 @@ namespace riner {
 
         /**
          * obsolete
+         * poolswitcher should be no longer subclass of Pool
          */
-        void onDeclaredDead() override {};//poolswitcher should no longer subclass Pool
+        void onDeclaredDead() override {}
+        bool isExpiredJob(const PoolJob &job) override {return true; }
+        void expireJobs() override {}
+        void clearJobs() override {}
+        /***/
 
         /**
          * amount of pools added to this pool switcher
