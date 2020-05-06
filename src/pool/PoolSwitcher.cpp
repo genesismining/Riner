@@ -44,6 +44,8 @@ namespace riner {
 
             bool was_active = false;
             auto _poolUid = poolUid;
+            //copy shared_ptr to active pool and access pool through copy
+            //because the active pool might change at any time
             if (auto pool = active_pool.get()) {
                 was_active = pool->isConnected() && !pool->isDisabled();
                 _poolUid = pool->poolUid;
@@ -189,8 +191,10 @@ namespace riner {
     }
 
     unique_ptr<Work> PoolSwitcher::tryGetWorkImpl() {
+        //copy shared_ptr to active pool and access pool through copy
+        //because the active pool might change at any time
         if (auto pool = active_pool.get()) {
-            return pool->tryGetWorkImpl();
+            return pool->tryGetWorkImpl(); //thread-safe method
         }
 
         VLOG(2) << "PoolSwitcher cannot provide work since there is no active pool";
@@ -203,7 +207,7 @@ namespace riner {
     }
 
     void PoolSwitcher::submitSolutionImpl(unique_ptr<WorkSolution> solution) {
-        std::shared_ptr<const PoolJob> job = solution->tryGetJob();
+        std::shared_ptr<const PoolJob> job = solution->tryGetJob(); //thread-safe method
         if (!job) {
             LOG(INFO) << "work solution is not submitted because its job is stale";
             return;
@@ -228,7 +232,7 @@ namespace riner {
             if (!sameUid) {
                 LOG(INFO) << "solution will be submitted to non-active pool (uid " << solutionPoolUid << ") and not to current pool (uid " << activePoolUid << ")";
             }
-            pool->submitSolutionImpl(std::move(solution));
+            pool->submitSolutionImpl(std::move(solution)); //thread-safe method
         }
         else {
             LOG(INFO) << "solution could not be submitted to pool because it is not connected";
