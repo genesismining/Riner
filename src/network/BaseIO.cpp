@@ -369,7 +369,7 @@ namespace riner {
             _onDisconnected();
         }
         else if (!error) {
-            LOG(INFO) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
+            VLOG(0) << "successfully connected to '" << it->host_name() << ':' << it->service_name() << "'";
 
             //std::function that the upcoming lambda will be converted to demands copyability. so no unique_ptrs may be captured.
             _socket->tcpStream().set_option(tcp::no_delay(true));
@@ -388,7 +388,7 @@ namespace riner {
             _socket->tcpStream().close(); //socket operation
 
             tcp::endpoint endpoint = *it;
-            VLOG(1) << "when trying endpoint "<< it->host_name() << ":" << it->service_name() <<" - " << asio_error_name_num(error) << ": " << error.message();
+            VLOG(2) << "when trying endpoint "<< it->host_name() << ":" << it->service_name() <<" - " << asio_error_name_num(error) << ": " << error.message();
             auto next = ++it;
             if (next != it_end) {
                 VLOG(3) << "now trying different endpoint "<< next->host_name() << ":" << next->service_name();
@@ -406,13 +406,15 @@ namespace riner {
     //socket and keep listening while the async handshake is not yet finished (this is not the call responsible for that, but the lambda encapsulating it)
     void BaseIO::handshakeHandler(const asio::error_code &error, unique_ptr<Socket> sock) { //TODO: make method const?
         if (!error) {
-            if (_sslDesc) //if ssl is enabled a handshake happened successfully, otherwise nothing happened... successfully!
-                VLOG(0) << "successfully performed handshake";
+            if (_sslDesc) { //if ssl is enabled a handshake happened successfully, otherwise nothing happened... successfully!
+                VLOG(1) << "successfully performed handshake";
+            }
             createCxnWithSocket(std::move(sock));
         }
         else {
-            if (error)
-                VLOG(0) << "asio async " << (sock->isClient() ? "client" : "server") << " handshake: Error #" << error << ": " << error.message();
+            if (error) {
+                VLOG(1) << "asio async " << (sock->isClient() ? "client" : "server") << " handshake: Error #" << error << ": " << error.message();
+            }
             _onDisconnected();
         }
     }
@@ -504,11 +506,11 @@ namespace riner {
             VLOG(6) << "async_wait waitHandler called";
 
             if (error == asio::error::operation_aborted) { //TODO: remove
-                LOG(INFO) << "retry handler successfully aborted";
+                VLOG(4) << "retry handler successfully aborted";
             }
 
             if (error && error != asio::error::operation_aborted) {
-                LOG(INFO) << "wait handler error " << asio_error_name_num(error);
+                VLOG(4) << "wait handler error " << asio_error_name_num(error);
             }
 
             if (auto shared = weak.lock()) {
