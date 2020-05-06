@@ -75,16 +75,16 @@ namespace riner { namespace jrpc {
                                    request = std::move(request),
                                    handler = std::move(handler)] () mutable -> bool {
 
+                VLOG(6) << "Retry state: stillPending = " << *stillPending << ", " << tries << "/" << maxTries << " tries";
                 bool keepTrying = tries < maxTries && *stillPending;
 
                 if (keepTrying) {
-                    if (tries == 0) {
+                    if (tries++ == 0) {
                         //send proper tracked call at the first ry
                         callAsync(cxn, request, [handler = std::move(handler), stillPending] (CxnHandle cxn, auto response) {
                             *stillPending = false;
                             handler(cxn, std::move(response));
                         });
-                        ++tries;
                     }
                     else {
                         //for every other try,just resend the message
