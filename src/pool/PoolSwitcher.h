@@ -44,8 +44,8 @@ namespace riner {
 
             pool->addRecordsListener(records);
             pool->setOnStateChangeCv(onStateChange);
-            std::lock_guard<std::mutex> lock(mut);
-            pools.emplace_back(pool);
+            _pools.lock()->emplace_back(pool);
+            notifyOnPoolsChange();
 
             return pool;
         }
@@ -76,7 +76,8 @@ namespace riner {
          * pool data (e.g. by ApiServer)
          */
         std::vector<std::shared_ptr<const Pool>> getPoolsData() const {
-            std::lock_guard<std::mutex> lock(mut);
+            auto pools_lock_guard = _pools.readLock();
+            const auto &pools = *pools_lock_guard;
             std::vector<std::shared_ptr<const Pool>> constPools(pools.size());
             for (size_t i = 0; i < pools.size(); i++) {
                 constPools[i] = pools[i];
@@ -97,15 +98,36 @@ namespace riner {
         clock::duration checkInterval;
         clock::duration durUntilDeclaredDead;
 
-        std::vector<shared_ptr<Pool>> pools;
-        std::shared_ptr<Pool> active_pool;
-        size_t activePoolIndex = std::numeric_limits<size_t>::max(); //if > pools.size(), no pool is active
+        SharedLockGuarded<std::vector<shared_ptr<Pool>>> _pools;
+        std::atomic<bool> pools_changed{false};
+
+        /**
+         * after changes of _pools this method shall be called, so that the PoolSwitcher can check pools immediately
+         */
+        inline void notifyOnPoolsChange() {
+            pools_changed = true;
+            onStateChange->notify_all();
+        }
+
+        struct {
+        private:
+            std::shared_ptr<Pool> pool;
+
+        public:
+            inline std::shared_ptr<Pool> get() const {
+                return std::atomic_load(&pool);
+            }
+
+            inline void set(std::shared_ptr<Pool> new_pool) {
+                std::atomic_store(&pool, new_pool);
+            }
+        } active_pool;
 
         /**
          * check which pools are still alive and if the active pool is no longer alive, switch active pool.
          * called by the periodicAliveCheckTask thread
          */
-        void aliveCheckAndMaybeSwitch();
+        size_t aliveCheckAndMaybeSwitch(size_t activePoolIndex);
     };
 
 }
