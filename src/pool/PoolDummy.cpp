@@ -8,11 +8,17 @@
 namespace riner {
 
     PoolDummy::PoolDummy(const PoolConstructionArgs &args)
-            : Pool(args) {//set args in base class, can be accessed via this->constructionArgs
+            : Pool(args) //set args in base class, can be accessed via this->constructionArgs
+            , mock_server(args.port) //for the sake of this demonstration we also launch a fake server on the port we later want to connect to, so that you can see the PoolDummy successfully connecting to something and actually getting work messages
+            {
 
+        //if the config says we want an SSL connection we have to make the necessary preparations here.
         if (args.sslDesc.client) {
-            io.io().enableSsl(args.sslDesc);
+            io.io().enableSsl(args.sslDesc); //we decide to use the jrpc::JsonRpcUtil object "io" for
+            //our io, so we have to forward it all the necessary info for establishing a SSL connection.
+            //If you use another kind of network io, you have to forward it to that
         }
+
         tryConnect();
         //make sure tryConnect() is the final thing you do in this ctor.
         //things that get initialized after the io operations started are not guaranteed to be ready when
@@ -24,20 +30,23 @@ namespace riner {
         if (isDisabled() || !isActive()) {
             return;
         }
-        auto &args = this->constructionArgs; //get args from base class
-        io.launchClientAutoReconnect(args.host, args.port, [this] (CxnHandle cxn) {
-            onConnected(cxn);
+        auto &args = this->constructionArgs; //the Pool base class stores the constructionArgs for us, we don't need to store them.
+
+        //for demonstration purposes we pass 127.0.0.1 instead of `args.host` to the launch method, so it connects with this->mock_server.
+        io.launchClientAutoReconnect("127.0.0.1" /*args.host*/, args.port,
+                [this] (CxnHandle cxn) { //on connected
+            onConnected(cxn); //forward the call to our member function
         },
-        [this] () {
-            //mark pool as disconnected
-            setConnected(false);
+        [this] () { //on disconnected
+            setConnected(false); //mark pool as disconnected
         });
         //launch the json rpc 2.0 client
-        //the passed lambda will get called once a connection got established. That connection is represented by cxn.
-        //the callback happens on the 'IoThread': a single thread that deals with all the IO of this PoolImpl owned by io
+        //the first passed lambda will get called once a connection got established. That connection is represented by cxn.
+        //the callback happens on the 'IoThread': a single thread that deals with all the IO of this PoolImpl owned by io.
         //the connection cxn will only stay open as long as you use it in async io operations such as
         //io.callAsync and io.readAsync etc.
-        //to close the connection just stop calling any of these functions on it
+        //to close the connection just stop calling any of these functions on it.
+        //the second lambda is called whenever the connection is dropped
         //for more info see io's documentation
     }
 
@@ -47,8 +56,10 @@ namespace riner {
     }
 
     void PoolDummy::onConnected(CxnHandle cxn) {
-        LOG(INFO) << "successfully (re)connected";
-        acceptWorkMessages = false;
+        VLOG(0) << "PoolDummy successfully (re)connected";
+
+        acceptWorkMessages = false; //first we don't accept incoming work messages,
+        //later when the pool has accepted our "mining.authorize" call we will change that
 
         //jrpc requests can simply be created via the jrpc::RequestBuilder
         //jrpc IDs are not auto-generated, you have control over which ones are used,
@@ -57,7 +68,7 @@ namespace riner {
         jrpc::Message subscribe = jrpc::RequestBuilder{}
                 .id(io.nextId++)
                 .method("mining.subscribe")
-                .param("RAIIner")
+                .param("riner")
                 .param("gm")
                 .done();
 
@@ -85,9 +96,17 @@ namespace riner {
                     .done();
 
             io.callAsync(cxn, authorize, [this] (CxnHandle cxn, jrpc::Message response) {
-                acceptWorkMessages = true;
-                //the cxn object can be stored and used with io.callAsync oustide of this function
-                _cxn = cxn; //store connection for submit
+                if (response.isResultTrue()) {
+                    acceptWorkMessages = true;
+                    //the cxn object can be stored and used with io.callAsync oustide of this function
+                    _cxn = cxn; //store connection for submitSolution later
+
+                    LOG(INFO) << "waiting for first job from pool server... (takes few seconds in this example)";
+                }
+                else {
+                    LOG(INFO) << "Pool disabled because authorization failed (" << response.str() << "). Please check whether the correct pool credentials are supplied";
+                    setDisabled(true);
+                }
             });
         });
 
@@ -226,6 +245,8 @@ namespace riner {
         //mark pool as connected because the first job was received
         setConnected(true);
         //add job to job queue
+
+        LOG(INFO) << "we have a new job! (and therefore a new WorkTemplate)";
         queue.pushJob(std::move(job), shouldClean);
         //now that the job is pushed, `queue`'s background thread will every now and then call
         //job->makeWork() to produce enough work objects.

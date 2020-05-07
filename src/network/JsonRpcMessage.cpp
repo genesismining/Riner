@@ -84,7 +84,9 @@ namespace riner { namespace jrpc {
 
         nl::json Message::toJson() const {
             nl::json j;
-            j["id"] = id;
+            if (!id.empty()) {
+                j["id"] = id;
+            }
             j["jsonrpc"] = "2.0";
 
             visit<Request>(var, [&] (const Request &req) {

@@ -301,8 +301,6 @@ namespace riner {
             _layerBelow.stopIOThread(); //calls BaseIO::stopIOThread();
         }
 
-    private:
-
         /**
          * returns whether the io thread's dtor wasn't called yet.
          * If this function returns `true` you should assume that handlers are being executed that access the layer's state
@@ -311,6 +309,14 @@ namespace riner {
         bool ioThreadRunning() const {
             return _layerBelow.ioThreadRunning();
         }
+
+        /**
+         * shorthand for ensuring that it is ok to mutate the layer's state
+         */
+        void checkNotLaunchedOrOnIOThread() {
+            RNR_EXPECTS(!hasLaunched() || isIoThread()); //mutating functions may only be called before calling launch, or from the IO Thread
+        }
+    private:
 
         /**
          * apply all necessary changes to the incoming data so that it can be
@@ -336,13 +342,6 @@ namespace riner {
                 _outgoingModifier(t);
             auto lbt = convertOutgoing(std::move(t));
             return lbt;
-        }
-
-        /**
-         * shorthand for ensuring that it is ok to mutate the layer's state
-         */
-        void checkNotLaunchedOrOnIOThread() {
-            RNR_EXPECTS(!hasLaunched() || isIoThread()); //mutating functions may only be called before calling launch, or from the IO Thread
         }
 
         ModifierFunc _incomingModifier;

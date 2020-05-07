@@ -21,7 +21,7 @@ namespace riner {
         //         <AlgoImpl class>(ConfigName, PowType)
         addAlgoImpl<AlgoEthashCL>("EthashCL", "ethash");
         addAlgoImpl<AlgoCuckatoo31Cl>("Cuckatoo31Cl", "cuckatoo31");
-        addAlgoImpl<AlgoDummy>("AlgoDummy", "ethash");
+        addAlgoImpl<AlgoDummy>("AlgoDummy", "dummy");
     }
 
     void Registry::registerAllPoolImpls() {
@@ -29,7 +29,7 @@ namespace riner {
         addPoolImpl<PoolEthashStratum>("EthashStratum2", "ethash", "stratum2");
         addPoolImpl<PoolGrinStratum>("Cuckatoo31Stratum", "cuckatoo31", "stratum"); // TODO: make it possible to assign multiple pow_types to one PoolImpl
         // addPoolImpl<PoolGrinStratum>("Cuckaroo29Stratum", "cuckaroo29", "stratum");
-        addPoolImpl<PoolDummy>("PoolDummy", "ethash", "dummy");
+        addPoolImpl<PoolDummy>("PoolDummy", "dummy", "stratum2");
     }
 
     void Registry::registerAllGpuApis() {

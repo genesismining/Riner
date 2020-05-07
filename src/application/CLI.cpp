@@ -8,6 +8,8 @@
 #include <sstream>
 #include <src/util/StringUtils.h>
 #include <src/application/Registry.h>
+#include <src/util/FileUtils.h>
+#include <src/config/TutorialConfig.h>
 
 #include <src/common/Json.h>
 
@@ -203,6 +205,44 @@ namespace riner {
             }
         }
         return nullopt;
+    }
+
+    CommandLineArgs commandRunTutorial(const CommandLineArgs &orig) {
+        //generate tutorial_config if it doesn't already exist
+        RNR_EXPECTS(orig.argc > 0);
+        std::string exec_dir = stripDirFromPath(orig.argv[0]);
+        std::string path = exec_dir + '/' + "tutorial_config.textproto";
+
+        if (!file::fileExists(path)) {
+            LOG(INFO) << "creating tutorial config at '" << path << "'";
+            file::writeStringIntoFile(path, tutorial_config);
+        }
+        else {
+            LOG(INFO) << "tutorial config file already exists => not recreating it";
+        }
+
+        std::vector<const char *> new_argv;
+
+        for (auto &arg : orig.strings) {
+            if (startsWith(arg, "--config=")) {//filter out existing --config command
+                LOG(INFO) << "replacing existing '--config' command";
+                continue;
+            }
+            if (startsWith(arg, "--run-tutorial")) {
+                continue;
+            }
+            new_argv.push_back(arg.c_str());
+        }
+
+        std::string config_arg = "--config=" + path;
+        LOG(INFO) << "adding '" << config_arg << "' to command line args";
+        new_argv.push_back(config_arg.c_str());
+
+        auto result = copyArgsAndExpandSingleDashCombinedArgs(new_argv.size(), new_argv.data());
+
+        LOG(INFO) << "running riner with args: " << result.allArgsAsOneString;
+
+        return result;
     }
 
     CommandLineArgs copyArgsAndExpandSingleDashCombinedArgs(int argc, const char **argv) {

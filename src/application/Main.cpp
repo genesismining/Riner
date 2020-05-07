@@ -31,6 +31,7 @@ int main(int raw_argc, const char *raw_argv[]) {
     vector<pair<vector<string>, string>> command_infos {
       //{{commands,...}, "help string"},
         {{"--help", "-h"}, "show help"},
+        {{"--run-tutorial"}, "runs the dummy tutorial code with explanatory logs"},
         {{"--config"}, "--config=path/to/config.textproto run the mining algorithms as specified in the provided config file"},
         {{"--list", "-l"}, "list all devices, algoimpls and poolimpls"},
         {{"--list-devices"}, "list all available devices (gpus, cpus)"},
@@ -64,6 +65,13 @@ int main(int raw_argc, const char *raw_argv[]) {
     bool did_respond_already = false; //if we responded to something we won't complain about e.g. "--config" missing
 
     //check command line arguments and respond accordingly
+
+    if (hasArg({"--run-tutorial"}, argc, argv)) {
+        //creates "tutorial_config.textproto" in the executable dir and adds a "--config=" command that points to it
+        expandedArgs = commandRunTutorial(expandedArgs);
+        argc = expandedArgs.argc;
+        argv = expandedArgs.argv;
+    }
     
     if (hasArg({"--help", "-h"}, argc, argv)) {
         std::cout << commandHelp(command_infos, format_as_json);

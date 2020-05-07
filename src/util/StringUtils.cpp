@@ -22,6 +22,10 @@ namespace riner {
         return res;
     }
 
+    bool startsWith(const std::string &str, const std::string &prefix) {
+        return str.find(prefix) == 0;
+    }
+
     std::string stripDirFromPath(const std::string &path) {
         return path.substr(0, path.find_last_of("\\/"));
     }

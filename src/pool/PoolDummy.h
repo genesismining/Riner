@@ -14,6 +14,7 @@
 #include <atomic>
 #include <src/network/JsonRpcUtil.h>
 #include "WorkQueue.h"
+#include "DummyTestPoolServer.h" //a mock server to see this pool in action
 
 namespace riner {
 
@@ -26,7 +27,9 @@ namespace riner {
         void clearJobs() override;
 
     private:
-        WorkQueue queue;
+        DummyTestPoolServer mock_server; //this is just here for tutorial purposes. Its a server that simulates a dummy pool on localhost, so that you can see the PoolDummy code in action.
+
+        WorkQueue queue {2, 4}; //the numbers (2, 4) provided are lower than default to make the logs less verbose in this demonstration. See the WorkQueue docs for more info.
 
         // Pool interface
         bool isExpiredJob(const PoolJob &job) override;
@@ -58,6 +61,8 @@ namespace riner {
         std::unique_ptr<Work> makeWork() override { //makeWork is called from another thread (usually the WorkQueue thread).
             //in here, do whatever is necessary to define the solution-space for
             //a WorkDummy instance so that the work of two instances never overlaps.
+
+            VLOG(2) << "DummyPoolJob is making one WorkDummy instance from the workTemplate to refill the WorkQueue";
 
             uint64_t single_work_range = 1234567; //made up number, this is just a dummy
 

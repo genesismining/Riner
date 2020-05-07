@@ -73,8 +73,9 @@ add_library(lib_riner
         src/pool/WorkQueue.h
         src/pool/PoolSwitcher.cpp src/pool/PoolSwitcher.h
         src/pool/PoolEthash.cpp src/pool/PoolEthash.h
-        src/pool/PoolDummy.cpp src/pool/PoolDummy.h
         src/pool/PoolGrin.cpp src/pool/PoolGrin.h
+        src/pool/PoolDummy.cpp src/pool/PoolDummy.h
+        src/pool/DummyTestPoolServer.cpp src/pool/DummyTestPoolServer.h
         src/compute/DeviceId.cpp src/compute/DeviceId.h
         src/compute/ComputeModule.cpp src/compute/ComputeModule.h
         src/compute/ComputeApiEnums.cpp src/compute/ComputeApiEnums.h

@@ -7,6 +7,7 @@
 #include <src/common/Chrono.h>
 #include <src/pool/WorkEthash.h>
 #include <src/pool/Pool.h>
+#include <src/pool/WorkDummy.h>
 
 namespace riner {
     using namespace std::chrono;
@@ -32,9 +33,9 @@ namespace riner {
                 };
 
                 //start a new thread
-                auto task = std::async(std::launch::async, [&] (auto deviceThread) {
+                auto task = std::async(std::launch::async, [&, i = device.deviceIndex] (auto deviceThread) {
                     //deviceThread object now lives on the stack of this thread
-                    SetThreadNameStream{} << "Dummy device"; //give it a name that will show up in all its log messages
+                    SetThreadNameStream{} << "Dummy OpenCL device #" << i; //give it a name that will show up in all its log messages
                     deviceThread.run();
                 }, std::move(deviceThread));
 
@@ -57,21 +58,24 @@ namespace riner {
         while (!algo._shutdown) {
 
             //get work from pool or try again
-            auto work = pool.tryGetWork<WorkEthash>();
+            auto work = pool.tryGetWork<WorkDummy>();
             if (!work)
                 continue; //this does not cause a busy wait loop, tryGetWork has a timeout mechanism
+
+            LOG(INFO) << "i got mining work! (= a WorkDummy instance)";
 
             //get settings that have been parsed from the config file via device.settings
             auto rawIntensity = device.settings.raw_intensity;
 
-            //... add algorithm here ...
+            //... add your algorithm here ...
+            sleep_for(1s);
 
             //report statistical data about hashrate etc via device.records.report...
+            LOG(INFO) << "reporting: scanned " << rawIntensity << " nonces";
             device.records.reportScannedNoncesAmount(rawIntensity);
-            sleep_for(1s);
 
-            device.records.reportWorkUnit(work->deviceDifficulty, true);
             sleep_for(1s);
+            device.records.reportWorkUnit(work->nonce_end - work->nonce_begin, true);
 
             //once you notice work has expired you may abort calculation and get fresh work
             if (work->expired()) {

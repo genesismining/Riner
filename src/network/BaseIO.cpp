@@ -478,6 +478,7 @@ namespace riner {
         //the onCancelled handler must be called at a time where the user can be sure that the ioThread is no longer around
         //to interact with their resources. Therefore let's guarantee that the ioThread is joined here.
 
+
         {auto list = _activeRetries.lock();
 
             for (auto &retry : *list) {

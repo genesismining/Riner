@@ -8,6 +8,10 @@
 
 namespace riner {namespace file {
 
+        bool fileExists(const std::string &filePath) {
+            return bool(std::ifstream(filePath));
+        }
+
         template<class T>
         inline static optional<T> readFileInto(const std::string &filePath) {
             using namespace std;

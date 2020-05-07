@@ -7,6 +7,11 @@
 namespace riner {namespace file {
 
         /**
+         * @return whether a file exists at filePath
+         */
+        bool fileExists(const std::string &filePath);
+
+        /**
          * creates a std::string from the contents of a file
          * @param filePath path to the file
          * @return std::string with contents of file, nullopt if file couldn't be read (e.g. if it doesn't exist)

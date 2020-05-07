@@ -42,7 +42,17 @@ namespace riner {
      * e.g. takes {"-a" "-bcd" "-e" "-fg" "--hij"} and returns {"-a", "-b", "-c", "-d", "-e" "-f" "-g" "--hij"}
      */
     CommandLineArgs copyArgsAndExpandSingleDashCombinedArgs(int argc, const char **argv);
-    
+
+    /**
+     * creates a "tutorial_config.textproto" file in the executable's directory and adds a "--config=" command to
+     * the provided commandline args that runs that config
+     * If the tutorial_config already exists, we do not overwrite it, since the person running the tutorial
+     * is likely just tinkering with it to gain a better understanding.
+     * param args the current command line args
+     * return the command line args with added (or replaced) "--config=" command that now points to the generated tutorial_config.textproto
+     */
+    CommandLineArgs commandRunTutorial(const CommandLineArgs &args);
+
     /**
      * reports unsupported commands on command line and returns amount of them
      * param supportedCommands table of supported commands as seen in Main.cpp's `main()`

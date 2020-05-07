@@ -20,18 +20,24 @@ namespace riner {
      * features.
      */
     class LineIO : public IOTypeLayer<std::string, BaseIO> {
+        unsigned verbosity_level = 0;
     public:
         using IOTypeLayer::IOTypeLayer; //expose base ctors
 
         std::string convertIncoming(std::string line) override {
-            VLOG(0) << "                                   " << "<-- " << line;
+            VLOG(verbosity_level) << "                                   " << "<-- " << line;
             return line;
         };
 
         std::string convertOutgoing(std::string line) override {
-            VLOG(0) << "                                   " << "--> " << line;
+            VLOG(verbosity_level) << "                                   " << "--> " << line;
             return line;
         };
+
+        void setLoggingVerbosity(unsigned level) {
+            checkNotLaunchedOrOnIOThread();
+            verbosity_level = level;
+        }
 
         ~LineIO() override {stopIOThread();}
     };

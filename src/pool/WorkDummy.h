@@ -48,11 +48,13 @@ namespace riner {
         Bytes<32> target; //if our hash (interpreted as a number) is less than this target value, we found a solution!
         uint64_t nonce_begin = 0;
         uint64_t nonce_end = 0;
+        double difficulty = 0;
 
         //we can also put helper functions here that will inevitably be needed in the
         //initialization of a Work struct, so that not every Dummy Pool implementation
         //has to reimplement them.
-        void setDifficulty(double difficulty) {
+        void setDifficulty(double dfficulty) {
+            difficulty = dfficulty;
             target = difficultyToTargetApprox(difficulty);
         }
     };
