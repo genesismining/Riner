@@ -102,7 +102,7 @@ add_library(lib_riner
         src/util/StringUtils.cpp src/util/StringUtils.h
         src/util/TaskExecutorPool.h src/util/TaskExecutorPool.cpp
         src/util/OptionalAccess.h
-        src/util/LockUtils.cpp src/util/LockUtils.h
+        src/util/LockUtils.h
         src/util/FileUtils.cpp src/util/FileUtils.h
         src/util/HexString.cpp src/util/HexString.h
         src/util/AsioErrorUtil.cpp src/util/AsioErrorUtil.h
