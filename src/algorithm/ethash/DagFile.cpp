@@ -3,6 +3,8 @@
 #include "DagFile.h"
 #include <src/util/Logging.h>
 #include <thread>
+#include <src/compute/DeviceId.h>
+#include <src/common/PlatformDefines.h>
 
 
 static const uint32_t dagSize[2048] = {
@@ -309,6 +311,17 @@ namespace riner {
 
             if (err) {
                 LOG(ERROR) << "#" << err << " allocation of clDagBuffer failed (size = " << allocSize << " on device " << device() << ")";
+#ifdef RNR_PLATFORM_LINUX
+                if (auto id = obtainDeviceIdFromOpenCLDevice(device)) {
+                    if (id->getVendor() == kAMD) {
+                        LOG(ERROR) << "allocation failed maybe because the following env variables are not defined like so: \n"
+                                     "export GPU_MAX_HEAP_SIZE=100\n"
+                                     "export GPU_USE_SYNC_OBJECTS=1\n"
+                                     "export GPU_MAX_ALLOC_PERCENT=100\n"
+                                     "export GPU_SINGLE_ALLOC_PERCENT=100\n";
+                    }
+                }
+#endif
                 return false;
             }
             else {

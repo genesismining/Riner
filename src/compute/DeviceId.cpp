@@ -47,7 +47,7 @@ namespace riner {
         return name;
     }
 
-    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &device) {
+    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(const cl::Device &device) {
         variant<PcieIndex, DeviceVendorId> idVariant = PcieIndex{};
         VendorEnum vendorEnum = VendorEnum::kUnknown;
 

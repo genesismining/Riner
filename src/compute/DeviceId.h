@@ -50,5 +50,5 @@ namespace riner {
     };
 
     std::vector<DeviceId> gatherAllDeviceIds();
-    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(cl::Device &);
+    optional<DeviceId> obtainDeviceIdFromOpenCLDevice(const cl::Device &);
 }
