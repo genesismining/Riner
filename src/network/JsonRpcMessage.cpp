@@ -29,7 +29,7 @@ namespace riner { namespace jrpc {
                 case internal_error:
                     return e;
                 default: {
-                    LOG(INFO) << "unknown jrpc error code " << n;
+                    VLOG(4) << "unknown jrpc error code " << n;
                     return error_code_unknown;
                 }
             }

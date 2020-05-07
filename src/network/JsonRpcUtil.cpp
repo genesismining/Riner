@@ -33,7 +33,15 @@ namespace riner { namespace jrpc {
                         }
                     }
                     else {
-                        LOG(INFO) << "received jrpc response has no corresponding handler";
+                        std::stringstream log_msg;
+                        log_msg << "received untracked jrpc response with ";
+                        if (msg.isError()) {
+                            log_msg << "error '" << msg.getIfError()->what() << "'";
+                        }
+                        else {
+                            log_msg << "result '" << *msg.getIfResult() << "'";
+                        }
+                        LOG(INFO) << log_msg.str();
                     }
                 }
 
