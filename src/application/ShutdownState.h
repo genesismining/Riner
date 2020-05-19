@@ -32,7 +32,7 @@ namespace riner {
          * Launches the shutdown thread which gives the application a little grace period to shutdown and
          * also unblocks the `waitUntilShutdownRequested()` function which the main thread in `main()` is waiting in.
          * called by the sigintHandler in Main.cpp.
-         * param signum the signum argument of the signal handler that calls this function
+         * @param signum the signum argument of the signal handler that calls this function
          */
         void launchShutdownTask(int signum);
 

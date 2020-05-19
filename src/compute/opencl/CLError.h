@@ -9,8 +9,8 @@
 namespace riner {
     
     /**
-     * param err an opencl opencl error value
-     * return a c_string containing the opencl error macro name (e.g. CL_SUCCESS => "CL_SUCCESS")
+     * @param err an opencl opencl error value
+     * @return a c_string containing the opencl error macro name (e.g. CL_SUCCESS => "CL_SUCCESS")
      */
     const char *cl_error_name(cl_int err);
 

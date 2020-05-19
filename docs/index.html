@@ -181,6 +181,7 @@
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#build">Build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#running-riner">Running Riner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#running-tutorial-code">Running Tutorial Code</a></li>
 </ul>
 </li>
 </ul>
@@ -193,17 +194,92 @@
 <p class="caption"><span class="caption-text">Api Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="class.html">Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="class.html#poolrecords">PoolRecords</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#statisticnode">StatisticNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#devicerecords">DeviceRecords</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#expaverage">ExpAverage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#mean">Mean</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#amdgpuapi">AmdgpuApi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#gpuapi">GpuApi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#barrier">Barrier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#dynamicbuffer">DynamicBuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#locked">Locked</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#lockguarded">LockGuarded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#sharedlockguarded">SharedLockGuarded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#readlocked">ReadLocked</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#immediatelocked">ImmediateLocked</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#writelocked">WriteLocked</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#upgradeablelockguarded">UpgradeableLockGuarded</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#hexstring">HexString</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#lineio">LineIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#jsonio">JsonIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#jsonrpcio">JsonRpcIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#jsonrpcutil">JsonRpcUtil</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#ioconnection">IOConnection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#baseio">BaseIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#cxnhandle">CxnHandle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#iotypelayer">IOTypeLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#method">Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#requestbuilder">RequestBuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#socket">Socket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#algodummy">AlgoDummy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#algorithm">Algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#taskexecutorpool">TaskExecutorPool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#algocuckatoo31cl">AlgoCuckatoo31Cl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#id1">Algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#dagfile">DagFile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#dagcachecontainer">DagCacheContainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#algoethashcl">AlgoEthashCL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#jsonserializable">JsonSerializable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#clprogramloader">CLProgramLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#computemodule">ComputeModule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#deviceid">DeviceId</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#application">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#registry">Registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#apiserver">ApiServer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="class.html#work">Work</a></li>
 <li class="toctree-l2"><a class="reference internal" href="class.html#worksolution">WorkSolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#workethash">WorkEthash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#worksolutionethash">WorkSolutionEthash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#stillalivetrackable">StillAliveTrackable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="class.html#pool">Pool</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#algorithm">Algorithm</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#lockguarded">LockGuarded</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#autorefillqueue">AutoRefillQueue</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#iotypelayer">IOTypeLayer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#jrpc-primitives">jrpc Primitives</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#jrpc-errorcode">jrpc::ErrorCode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#jrpc-message">jrpc::Message</a></li>
-<li class="toctree-l2"><a class="reference internal" href="class.html#jrpc-requestbuilder">jrpc::RequestBuilder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#workqueue">WorkQueue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#lazyworkqueue">LazyWorkQueue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#poolethashstratum">PoolEthashStratum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#poolgrinstratum">PoolGrinStratum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#poolswitcher">PoolSwitcher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#pooldummy">PoolDummy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#dummytestpoolserver">DummyTestPoolServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#workcuckoo">WorkCuckoo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#worksolutioncuckoo">WorkSolutionCuckoo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#gpuapiconstructionargs">GpuApiConstructionArgs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#has-value-type">has_value_type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#parsepooladdressresult">ParsePoolAddressResult</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#makestr">MakeStr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#setthreadnamestream">SetThreadNameStream</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#gpusettings">GpuSettings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#algosettings">AlgoSettings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#error">Error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#response">Response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#request">Request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#message">Message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#connection">Connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#ioconversionerror">IOConversionError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#ssldesc">SslDesc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#algoconstructionargs">AlgoConstructionArgs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#pcieindex">PcieIndex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#device">Device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#shutdownstate">ShutdownState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#commandlineargs">CommandLineArgs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#haspowtypeethash">HasPowTypeEthash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#poolconstructionargs">PoolConstructionArgs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#pooljob">PoolJob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#haspowtypedummy">HasPowTypeDummy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#workdummy">WorkDummy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#worksolutiondummy">WorkSolutionDummy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#ethashstratumjob">EthashStratumJob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#grinstratumjob">GrinStratumJob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="class.html#dummypooljob">DummyPoolJob</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="function.html">Functions</a></li>

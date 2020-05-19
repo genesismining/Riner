@@ -44,13 +44,13 @@ namespace riner {
 
         /**
          * factory method to construct a Pool subclass
-         * return shared_ptr of the pool (so that weak_ptrs of it can be distributed) or nullptr if `name` wasn't found
+         * @return shared_ptr of the pool (so that weak_ptrs of it can be distributed) or nullptr if `name` wasn't found
          */
         shared_ptr<Pool> makePool(const std::string &name, PoolConstructionArgs args) const;
         
         /**
          * factory method to construct a GpuApi subclass
-         * return unique_ptr containing the upcast GpuApi or nullptr if the GpuApi could not be initialized or the name wasn't found
+         * @return unique_ptr containing the upcast GpuApi or nullptr if the GpuApi could not be initialized or the name wasn't found
          */
         unique_ptr<GpuApi> tryMakeGpuApi(const std::string &name, const GpuApiConstructionArgs &args) const;
 
@@ -114,9 +114,9 @@ namespace riner {
 
         /**
          * Register an AlgoImpl type and generate a factory function for it.
-         * param AlgoT the type of the Algorithm subclass (e.g. AlgoEthashCL)
-         * param algoImplName the algo's name as it should be referred to in the config file
-         * param powType the pow type string for checking compatibility with pools/work
+         * @param AlgoT the type of the Algorithm subclass (e.g. AlgoEthashCL)
+         * @param algoImplName the algo's name as it should be referred to in the config file
+         * @param powType the pow type string for checking compatibility with pools/work
          */
         template<class AlgoT>
         void addAlgoImpl(const std::string &algoImplName, const std::string &powType) {
@@ -133,9 +133,9 @@ namespace riner {
 
         /**
          * Register a PoolImpl type and generate a factory function for it.
-         * param PoolT the type of the Pool subclass (e.g. PoolEthashStratum)
-         * param poolImplName the pool's name as it should be referred to in the config file
-         * param powType the pow type string for checking compatibility with pools/work
+         * @param PoolT the type of the Pool subclass (e.g. PoolEthashStratum)
+         * @param poolImplName the pool's name as it should be referred to in the config file
+         * @param powType the pow type string for checking compatibility with pools/work
          */
         template<class PoolT>
         void addPoolImpl(const std::string &poolImplName, const std::string &powType, const std::string &protocolType, const std::string &protocolTypeAlias = "") {
@@ -156,8 +156,8 @@ namespace riner {
 
         /**
          * Register a GpuApi type and generate a factory function for it.
-         * param GpuApiT the type of the GpuApi subclass (e.g. AmdgpuApi)
-         * param gpuApiName the the name of the GpuApi (used as a key)
+         * @param GpuApiT the type of the GpuApi subclass (e.g. AmdgpuApi)
+         * @param gpuApiName the the name of the GpuApi (used as a key)
          */
         template<class GpuApiT>
         void addGpuApi(const std::string &gpuApiName) {

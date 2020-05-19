@@ -37,7 +37,7 @@ namespace riner {
         
         /**
          * wait from one or more threads with timeout (no spurious wakes)
-         * return value can be used to find out if timeout happened
+         * @return value can be used to find out if timeout happened
          * see std::shared_future documentation for specifics
          */
         std::future_status wait_for(std::chrono::milliseconds duration) const {

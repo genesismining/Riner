@@ -17,9 +17,9 @@ namespace riner {
      *     foo.doSomething(); //only gets called if var contains a Foo.
      * }
      * ```
-     * param var the variant which may contain a `T`
-     * param func a function that takes an argument that can bind to a `T &` or `const T &` dependent on `var`'s type
-     * return whether the function was called (useful for trying multiple types and deciding when to stop)
+     * @param var the variant which may contain a `T`
+     * @param func a function that takes an argument that can bind to a `T &` or `const T &` dependent on `var`'s type
+     * @return whether the function was called (useful for trying multiple types and deciding when to stop)
      */
     template<class T, class Variant, class Func>
     bool visit(Variant &var, Func &&func) {

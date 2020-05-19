@@ -10,12 +10,15 @@
 namespace riner {
 
     /**
-     * class for extracting bytes from hex-string
+     * class for extracting bytes from a hex-string
+     * and converting bytes to a hex-string
      * common usage:
+     * ``
      * if (HexString h {"0xC0FFEE"}) //also supports missing 0x
      *     auto bytes = h.getBytes<32>();
      * else
-     *     std::cout << "parsing failed"
+     *     std::cout << "parsing failed"`
+     * ```
      */
     class HexString {
 
@@ -62,12 +65,12 @@ namespace riner {
         HexString &swapByteOrder();
 
         /**
-         * return lowercase hex without "0x"
+         * @return lowercase hex without "0x"
          */
         std::string str() const;
 
         /**
-         * return amount of bytes e.g. "0x001F" => 2
+         * @return amount of bytes e.g. "0x001F" => 2
          */
         size_t sizeBytes() const;
 
@@ -77,7 +80,7 @@ namespace riner {
         /**
          * copies data into dst with leading zeroes.
          * if dst is too small, leading bytes will be cut.
-         * return the length of the bytes written to ByteSpan
+         * @return the length of the bytes written to ByteSpan
          */
         size_t getBytes(ByteSpan<>) const;
         
@@ -92,7 +95,7 @@ namespace riner {
         }
 
         /**
-         * return false if parse failed
+         * @return false if parse failed
          */
         operator bool() const;
     };

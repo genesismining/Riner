@@ -33,9 +33,9 @@ namespace riner {
 
     /**
      * "less-than" compare two large little endian unsigned integer numbers
-     * param a span to first little endian number
-     * param b span to second little endian number
-     * return whether a < b if a and b are interpreted as large unsigned integers
+     * @param a span to first little endian number
+     * @param b span to second little endian number
+     * @return whether a < b if a and b are interpreted as large unsigned integers
      */
     static inline bool lessThanLittleEndian(cByteSpan<> a, cByteSpan<> b) {
         return std::lexicographical_compare(

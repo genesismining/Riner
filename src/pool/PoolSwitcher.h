@@ -24,9 +24,9 @@ namespace riner {
 
         /**
          * creates a PoolSwitcher for a given PowType
-         * param powType the PowType of all pools that will ever be added to this pool switcher
-         * param checkInterval the interval in which the alive status (see `StillAliveTrackable`) of pools is checked
-         * param durUntilDeclaredDead if the checking thread notices that the last life sign of a pool was longer ago than this duration, the pool will be declared dead, and the next alive pool will be chosen as active pool.
+         * @param powType the PowType of all pools that will ever be added to this pool switcher
+         * @param checkInterval the interval in which the alive status (see `StillAliveTrackable`) of pools is checked
+         * @param durUntilDeclaredDead if the checking thread notices that the last life sign of a pool was longer ago than this duration, the pool will be declared dead, and the next alive pool will be chosen as active pool.
          */
         explicit PoolSwitcher(std::string powType,
                 clock::duration checkInterval = std::chrono::seconds(20),
@@ -52,7 +52,7 @@ namespace riner {
 
         /**
          * redirects the tryGetWork call to the active pool.
-         * return nullptr if either the active pool does not have work, or there is no active pool. Valid work otherwise, which can be downcast to the specific work type (e.g. WorkEthash for powType "ethash")
+         * @return nullptr if either the active pool does not have work, or there is no active pool. Valid work otherwise, which can be downcast to the specific work type (e.g. WorkEthash for powType "ethash")
          */
         unique_ptr <Work> tryGetWorkImpl() override;
 
@@ -77,7 +77,7 @@ namespace riner {
         size_t poolCount() const;
 
         /**
-         * return const references to the pools with shared ownership. useful for introspection of
+         * @return const references to the pools with shared ownership. useful for introspection of
          * pool data (e.g. by ApiServer)
          */
         std::vector<std::shared_ptr<const Pool>> getPoolsData() const {

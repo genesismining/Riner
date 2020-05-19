@@ -24,7 +24,7 @@ namespace riner {
         bool expired() const;
         bool valid() const;
 
-        /*
+        /**
          * create a Work(-subclass) object with a unique solutionspace which can be handed out to the AlgoImpl.
          *
          * IMPORTANT: makeWork() is usually called by mechanisms that run in various threads which hold a lock while calling into makeWork().
@@ -159,7 +159,7 @@ namespace riner {
         }
 
         /**
-         * return the associated poolJob or nullptr if the job expired
+         * @return the associated poolJob or nullptr if the job expired
          */
         inline std::shared_ptr<const PoolJob> tryGetJob() const {
             return job.lock();

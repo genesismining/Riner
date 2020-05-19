@@ -1,71 +1,560 @@
+
 Classes
 =======
 
-.. note::
+.. 
+   PoolRecords
+   StatisticNode
+   DeviceRecords
+   ExpAverage
+   Mean
+   AmdgpuApi
+   GpuApi
+   Barrier
+   DynamicBuffer
+   Locked
+   LockGuarded
+   SharedLockGuarded
+   ReadLocked
+   ImmediateLocked
+   WriteLocked
+   UpgradeableLockGuarded
+   HexString
+   LineIO
+   JsonIO
+   JsonRpcIO
+   JsonRpcUtil
+   IOConnection
+   BaseIO
+   CxnHandle
+   IOTypeLayer
+   Method
+   RequestBuilder
+   Socket
+   AlgoDummy
+   Algorithm
+   TaskExecutorPool
+   AlgoCuckatoo31Cl
+   Algorithm
+   DagFile
+   DagCacheContainer
+   AlgoEthashCL
+   JsonSerializable
+   CLProgramLoader
+   ComputeModule
+   Device
+   DeviceId
+   Application
+   Registry
+   ApiServer
+   Work
+   WorkSolution
+   HasPowTypeEthash
+   WorkEthash
+   WorkSolutionEthash
+   StillAliveTrackable
+   Pool
+   WorkQueue
+   LazyWorkQueue
+   PoolEthashStratum
+   PoolGrinStratum
+   PoolSwitcher
+   PoolDummy
+   DummyTestPoolServer
+   WorkCuckoo
+   WorkSolutionCuckoo
 
-    Please note that this documentation is still very much under construction. This is just a brief overview of some classes. More details will be added soon.
+.. structs
+.. 
+   Averages
+   Data
+   Node
+   Average
+   NonceAverage
+   Data
+   table_entry
+   frequency_settings
+   GpuApiConstructionArgs
+   has_value_type
+   ParsePoolAddressResult
+   MakeStr
+   TestSslData
+   SetThreadNameStream
+   GpuSettings
+   AlgoSettings
+   Error
+   Response
+   Request
+   Message
+   AsyncRetry
+   Connection
+   IOConversionError
+   SslDesc
+   Client
+   Server
+   DeviceThread
+   AlgoConstructionArgs
+   Cycle
+   Bucket
+   Options
+   Cycle
+   HashResult
+   PerPlatform
+   PerGpuSubTask
+   PcieIndex
+   Device
+   ShutdownState
+   Listing
+   EntryAlgo
+   EntryPool
+   EntryGpuApi
+   CommandLineArgs
+   HasPowTypeEthash
+   PoolConstructionArgs
+   PoolJob
+   HasPowTypeDummy
+   WorkDummy
+   WorkSolutionDummy
+   EthashStratumJob
+   GrinStratumJob
+   DummyPoolJob
+   Info
+   SiphashKeys
+   Edge
+
+
+..    using regex to replace:
+   "   (.*)"
+   "$1\n----\n.. doxygenclass:: riner::$1\n   :project: Riner\n"
+
+PoolRecords
+----
+.. doxygenclass:: riner::PoolRecords
+   :project: Riner
+
+StatisticNode
+----
+.. doxygenclass:: riner::StatisticNode
+   :project: Riner
+
+DeviceRecords
+----
+.. doxygenclass:: riner::DeviceRecords
+   :project: Riner
+
+ExpAverage
+----
+.. doxygenclass:: riner::ExpAverage
+   :project: Riner
+
+Mean
+----
+.. doxygenclass:: riner::Mean
+   :project: Riner
+
+AmdgpuApi
+----
+.. doxygenclass:: riner::AmdgpuApi
+   :project: Riner
+
+GpuApi
+----
+.. doxygenclass:: riner::GpuApi
+   :project: Riner
+
+Barrier
+----
+.. doxygenclass:: riner::Barrier
+   :project: Riner
+
+DynamicBuffer
+----
+.. doxygenclass:: riner::DynamicBuffer
+   :project: Riner
+
+Locked
+----
+.. doxygenclass:: riner::Locked
+   :project: Riner
+
+LockGuarded
+----
+.. doxygenclass:: riner::LockGuarded
+   :project: Riner
+
+SharedLockGuarded
+----
+.. doxygenclass:: riner::SharedLockGuarded
+   :project: Riner
+
+ReadLocked
+----
+.. doxygenclass:: riner::ReadLocked
+   :project: Riner
+
+ImmediateLocked
+----
+.. doxygenclass:: riner::ImmediateLocked
+   :project: Riner
+
+WriteLocked
+----
+.. doxygenclass:: riner::WriteLocked
+   :project: Riner
+
+UpgradeableLockGuarded
+----
+.. doxygenclass:: riner::UpgradeableLockGuarded
+   :project: Riner
+
+HexString
+----
+.. doxygenclass:: riner::HexString
+   :project: Riner
+
+LineIO
+----
+.. doxygenclass:: riner::LineIO
+   :project: Riner
+
+JsonIO
+----
+.. doxygenclass:: riner::JsonIO
+   :project: Riner
+
+JsonRpcIO
+----
+.. doxygenclass:: riner::jrpc::JsonRpcIO
+   :project: Riner
+
+JsonRpcUtil
+----
+.. doxygenclass:: riner::jrpc::JsonRpcUtil
+   :project: Riner
+
+IOConnection
+----
+.. doxygenclass:: riner::IOConnection
+   :project: Riner
+
+BaseIO
+----
+.. doxygenclass:: riner::BaseIO
+   :project: Riner
+
+CxnHandle
+----
+.. doxygenclass:: riner::CxnHandle
+   :project: Riner
+
+IOTypeLayer
+----
+.. doxygenclass:: riner::IOTypeLayer
+   :project: Riner
+
+Method
+----
+.. doxygenclass:: riner::jrpc::Method
+   :project: Riner
+
+RequestBuilder
+----
+.. doxygenclass:: riner::jrpc::RequestBuilder
+   :project: Riner
+
+Socket
+----
+.. doxygenclass:: riner::Socket
+   :project: Riner
+
+AlgoDummy
+----
+.. doxygenclass:: riner::AlgoDummy
+   :project: Riner
+
+Algorithm
+----
+.. doxygenclass:: riner::Algorithm
+   :project: Riner
+
+TaskExecutorPool
+----
+.. doxygenclass:: riner::TaskExecutorPool
+   :project: Riner
+
+AlgoCuckatoo31Cl
+----
+.. doxygenclass:: riner::AlgoCuckatoo31Cl
+   :project: Riner
+
+Algorithm
+----
+.. doxygenclass:: riner::Algorithm
+   :project: Riner
+
+DagFile
+----
+.. doxygenclass:: riner::DagFile
+   :project: Riner
+
+DagCacheContainer
+----
+.. doxygenclass:: riner::DagCacheContainer
+   :project: Riner
+
+AlgoEthashCL
+----
+.. doxygenclass:: riner::AlgoEthashCL
+   :project: Riner
+
+JsonSerializable
+----
+.. doxygenclass:: riner::JsonSerializable
+   :project: Riner
+
+CLProgramLoader
+----
+.. doxygenclass:: riner::CLProgramLoader
+   :project: Riner
+
+ComputeModule
+----
+.. doxygenclass:: riner::ComputeModule
+   :project: Riner
+
+DeviceId
+----
+.. doxygenclass:: riner::DeviceId
+   :project: Riner
+
+Application
+----
+.. doxygenclass:: riner::Application
+   :project: Riner
+
+Registry
+----
+.. doxygenclass:: riner::Registry
+   :project: Riner
+
+ApiServer
+----
+.. doxygenclass:: riner::ApiServer
+   :project: Riner
 
 Work
 ----
-.. doxygenclass:: miner::Work
+.. doxygenclass:: riner::Work
    :private-members:
    :project: Riner
 
 WorkSolution
 ----
-.. doxygenclass:: miner::WorkSolution
+.. doxygenclass:: riner::WorkSolution
+   :project: Riner
+
+WorkEthash
+----
+.. doxygenclass:: riner::WorkEthash
+   :project: Riner
+
+WorkSolutionEthash
+----
+.. doxygenclass:: riner::WorkSolutionEthash
+   :project: Riner
+
+StillAliveTrackable
+----
+.. doxygenclass:: riner::StillAliveTrackable
    :project: Riner
 
 Pool
 ----
-.. doxygenclass:: miner::Pool
+.. doxygenclass:: riner::Pool
    :project: Riner
 
-Algorithm
+WorkQueue
 ----
-.. doxygenclass:: miner::Algorithm
+.. doxygenclass:: riner::WorkQueue
    :project: Riner
 
-LockGuarded
------------
-.. doxygenclass:: miner::LockGuarded
+LazyWorkQueue
+----
+.. doxygenclass:: riner::LazyWorkQueue
    :project: Riner
 
-AutoRefillQueue
----------------
-.. doxygenclass:: miner::AutoRefillQueue
+PoolEthashStratum
+----
+.. doxygenclass:: riner::PoolEthashStratum
    :project: Riner
 
-IOTypeLayer
------------
-.. doxygenclass:: miner::IOTypeLayer
+PoolGrinStratum
+----
+.. doxygenclass:: riner::PoolGrinStratum
    :project: Riner
 
-jrpc Primitives
----------------
-.. doxygentypedef:: miner::jrpc::Null
+PoolSwitcher
+----
+.. doxygenclass:: riner::PoolSwitcher
    :project: Riner
 
-.. doxygentypedef:: miner::jrpc::String
+PoolDummy
+----
+.. doxygenclass:: riner::PoolDummy
    :project: Riner
 
-.. doxygentypedef:: miner::jrpc::Number
+DummyTestPoolServer
+----
+.. doxygenclass:: riner::DummyTestPoolServer
    :project: Riner
 
-jrpc::ErrorCode
-----------
-.. doxygenenum:: miner::jrpc::ErrorCode
+WorkCuckoo
+----
+.. doxygenclass:: riner::WorkCuckoo
    :project: Riner
 
-jrpc::Message
--------------
-.. doxygenstruct:: miner::jrpc::Message
+WorkSolutionCuckoo
+----
+.. doxygenclass:: riner::WorkSolutionCuckoo
    :project: Riner
 
-jrpc::RequestBuilder
--------------
-.. doxygenclass:: miner::jrpc::RequestBuilder
+GpuApiConstructionArgs
+----
+.. doxygenstruct:: riner::GpuApiConstructionArgs
    :project: Riner
 
+has_value_type
+----
+.. doxygenstruct:: riner::has_value_type
+   :project: Riner
 
-   
+ParsePoolAddressResult
+----
+.. doxygenstruct:: riner::ParsePoolAddressResult
+   :project: Riner
+
+MakeStr
+----
+.. doxygenstruct:: riner::MakeStr
+   :project: Riner
+
+SetThreadNameStream
+----
+.. doxygenstruct:: riner::SetThreadNameStream
+   :project: Riner
+
+GpuSettings
+----
+.. doxygenstruct:: riner::GpuSettings
+   :project: Riner
+
+AlgoSettings
+----
+.. doxygenstruct:: riner::AlgoSettings
+   :project: Riner
+
+Error
+----
+.. doxygenstruct:: riner::jrpc::Error
+   :project: Riner
+
+Response
+----
+.. doxygenstruct:: riner::jrpc::Response
+   :project: Riner
+
+Request
+----
+.. doxygenstruct:: riner::jrpc::Request
+   :project: Riner
+
+Message
+----
+.. doxygenstruct:: riner::jrpc::Message
+   :project: Riner
+
+Connection
+----
+.. doxygenstruct:: riner::Connection
+   :project: Riner
+
+IOConversionError
+----
+.. doxygenstruct:: riner::IOConversionError
+   :project: Riner
+
+SslDesc
+----
+.. doxygenstruct:: riner::SslDesc
+   :project: Riner
+
+AlgoConstructionArgs
+----
+.. doxygenstruct:: riner::AlgoConstructionArgs
+   :project: Riner
+
+PcieIndex
+----
+.. doxygenstruct:: riner::PcieIndex
+   :project: Riner
+
+Device
+----
+.. doxygenstruct:: riner::Device
+   :project: Riner
+
+ShutdownState
+----
+.. doxygenstruct:: riner::ShutdownState
+   :project: Riner
+
+CommandLineArgs
+----
+.. doxygenstruct:: riner::CommandLineArgs
+   :project: Riner
+
+HasPowTypeEthash
+----
+.. doxygenstruct:: riner::HasPowTypeEthash
+   :project: Riner
+
+PoolConstructionArgs
+----
+.. doxygenstruct:: riner::PoolConstructionArgs
+   :project: Riner
+
+PoolJob
+----
+.. doxygenstruct:: riner::PoolJob
+   :project: Riner
+
+HasPowTypeDummy
+----
+.. doxygenstruct:: riner::HasPowTypeDummy
+   :project: Riner
+
+WorkDummy
+----
+.. doxygenstruct:: riner::WorkDummy
+   :project: Riner
+
+WorkSolutionDummy
+----
+.. doxygenstruct:: riner::WorkSolutionDummy
+   :project: Riner
+
+EthashStratumJob
+----
+.. doxygenstruct:: riner::EthashStratumJob
+   :project: Riner
+
+GrinStratumJob
+----
+.. doxygenstruct:: riner::GrinStratumJob
+   :project: Riner
+
+DummyPoolJob
+----
+.. doxygenstruct:: riner::DummyPoolJob
+   :project: Riner
+

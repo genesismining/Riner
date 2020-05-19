@@ -94,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#build">Build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-riner">Running Riner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-tutorial-code">Running Tutorial Code</a></li>
 </ul>
 </li>
 </ul>
@@ -175,10 +176,6 @@
 </div>
 <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please note that this documentation is still very much under construction. More details will be added soon.</p>
-</div>
 <div class="section" id="what-is-riner">
 <h2>What is Riner<a class="headerlink" href="#what-is-riner" title="Permalink to this headline">¶</a></h2>
 <p>Riner is a cryptocurrency mining application that can run a variety of “proof of work” algorithms on GPUs and communicate using different pool mining protocols.
@@ -189,133 +186,174 @@ The codebase is designed to make adding new algorithms as well as new pool proto
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<p>In order to build Riner the following dependencies need to be installed:</p>
+<p>In order to build Riner the following dependencies should be installed:</p>
 <ul class="simple">
+<li><p>C++ compiler with support of the C++-14 standard</p></li>
+<li><p><a class="reference external" href="https://cmake.org/">CMake</a> (version 3.9 or later)</p></li>
+<li><p>Build tool supported by <code class="code docutils literal notranslate"><span class="pre">cmake</span></code> like <code class="code docutils literal notranslate"><span class="pre">make</span></code> (Unix), <code class="code docutils literal notranslate"><span class="pre">Visual</span> <span class="pre">Studio</span></code> (Windows), <code class="code docutils literal notranslate"><span class="pre">Xcode</span></code> (macOS) etc.</p></li>
 <li><p><a class="reference external" href="https://www.khronos.org/registry/OpenCL/specs/2.2/html/OpenCL_ICD_Installation.html">OpenCL</a></p></li>
-<li><p><a class="reference external" href="https://cmake.org/">CMake</a></p></li>
-<li><p><a class="reference external" href="https://github.com/google/googletest">GoogleTest</a></p></li>
+<li><p><a class="reference external" href="https://github.com/protocolbuffers/protobuf">Protocol Buffers</a></p></li>
+<li><p>for SSL/TLS support (optional): <a class="reference external" href="https://www.openssl.org/source/">OpenSSL</a></p></li>
+<li><p>for building tests (optional): <a class="reference external" href="https://github.com/google/googletest">GoogleTest</a></p></li>
 </ul>
 </div>
 <div class="section" id="build">
 <h2>Build<a class="headerlink" href="#build" title="Permalink to this headline">¶</a></h2>
-<p>first, clone the Riner repository and update submodules</p>
+<p>First, install the required dependencies. On Ubuntu 18.04 the following packages might be installed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">cmake</span> <span class="n">make</span> <span class="n">g</span><span class="o">++</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">opencl</span><span class="o">-</span><span class="n">headers</span> <span class="n">ocl</span><span class="o">-</span><span class="n">icd</span><span class="o">-</span><span class="n">libopencl1</span>
+<span class="c1"># if /usr/lib/libOpenCL.so does not exist, then create it as symlink to /usr/lib/x86_64-linux-gnu/libOpenCL.so.1</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libprotobuf</span><span class="o">-</span><span class="n">dev</span> <span class="n">protobuf</span><span class="o">-</span><span class="n">compiler</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libssl</span><span class="o">-</span><span class="n">dev</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">googletest</span> <span class="o">&amp;&amp;</span> <span class="p">(</span> <span class="n">cd</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">googletest</span><span class="p">;</span> <span class="n">sudo</span> <span class="n">cmake</span> <span class="o">.</span> <span class="o">&amp;&amp;</span> <span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span><span class="p">;</span> <span class="n">cd</span> <span class="o">-</span> <span class="p">)</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">git</span>
+</pre></div>
+</div>
+<p>Some distributions split <code class="code docutils literal notranslate"><span class="pre">GoogleTest</span></code> into two packages, e.g. <code class="code docutils literal notranslate"><span class="pre">gtest</span></code> and <code class="code docutils literal notranslate"><span class="pre">gmock</span></code>.</p>
+<p>Afterwards, clone the Riner repository and update submodules</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recurse</span><span class="o">-</span><span class="n">submodules</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">genesismining</span><span class="o">/</span><span class="n">Riner</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
-<p>then build the project using <code class="code docutils literal notranslate"><span class="pre">cmake</span></code> and <code class="code docutils literal notranslate"><span class="pre">make</span></code> or configure CMake to output build files for your favourite IDE.</p>
+<p>Then build the project using <code class="code docutils literal notranslate"><span class="pre">cmake</span></code> and <code class="code docutils literal notranslate"><span class="pre">make</span></code> or configure CMake to output build files for your favourite IDE.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">.</span>
-<span class="n">make</span>
+<span class="n">make</span> <span class="n">riner</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Running cmake will also download additional files such as ethash.cl from other repositories.</p>
 </div>
-<p>now if we run the resulting executable, the following message will show up in the console output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">no</span> <span class="n">config</span> <span class="n">path</span> <span class="n">command</span> <span class="n">line</span> <span class="n">argument</span> <span class="p">(</span><span class="o">--</span><span class="n">config</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+<p>Now if we run the resulting executable, the following message will show up in the console output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">no</span> <span class="n">config</span> <span class="n">path</span> <span class="n">command</span> <span class="n">line</span> <span class="n">argument</span> <span class="p">(</span><span class="o">--</span><span class="n">config</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">textproto</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Riner requires a .json configuration file to run any algorithms. For now only a basic OpenCL implementation of ethash can be run (which requires a GPU with 4GB of memory). Alternatively an example algorithm is available that can be used as a starting point for implementing your own proof of work in Riner.</p>
+<p>Riner requires a .textproto configuration file to run any algorithms. For now only a basic OpenCL implementation of Cuckatoo31 and ethash can be run, which requires a GPU with 4GB of memory and a working OpenCL driver. Alternatively an example algorithm is available that can be used as a starting point for implementing your own proof of work in Riner.</p>
 <p>In either case, providing a configuration file as described in the following section is required</p>
 </div>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<p>Here is an example of a valid config.json file</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;config_version&quot;</span><span class="p">:</span> <span class="s2">&quot;1.0&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;global_settings&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;temp_cutoff&quot;</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
-        <span class="s2">&quot;temp_overheat&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
-        <span class="s2">&quot;temp_target&quot;</span><span class="p">:</span> <span class="mi">76</span><span class="p">,</span>
-        <span class="s2">&quot;api_port&quot;</span><span class="p">:</span> <span class="mi">4028</span><span class="p">,</span>
-        <span class="s2">&quot;opencl_kernel_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;dir/containing/kernels&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;start_profile&quot;</span><span class="p">:</span> <span class="s2">&quot;myProfile&quot;</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;pools&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ethash&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;stratum2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;eth-eu1.nanopool.org&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">9999</span><span class="p">,</span>
-            <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;0x0&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span>
-        <span class="p">},</span>
-    <span class="p">],</span>
-    <span class="s2">&quot;device_profiles&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;myGpu&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;example GPU profile&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;algorithms&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;these settings will be used if AlgoEthashCL is launched with a gpu that has the &quot;</span><span class="n">myGpu</span><span class="s2">&quot; profile assigned&quot;</span><span class="p">,</span>
+<p>Here is an example of a valid config.textproto file</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">:</span> <span class="s2">&quot;0.1&quot;</span>
 
-                <span class="s2">&quot;AlgoEthashCL&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;core_clock_MHz&quot;</span><span class="p">:</span> <span class="mi">1145</span><span class="p">,</span>
-                    <span class="s2">&quot;memory_clock_MHz&quot;</span><span class="p">:</span> <span class="mi">2100</span><span class="p">,</span>
-                    <span class="s2">&quot;power_limit_W&quot;</span><span class="p">:</span> <span class="mi">110</span><span class="p">,</span>
-                    <span class="s2">&quot;core_voltage_mV&quot;</span><span class="p">:</span> <span class="mi">850</span><span class="p">,</span>
-                    <span class="s2">&quot;num_threads&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                    <span class="s2">&quot;work_size&quot;</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span>
-                    <span class="s2">&quot;raw_intensity&quot;</span><span class="p">:</span> <span class="mi">4194304</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
+<span class="n">global_settings</span> <span class="p">{</span>
+    <span class="n">api_port</span><span class="p">:</span> <span class="mi">4028</span>
+    <span class="n">opencl_kernel_dir</span><span class="p">:</span> <span class="s2">&quot;kernel/dir/&quot;</span> <span class="c1">#dir which contains the opencl kernel files (e.g. ethash.cl)</span>
+    <span class="n">start_profile_name</span><span class="p">:</span> <span class="s2">&quot;my_profile&quot;</span> <span class="c1">#when running Riner with this config file, the tasks of &quot;my_profile&quot; get launched</span>
+<span class="p">}</span>
+
+<span class="n">profile</span> <span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s2">&quot;my_profile&quot;</span>
+    <span class="c1"># now specify tasks that will run in parallel as this profile is started</span>
+
+    <span class="c1"># Task 1: run AlgoEthashCL on all devices</span>
+    <span class="n">task</span> <span class="p">{</span>
+        <span class="n">run_on_all_remaining_devices</span><span class="p">:</span> <span class="n">true</span>
+        <span class="c1">#run this task on every gpu except gpu 1, which will run the task below</span>
+
+        <span class="n">run_algoimpl_with_name</span><span class="p">:</span> <span class="s2">&quot;EthashCL&quot;</span>
+        <span class="c1">#run the OpenCL ethash AlgoImpl. run riner --list-algoimpls for a list of all available AlgoImpls</span>
+
+        <span class="n">use_device_profile_with_name</span><span class="p">:</span> <span class="s2">&quot;my_default_gpu_profile&quot;</span>
+        <span class="c1">#my_gpu_profile has specific settings for AlgoEthashCL for this gpu type.</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Task 1: run AlgoCuckatoo31 on GPU 1 (use --list-devices to find out about indices)</span>
+    <span class="n">task</span> <span class="p">{</span>
+        <span class="n">device_index</span><span class="p">:</span> <span class="mi">1</span>
+        <span class="c1">#gpu 1 will not run the task above, but this one.</span>
+
+        <span class="n">run_algoimpl_with_name</span><span class="p">:</span> <span class="s2">&quot;Cuckatoo31Cl&quot;</span>
+
+        <span class="n">use_device_profile_with_name</span><span class="p">:</span> <span class="s2">&quot;my_AMD_gpu_profile&quot;</span>
+        <span class="c1">#my_gpu_profile has specified other settings for AlgoCuckatoo31Cl</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">device_profile</span> <span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s2">&quot;my_AMD_gpu_profile&quot;</span>
+    <span class="c1">#device profile, example name suggests they should be used for AMD gpus</span>
+
+    <span class="n">settings_for_algoimpl</span> <span class="p">{</span> <span class="c1">#key value pairs</span>
+        <span class="n">key</span><span class="p">:</span> <span class="s2">&quot;EthashCL&quot;</span>
+        <span class="c1">#these settings are applied if AlgoEthashCL is started with this gpu profile</span>
+
+        <span class="n">value</span> <span class="p">{</span>
+        <span class="n">num_threads</span><span class="p">:</span> <span class="mi">4</span>
+        <span class="n">work_size</span><span class="p">:</span> <span class="mi">1024</span>
         <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;profiles&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;myProfile&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;device_default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;myGpu&quot;</span><span class="p">,</span> <span class="s2">&quot;AlgoEthashCL&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="n">settings_for_algoimpl</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="s2">&quot;Cuckatoo31Cl&quot;</span>
+
+        <span class="n">value</span><span class="p">:</span> <span class="p">{</span> <span class="c1">#settings:</span>
+        <span class="n">work_size</span><span class="p">:</span> <span class="mi">512</span>
         <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span>
+
+<span class="n">device_profile</span> <span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s2">&quot;my_default_gpu_profile&quot;</span>
+    <span class="c1">#generic device profile for no particular gpu</span>
+
+    <span class="n">settings_for_algoimpl</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="s2">&quot;EthashCL&quot;</span>
+
+        <span class="n">value</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">num_threads</span><span class="p">:</span> <span class="mi">4</span>
+        <span class="n">work_size</span><span class="p">:</span> <span class="mi">1024</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># pools are listed by priority.</span>
+<span class="c1"># e.g. if there are two ethash pools, the top most one will get used first,</span>
+<span class="c1"># if that pool is unresponsive, work will get taken from the next ethash pool instead.</span>
+<span class="c1"># To prevent idle time in such a case, riner has connections to all pools, even unused ones.</span>
+<span class="c1"># if an unresponsive pool reawakens, its work will get used again.</span>
+
+<span class="n">pool</span> <span class="p">{</span> <span class="c1">#if this pool is active it will provide work to all running AlgoImpls that are of pow_type &quot;ethash&quot;</span>
+    <span class="n">pow_type</span><span class="p">:</span> <span class="s2">&quot;ethash&quot;</span>
+    <span class="n">protocol</span><span class="p">:</span> <span class="s2">&quot;stratum2&quot;</span>
+    <span class="n">host</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+    <span class="n">port</span><span class="p">:</span> <span class="mi">2345</span>
+    <span class="n">username</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span>
+    <span class="n">password</span><span class="p">:</span> <span class="s2">&quot;password&quot;</span>
+<span class="p">}</span>
+
+<span class="n">pool</span> <span class="p">{</span>
+    <span class="n">pow_type</span><span class="p">:</span> <span class="s2">&quot;cuckatoo31&quot;</span>
+    <span class="n">protocol</span><span class="p">:</span> <span class="s2">&quot;stratum&quot;</span>
+    <span class="n">host</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+    <span class="n">port</span><span class="p">:</span> <span class="mi">2346</span>
+    <span class="n">username</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span>
+    <span class="n">password</span><span class="p">:</span> <span class="s2">&quot;password&quot;</span>
+<span class="p">}</span>
+
+<span class="n">pool</span> <span class="p">{</span> <span class="c1">#2nd ethash pool as a backup if the first one is unresponsive</span>
+    <span class="n">pow_type</span><span class="p">:</span> <span class="s2">&quot;ethash&quot;</span>
+    <span class="n">protocol</span><span class="p">:</span> <span class="s2">&quot;stratum2&quot;</span>
+    <span class="n">host</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+    <span class="n">port</span><span class="p">:</span> <span class="mi">2347</span>
+    <span class="n">username</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span>
+    <span class="n">password</span><span class="p">:</span> <span class="s2">&quot;password&quot;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>The root json object that must contain the following keys:</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>“config_version”</dt><dd><p>version of the config file, must be “1.0”</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>“pools”</dt><dd><p>json list of pool objects.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>“device_profiles”</dt><dd><p>json object with device profiles as named members. Device profiles are settings which can later be assigned to specific devices (GPUs)</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>“profiles”</dt><dd><p>json object with profiles as named members. A profile maps device profiles to specific devices (GPUs). The</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>“global_settings”</dt><dd><p>a json object that contains parameters. Most importantly:</p>
-<ul>
-<li><dl class="simple">
-<dt>“start_profile”</dt><dd><p>the profile that gets started when the Riner executable is run</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>“opencl_kernel_dir”</dt><dd><p>path to the directory containing OpenCL kernel files (such as ethash.cl for that was downloaded via cmake) which will be compiled on demand</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>A more comprehensive documentation of the config file will be added as soon as its structure is finalized.</p>
+<p>For more detailed information about the config file structure, see the protobuf source “Config.proto” in the <cite>src/config</cite> folder.</p>
 </div>
 </div>
 <div class="section" id="running-riner">
 <h2>Running Riner<a class="headerlink" href="#running-riner" title="Permalink to this headline">¶</a></h2>
-<p>in order to run ethash, the “opencl_kernel_dir” option in “global_settings” must be set to the directory that ethash.cl was downloaded into by cmake.
-If your system doesn’t have a GPU installed that is sufficient for running ethash, but you still like to contribute to Riner, you can use the example algorithm by entering “AlgoDummy” instead of “AlgoEthashCL” in the “myProfile” profile.</p>
+<p>in order to run ethash, the “opencl_kernel_dir” option in “global_settings” must be set to the directory that ethash.cl was downloaded into by cmake.</p>
+</div>
+<div class="section" id="running-tutorial-code">
+<h2>Running Tutorial Code<a class="headerlink" href="#running-tutorial-code" title="Permalink to this headline">¶</a></h2>
+<p>If you want to get started adding new algorithms or pool protocols to Riner, the quickest way to get started is looking at the “AlgoDummy” and “PoolDummy” classes, which are extensively documented.
+To run the tutorial code, just run</p>
+<p>and read the log messages (you can change log verbosity via the -v=X command)</p>
 </div>
 </div>
 

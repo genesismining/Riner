@@ -17,7 +17,7 @@ namespace riner {
 
     /**
      * cast a unique_ptr<U> to a unique_ptr<T> (like dynamic_cast)
-     * return the downcast version of uUnique
+     * @return the downcast version of uUnique
      */
     template<class T, class U>
     unique_ptr<T> static_unique_ptr_cast(unique_ptr<U> uUnique) {
@@ -28,7 +28,7 @@ namespace riner {
 
     /**
      * function that clearly indicates intent when creating a weak_ptr from a shared_ptr
-     * return a weak_ptr that points to the same object as `sharedPtr`
+     * @return a weak_ptr that points to the same object as `sharedPtr`
      */
     template<class T>
     std::weak_ptr<T> make_weak(const std::shared_ptr<T> &sharedPtr) {

@@ -5,10 +5,6 @@
 Introduction
 ===============
 
-.. note::
-
-    Please note that this documentation is still very much under construction. More details will be added soon.
-
 What is Riner
 -------------
 
@@ -88,79 +84,127 @@ Here is an example of a valid config.textproto file
 
 .. code::
 
-    {
-        "config_version": "1.0",
-        "global_settings": {
-            "temp_cutoff": 85,
-            "temp_overheat": 80,
-            "temp_target": 76,
-            "api_port": 4028,
-            "opencl_kernel_dir": "dir/containing/kernels",
-            "start_profile": "myProfile"
-        },
-        "pools": [
-            {
-                "type": "ethash",
-                "protocol": "stratum2",
-                "host": "eth-eu1.nanopool.org",
-                "port": 9999,
-                "username": "0x0",
-                "password": "x"
-            },
-        ],
-        "device_profiles": {
-            "myGpu": {
-                "comment": "example GPU profile",
-                "algorithms": {
-                    "comment": "these settings will be used if AlgoEthashCL is launched with a gpu that has the "myGpu" profile assigned",
+    version: "0.1"
 
-                    "AlgoEthashCL": {
-                        "core_clock_MHz": 1145,
-                        "memory_clock_MHz": 2100,
-                        "power_limit_W": 110,
-                        "core_voltage_mV": 850,
-                        "num_threads": 1,
-                        "work_size": 128,
-                        "raw_intensity": 4194304 
-                    }
-                }
+    global_settings {
+        api_port: 4028
+        opencl_kernel_dir: "kernel/dir/" #dir which contains the opencl kernel files (e.g. ethash.cl)
+        start_profile_name: "my_profile" #when running Riner with this config file, the tasks of "my_profile" get launched
+    }
+
+    profile {
+        name: "my_profile"
+        # now specify tasks that will run in parallel as this profile is started
+
+        # Task 1: run AlgoEthashCL on all devices
+        task {
+            run_on_all_remaining_devices: true
+            #run this task on every gpu except gpu 1, which will run the task below
+
+            run_algoimpl_with_name: "EthashCL"
+            #run the OpenCL ethash AlgoImpl. run riner --list-algoimpls for a list of all available AlgoImpls
+
+            use_device_profile_with_name: "my_default_gpu_profile" 
+            #my_gpu_profile has specific settings for AlgoEthashCL for this gpu type.
+        }
+
+        # Task 1: run AlgoCuckatoo31 on GPU 1 (use --list-devices to find out about indices)
+        task {
+            device_index: 1
+            #gpu 1 will not run the task above, but this one.
+
+            run_algoimpl_with_name: "Cuckatoo31Cl"
+
+            use_device_profile_with_name: "my_AMD_gpu_profile" 
+            #my_gpu_profile has specified other settings for AlgoCuckatoo31Cl
+        }
+    }
+
+    device_profile {
+        name: "my_AMD_gpu_profile"
+        #device profile, example name suggests they should be used for AMD gpus
+
+        settings_for_algoimpl { #key value pairs
+            key: "EthashCL"
+            #these settings are applied if AlgoEthashCL is started with this gpu profile
+
+            value {
+            num_threads: 4
+            work_size: 1024
             }
-        },
-        "profiles": {
-            "myProfile": {
-                "device_default": ["myGpu", "AlgoEthashCL"]
+        }
+
+        settings_for_algoimpl {
+            key: "Cuckatoo31Cl"
+
+            value: { #settings:
+            work_size: 512
             }
         }
     }
 
-The root json object that must contain the following keys:
+    device_profile {
+        name: "my_default_gpu_profile"
+        #generic device profile for no particular gpu
 
-- "config_version"
-    version of the config file, must be "1.0"
+        settings_for_algoimpl {
+            key: "EthashCL"
+            
+            value: {
+            num_threads: 4
+            work_size: 1024
+            }
+        }
+    }
 
-- "pools"
-    json list of pool objects.
+    # pools are listed by priority. 
+    # e.g. if there are two ethash pools, the top most one will get used first, 
+    # if that pool is unresponsive, work will get taken from the next ethash pool instead.
+    # To prevent idle time in such a case, riner has connections to all pools, even unused ones.
+    # if an unresponsive pool reawakens, its work will get used again.
 
-- "device_profiles"
-    json object with device profiles as named members. Device profiles are settings which can later be assigned to specific devices (GPUs)
+    pool { #if this pool is active it will provide work to all running AlgoImpls that are of pow_type "ethash"
+        pow_type: "ethash"
+        protocol: "stratum2"
+        host: "127.0.0.1"
+        port: 2345
+        username: "user"
+        password: "password"
+    }
 
-- "profiles"
-    json object with profiles as named members. A profile maps device profiles to specific devices (GPUs). The 
+    pool {
+        pow_type: "cuckatoo31"
+        protocol: "stratum"
+        host: "127.0.0.1"
+        port: 2346
+        username: "user"
+        password: "password"
+    }
 
-- "global_settings"
-    a json object that contains parameters. Most importantly:
-
-    - "start_profile" 
-        the profile that gets started when the Riner executable is run
-    - "opencl_kernel_dir"
-        path to the directory containing OpenCL kernel files (such as ethash.cl for that was downloaded via cmake) which will be compiled on demand
+    pool { #2nd ethash pool as a backup if the first one is unresponsive
+        pow_type: "ethash"
+        protocol: "stratum2"
+        host: "127.0.0.1"
+        port: 2347
+        username: "user"
+        password: "password"
+    }
 
 .. note:: 
-
-    A more comprehensive documentation of the config file will be added as soon as its structure is finalized.
+    For more detailed information about the config file structure, see the protobuf source "Config.proto" in the `src/config` folder.
 
 Running Riner
 -------------
 
 in order to run ethash, the "opencl_kernel_dir" option in "global_settings" must be set to the directory that ethash.cl was downloaded into by cmake.
-If your system doesn't have a GPU installed that is sufficient for running ethash, but you still like to contribute to Riner, you can use the example algorithm by entering "AlgoDummy" instead of "AlgoEthashCL" in the "myProfile" profile.
+
+Running Tutorial Code
+---------------------
+
+If you want to get started adding new algorithms or pool protocols to Riner, the quickest way to get started is looking at the "AlgoDummy" and "PoolDummy" classes, which are extensively documented.
+To run the tutorial code, just run
+
+.. code::
+    ./riner --run-tutorial
+
+and read the log messages (you can change log verbosity via the -v=X command)

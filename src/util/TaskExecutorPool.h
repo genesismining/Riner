@@ -34,8 +34,8 @@ namespace riner {
 
         /**
          * addTask that returns a value.
-         * param fct task that will be executed by the worker threads as soon as possible
-         * return a std::future<X> where X is fct's return type. Can be used to query if the task is done.
+         * @param fct task that will be executed by the worker threads as soon as possible
+         * @return a std::future<X> where X is fct's return type. Can be used to query if the task is done.
          **/
 		template<typename F, std::enable_if_t<!std::is_same<std::result_of_t<F &&()>, void>::value, int> N = 0>
 		std::future<std::result_of_t<F &&()>> addTask(F &&fct) {
@@ -53,8 +53,8 @@ namespace riner {
 
         /**
          * specialization of addTask for functions that return void.
-         * param fct task that will be executed by the worker threads as soon as possible
-         * return a std::future<void> for querying if the task is done.
+         * @param fct task that will be executed by the worker threads as soon as possible
+         * @return a std::future<void> for querying if the task is done.
          **/
 		template<typename F, std::enable_if_t<std::is_same<std::result_of_t<F &&()>, void>::value, int> N = 0>
 		std::future<std::result_of_t<F &&()>> addTask(F &&fct) {

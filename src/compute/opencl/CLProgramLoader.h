@@ -28,9 +28,9 @@ namespace riner {
          * loads text from a file and compiles it to a cl::Program.
          * This function is thread safe. (see `clCreateProgramWithSource` & `clBuildProgram` documentation
          * for more details, as these functions are wrapped here)
-         * param context the opencl context
-         * param clFileInKernelDir path to the kernel file relative to the clSourceDir provided in the constructor (which comes from the config file's global settings ultimately)
-         * return a cl::Program or nullopt if any complications happened from the loading of the file(s) to the compilation of the program.
+         * @param context the opencl context
+         * @param clFileInKernelDir path to the kernel file relative to the clSourceDir provided in the constructor (which comes from the config file's global settings ultimately)
+         * @return a cl::Program or nullopt if any complications happened from the loading of the file(s) to the compilation of the program.
          */
         optional<cl::Program> loadProgram(cl::Context context, std::string clFileInKernelDir,
                                           const std::string &clCompilerOptions) {

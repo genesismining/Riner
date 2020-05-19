@@ -143,9 +143,9 @@ namespace riner {
 
         /**
          * inits private/protected base class members without requiring the user to pass them through. called by the poolswitcher during initialization
-         * param w a shared pointer owning *this, which gets stored in this->_this
-         * param poolImplName the implementation name according to Registry
-         * param powType the powtype string according to Registry
+         * @param w a shared pointer owning *this, which gets stored in this->_this
+         * @param poolImplName the implementation name according to Registry
+         * @param powType the powtype string according to Registry
          */
         static void postInit(std::shared_ptr<Pool> w, const std::string &poolImplName, const std::string &powType);
         
@@ -178,14 +178,14 @@ namespace riner {
         }
 
         /**
-         * return host:port in a printable way
+         * @return host:port in a printable way
          */
         virtual std::string getName() const {
             return constructionArgs.host + ":" + std::to_string(constructionArgs.port);
         }
 
         /**
-         * return whether the pool job is considered expired. Most implementations forward this call to the WorkQueue's `WorkQueue::isExpiredJob()` method, which returns false as soon as a newer job was pushed.
+         * @return whether the pool job is considered expired. Most implementations forward this call to the WorkQueue's `WorkQueue::isExpiredJob()` method, which returns false as soon as a newer job was pushed.
          */
         virtual bool isExpiredJob(const PoolJob &job) = 0;
 

@@ -14,7 +14,7 @@ namespace riner {
     /**
      * takes the textproto string in google protocol buffer textProto format and tries to parse it according to `Config.proto`
      * Parser errors are shown in the logs.
-     * return a valid config object or nullopt if parsing failed.
+     * @return a valid config object or nullopt if parsing failed.
      */
     optional<Config> parseConfig(const std::string &txtProto);
 
@@ -31,13 +31,13 @@ namespace riner {
     bool validateConfig(const Config &);
 
     /**
-     * return the config profile which the application should be started with
+     * @return the config profile which the application should be started with
      */
     optional_cref<proto::Config_Profile> getStartProfile(const Config &);
 
     /**
      * finds the device profile with name `devProfileName` in `c`
-     * return reference to the device profile or nullopt if it couldn't be found.
+     * @return reference to the device profile or nullopt if it couldn't be found.
      */
     optional_cref<proto::Config_DeviceProfile> getDeviceProfile(const Config &c, const std::string &devProfileName);
 
@@ -74,7 +74,7 @@ namespace riner {
 
     /**
      * wrapper around AlgoSettings constructor that can fail if no Settings were found for that algoImplName in the device profile
-     * return found AlgoSettings or nullopt
+     * @return found AlgoSettings or nullopt
      */
     optional<AlgoSettings> getAlgoSettings(const proto::Config_DeviceProfile &dp, const std::string &algoImplName);
 

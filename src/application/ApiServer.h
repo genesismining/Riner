@@ -29,8 +29,8 @@ namespace riner {
         /**
          * Start the ApiServer on the local machine and start listening on port `port`.
          * The ApiServer will start running as soon as the constructor is called and will join its thread in the (blocking) destructor call, which means the ApiServer is alive as long as the instance is alive.
-         * param port the port on which the ApiServer should listen for incoming connections (usually provided by the user in the `Config`'s general settings
-         * param app reference that goes back to the application object (which the ApiServer has friend access rights to, in order to communicate the application's state in detail)
+         * @param port the port on which the ApiServer should listen for incoming connections (usually provided by the user in the `Config`'s general settings
+         * @param app reference that goes back to the application object (which the ApiServer has friend access rights to, in order to communicate the application's state in detail)
          */
         explicit ApiServer(uint16_t port, const Application &app);
         
